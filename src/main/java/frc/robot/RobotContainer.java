@@ -21,23 +21,26 @@ import frc.robot.subsystems.LightStripS.States;
 import frc.robot.util.InputAxis;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sparkmax.SparkDevice;
+import monologue.Logged;
+import monologue.Monologue;
+import monologue.Annotations.Log;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.photonvision.PhotonCamera;
 
-public class RobotContainer {
+public class RobotContainer implements Logged {
 
   /** Establishes the controls and subsystems of the robot */
   private final CommandXboxController m_driverController = new CommandXboxController(0);
 
   private final DrivebaseS m_drivebaseS;
-
-   private double loopTime = 0;
+  @Log.NT
+  private double loopTime = 0;
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
-
-   private final Field2d m_field = new Field2d();
+  @Log.NT
+  private final Field2d m_field = new Field2d();
 
   private final Autos m_autos;
 
@@ -62,17 +65,17 @@ public class RobotContainer {
 
   private boolean m_setupDone = false;
 
-  
+  @Log.NT
   private double getFwdAxis() {
     return m_fwdXAxis.getAsDouble();
   }
 
-  
+  @Log.NT
   private double getSideAxis() {
     return m_fwdYAxis.getAsDouble();
   }
 
-  
+  @Log.NT
   private double getRotAxis() {
     return m_rotAxis.getAsDouble();
   }
@@ -107,7 +110,7 @@ public class RobotContainer {
     addAutoRoutines();
 
     SmartDashboard.putData(m_autoSelector);
-    // AutoLog.setupLogging(this, "Robot", true);
+    Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
     // Delay either side of burning flash on all spark maxes (this)
@@ -145,7 +148,7 @@ public class RobotContainer {
     // /* Trace the loop duration and plot to shuffleboard */
     LightStripS.getInstance().periodic();
     updateFields();
-    //AutoLog.update();
+    Monologue.updateAll();
   }
 
   public void updateFields() {

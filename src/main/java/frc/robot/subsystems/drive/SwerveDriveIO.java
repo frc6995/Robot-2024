@@ -10,14 +10,18 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.SPI.Port;
+import monologue.Logged;
+import monologue.Annotations.Log;
+
 import com.kauailabs.navx.frc.AHRS;
 import java.util.List;
 import java.util.function.Consumer;
 
-public abstract class SwerveDriveIO {
+public abstract class SwerveDriveIO implements Logged {
   protected final AHRS m_navx = new AHRS(Port.kMXP, (byte) 50);
   protected List<ModuleIO> m_modules;
 
+  @Log.NT
   private SwerveModuleState[] currentStates =
       new SwerveModuleState[] {
         new SwerveModuleState(),
@@ -25,6 +29,7 @@ public abstract class SwerveDriveIO {
         new SwerveModuleState(),
         new SwerveModuleState()
       };
+  @Log.NT
   private SwerveModulePosition[] currentPositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -39,12 +44,12 @@ public abstract class SwerveDriveIO {
     m_navx.enableLogging(true);
   }
 
-  // @Override
-  // public String getPath() {
-  //   return "io";
-  // }
+  @Override
+  public String getPath() {
+    return "io";
+  }
 
-  
+  @Log.NT
   public Rotation2d getGyroHeading() {
     return Rotation2d.fromDegrees(-m_navx.getAngle());
   }
@@ -60,10 +65,11 @@ public abstract class SwerveDriveIO {
     }
   }
 
+  @Log.NT
   public SwerveModuleState[] getModuleStates() {
     return currentStates;
   }
-
+  @Log.NT
   public SwerveModulePosition[] getCurrentPositions() {
     return currentPositions;
   }
@@ -96,7 +102,7 @@ public abstract class SwerveDriveIO {
   public void resetModuleSteerControllers() {
     m_modules.forEach(ModuleIO::resetSteerController);
   }
-
+  @Log.NT
   public abstract Pose2d getSimPose();
 
   public Rotation3d getRotation3d() {

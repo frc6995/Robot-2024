@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.AllianceWrapper;
+import monologue.Monologue;
 
 public class Robot extends TimedRobot {
 
@@ -58,6 +59,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+
     AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
     robotContainer.onEnabled();
     if (autonomousCommand != null) autonomousCommand.cancel();
@@ -79,4 +81,5 @@ public class Robot extends TimedRobot {
   public static boolean isReal() {
     return !isSimulation;
   }
+  
 }
