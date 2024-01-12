@@ -8,9 +8,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.robot.Robot;
+import monologue.Logged;
+import monologue.Annotations.Log;
+
 import java.util.function.Consumer;
 
-public abstract class ModuleIO {
+public abstract class ModuleIO implements Logged {
 
   // steering trapezoid profile
   protected double m_steerSetpoint = 0;
@@ -50,10 +53,10 @@ public abstract class ModuleIO {
 
   public abstract void setRotationVoltage(double rotationVolts);
 
-  
+  @Log.NT
   public abstract double getDriveDistance();
 
-  
+  @Log.NT
   public abstract double getDriveVelocity();
 
   
@@ -62,28 +65,29 @@ public abstract class ModuleIO {
    *
    * @return
    */
+  @Log.NT
   public abstract double getAngle();
 
-  
+  @Log.NT
   public abstract double getRelativeAngle();
 
-  
+  @Log.NT
   public abstract double getDriveVoltage();
 
-  
+  @Log.NT
   public abstract double getSteerVoltage();
 
-  
+  @Log.NT
   public double getSteerSetpoint() {
     return m_steerSetpoint;
   }
 
-  
+  @Log.NT
   public double getSteerCurrent() {
     return 0;
   }
 
-  
+  @Log.NT
   public double getDriveSetpoint() {
     return m_driveSetpoint;
   }
@@ -118,10 +122,12 @@ public abstract class ModuleIO {
 
   public abstract void setRotationPid(double angle, double ffVolts);
 
+  @Log.NT
   public SwerveModuleState getCurrentState() {
     return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAngle()));
   }
 
+  @Log.NT
   public SwerveModulePosition getCurrentPosition() {
     return new SwerveModulePosition(getDriveDistance(), new Rotation2d(getAngle()));
   }
@@ -140,7 +146,7 @@ public abstract class ModuleIO {
     m_steerSetpoint = getAngle();
   }
 
-  
+  @Log.NT
   public double getDriveCurrent() {
     return 0;
   }

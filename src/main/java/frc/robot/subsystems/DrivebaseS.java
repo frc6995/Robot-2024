@@ -46,6 +46,8 @@ import frc.robot.util.AprilTags;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.trajectory.PPChasePoseCommand;
+import monologue.Logged;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -59,7 +61,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
  * Subsystem that controls the drivetrain of the robot Handles all the odometry and base movement
  * for the chassis
  */
-public class DrivebaseS extends SubsystemBase {
+public class DrivebaseS extends SubsystemBase implements Logged {
   /** The abstract class for interfacing with the gyro and modules. */
   private final SwerveDriveIO io;
 
