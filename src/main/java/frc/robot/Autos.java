@@ -23,7 +23,10 @@ public class Autos {
 
   public Command driveToNote() {
     return m_drivebaseS.run(()->{
-      if (m_noteCamera.hasTarget()) {
+      if (m_noteCamera.hasTarget() &&
+        Math.abs(m_noteCamera.getPitch() - 0.22) > 0.02 &&
+        Math.abs(m_noteCamera.getYaw()) > 0.02
+      ) {
         m_drivebaseS.drive(
           new ChassisSpeeds(
             MathUtil.clamp(6 * (0.22 - m_noteCamera.getPitch()), -1, 1),
@@ -31,6 +34,8 @@ public class Autos {
             MathUtil.clamp(3* m_noteCamera.getYaw(), -1, 1)
           )
         );
+      } else {
+        m_drivebaseS.drive(new ChassisSpeeds());
       }
     });
 
