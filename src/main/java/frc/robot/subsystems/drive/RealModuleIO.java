@@ -71,7 +71,7 @@ public class RealModuleIO extends ModuleIO {
     m_magEncoder =
         new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_moduleConstants.magEncoderOffset);
     m_steerMotor.setIdleMode(IdleMode.kBrake);
-
+    m_steerMotor.setInverted(true);
     m_driveController = m_driveMotor.getPIDController();
     m_rotationController = m_steerMotor.getPIDController();
     m_driveController.setFeedbackDevice(m_driveMotor.getEncoder());

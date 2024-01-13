@@ -107,12 +107,13 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   private final SwerveDrivePoseEstimator m_poseEstimator;
 
   private final List<PhotonPoseEstimator> m_cameras =
-      List.of(
-          new PhotonPoseEstimator(
-              VisionConstants.TAG_FIELD_LAYOUT,
-              PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-              new PhotonCamera(VisionConstants.CAM_1_NAME),
-              VisionConstants.robotToCam1));
+    List.of();
+      // List.of(
+      //     new PhotonPoseEstimator(
+      //         VisionConstants.TAG_FIELD_LAYOUT,
+      //         PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+      //         new PhotonCamera(VisionConstants.CAM_1_NAME),
+      //         VisionConstants.robotToCam1));
 
   private Pose2d multitagPose = new Pose2d();
   private final BiConsumer<String, PathPlannerTrajectory> drawTrajectory;
@@ -129,6 +130,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             new Pose2d(),
             VecBuilder.fill(0.1, 0.1, 1000),
             VecBuilder.fill(1, 1, Math.PI));
+    resetPose(new Pose2d(4, 4, new Rotation2d()));
     m_thetaController.setTolerance(Units.degreesToRadians(0.5));
     m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
     m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
@@ -412,13 +414,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
-    ChassisSpeeds speeds = getFieldRelativeLinearSpeedsMPS();
-    Transform2d transform =
-        new Transform2d(
-            speeds.vxMetersPerSecond,
-            speeds.vyMetersPerSecond,
-            new Rotation2d(speeds.omegaRadiansPerSecond));
-    field.getObject("future").setPose(getPose().transformBy(transform));
     field.getObject("multitag").setPose(multitagPose);
     // Draw a pose that is based on the robot pose, but shifted by the translation
     // of the module relative to robot center,

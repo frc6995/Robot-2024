@@ -3,8 +3,11 @@ package frc.robot;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import com.pathplanner.lib.path.PathPlannerTrajectory.State;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -18,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.InputAxis;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sparkmax.SparkDevice;
@@ -36,6 +40,7 @@ public class RobotContainer implements Logged {
   private final CommandXboxController m_driverController = new CommandXboxController(0);
 
   private final DrivebaseS m_drivebaseS;
+  private final BlobDetectionCamera m_noteCamera;
   @Log.NT
   private double loopTime = 0;
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
@@ -101,11 +106,11 @@ public class RobotContainer implements Logged {
                                   })
                           .collect(Collectors.toList()));
             });
-
+    m_noteCamera = new BlobDetectionCamera(addPeriodic);
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
 
-    m_autos = new Autos(m_drivebaseS);
+    m_autos = new Autos(m_drivebaseS, m_noteCamera);
     configureButtonBindings();
     addAutoRoutines();
 
@@ -125,6 +130,7 @@ public class RobotContainer implements Logged {
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
+    m_driverController.a().whileTrue(m_autos.driveToNote());
   }
 
   public void addAutoRoutines() {
@@ -153,6 +159,7 @@ public class RobotContainer implements Logged {
 
   public void updateFields() {
     m_drivebaseS.drawRobotOnField(m_field);
+    m_field.getObject("note").setPoses(m_noteCamera.getTargets(m_drivebaseS.getPose()));
     m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
   }
 
