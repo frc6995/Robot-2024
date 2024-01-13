@@ -14,7 +14,7 @@ import java.util.List;
 public class Constants {
 
   public static final class DriveConstants {
-    public static final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.5);
+    public static final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.75);
     public static final double WHEEL_RADIUS_M =
         Units.inchesToMeters(
             4.0 / 2.0); // 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
@@ -34,7 +34,9 @@ public class Constants {
         MAX_FWD_REV_SPEED_MPS / 0.125; // 0-full time of 0.25 second
     public static final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 =
         MAX_ROTATE_SPEED_RAD_PER_SEC / 0.25; // 0-full time of 0.25 second
-    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(16);
+
+    // For manual driving
+    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(2);
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(300);
     // HELPER ORGANIZATION CONSTANTS
     public static final int FL = 0; // Front Left Module Index
@@ -48,10 +50,10 @@ public class Constants {
     private static double HW = WHEEL_BASE_WIDTH_M / 2.0;
 
     public enum ModuleConstants {
-      FL("FL", 18, 17, 6, 5.648334, HW, HW),
-      FR("FR", 12, 11, 7, 3.797779, HW, -HW),
-      BL("BL", 16, 15, 8, 1.792148, -HW, HW),
-      BR("BR", 14, 13, 9, 5.632825, -HW, -HW);
+      FL("FL", 18, 17, 6, 0, HW, HW),
+      FR("FR", 12, 11, 7, -0.002726, HW, -HW),
+      BL("BL", 16, 15, 8, -0.002726, -HW, HW),
+      BR("BR", 14, 13, 9, -0.002726, -HW, -HW);
 
       public final String name;
       public final int driveMotorID;

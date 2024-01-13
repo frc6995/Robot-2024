@@ -480,6 +480,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     return run(
         () ->
             this.setModuleStates(
+              // TODO unnecessary allocation
                 new SwerveModuleState[] {
                   new SwerveModuleState(0, new Rotation2d(Math.PI / 2)), // FL
                   new SwerveModuleState(0, new Rotation2d(-Math.PI / 2)),
@@ -620,22 +621,22 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                   rot = rotAxis.getAsDouble();
                   rot *= MAX_TURN_SPEED;
                   // if still turning, set to false;
-                  isTurning = true; // Math.abs(rot) >= 0.05; //rad/s
+                  // isTurning = true; // Math.abs(rot) >= 0.05; //rad/s
                   // if it was true on the last iter, no longer true;
                   // if newly stopped turning
-                  if (!isTurning && lastIsTurning) {
-                    lastHeading = getPoseHeading().getRadians();
-                    m_thetaController.reset();
-                  }
+                  // if (!isTurning && lastIsTurning) {
+                  //   lastHeading = getPoseHeading().getRadians();
+                  //   m_thetaController.reset();
+                  // }
 
-                  if (!isTurning) {
-                    if (Math.abs(getPoseHeading().minus(new Rotation2d(lastHeading)).getRadians())
-                        < Units.degreesToRadians(1)) {
-                      rot = 0;
-                    } else {
-                      rot = m_thetaController.calculate(getPoseHeading().getRadians(), lastHeading);
-                    }
-                  }
+                  // if (!isTurning) {
+                  //   if (Math.abs(getPoseHeading().minus(new Rotation2d(lastHeading)).getRadians())
+                  //       < Units.degreesToRadians(1)) {
+                  //     rot = 0;
+                  //   } else {
+                  //     rot = m_thetaController.calculate(getPoseHeading().getRadians(), lastHeading);
+                  //   }
+                  // }
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
                   lastIsTurning = isTurning;
                 }));
