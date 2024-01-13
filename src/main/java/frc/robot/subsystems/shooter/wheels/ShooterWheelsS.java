@@ -21,9 +21,6 @@ public class ShooterWheelsS extends SubsystemBase {
   public class Constants{
     public static final int LEFT_CAN_ID = 31;
     public static final int RIGHT_CAN_ID = 32;
-
-
-  
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {
