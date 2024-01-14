@@ -8,11 +8,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.InputAxis;
 import frc.robot.util.TimingTracer;
@@ -40,6 +44,11 @@ public class RobotContainer implements Logged {
   private final CommandXboxController m_driverController = new CommandXboxController(0);
 
   private final DrivebaseS m_drivebaseS;
+
+  @Log.NT
+  private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(12), Units.feetToMeters(8));
+  private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(6), 0);
+  private final ShooterPivotS m_shooterPivotS;
   private final BlobDetectionCamera m_noteCamera;
   @Log.NT
   private double loopTime = 0;
@@ -89,6 +98,8 @@ public class RobotContainer implements Logged {
     if (RobotBase.isSimulation()) {
       PhotonCamera.setVersionCheckEnabled(false);
     }
+    m_shooterPivotS = new ShooterPivotS();
+    MECH_VISUALIZER_ROOT.append(m_shooterPivotS.SHOOTER_PIVOT);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
@@ -131,6 +142,7 @@ public class RobotContainer implements Logged {
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     m_driverController.a().whileTrue(m_autos.driveToNote());
+    m_driverController.b().whileTrue(m_shooterPivotS.runVoltage(()->12*m_driverController.getRightY()));
   }
 
   public void addAutoRoutines() {
