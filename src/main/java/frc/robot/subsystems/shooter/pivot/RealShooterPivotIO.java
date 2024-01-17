@@ -11,9 +11,11 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     private CANSparkMax m_motor;
     private SparkPIDController m_controller;
     private SparkRelativeEncoder m_encoder;
+    private double ffVolts;
     public RealShooterPivotIO() {
         super();
         m_motor = SparkDevice.getSparkMax(ShooterPivotS.Constants.CAN_ID);
+        // TODO add current limit, set PID constants, etc
         m_controller = m_motor.getPIDController();
     }
 
@@ -24,6 +26,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
 
     @Override
     public void setPIDFF(double angle, double ffVolts) {
+        this.ffVolts = ffVolts;
         m_controller.setReference(angle, ControlType.kPosition, 0, ffVolts);
     }
 
@@ -43,6 +46,11 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     @Override
     public double getVolts() {
         return m_motor.getAppliedOutput() * 12;
+    }
+
+    @Override
+    public double getPidVolts() {
+        return getVolts() - ffVolts;
     }
     
 }

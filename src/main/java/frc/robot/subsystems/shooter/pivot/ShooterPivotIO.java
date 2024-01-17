@@ -4,7 +4,6 @@ import monologue.Logged;
 import monologue.Annotations.Log;
 
 public abstract class ShooterPivotIO implements Logged {
-
     public ShooterPivotIO(){}
     @Log.NT
     public abstract double getAngle();
@@ -14,4 +13,5 @@ public abstract class ShooterPivotIO implements Logged {
     public abstract void setVolts(double volts);
     @Log.NT
     public abstract double getVolts();
+    public abstract double getPidVolts();
 }

@@ -46,8 +46,7 @@ public class RobotContainer implements Logged {
   private final DrivebaseS m_drivebaseS;
 
   @Log.NT
-  private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(12), Units.feetToMeters(8));
-  private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(6), 0);
+  private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   private final ShooterPivotS m_shooterPivotS;
   private final BlobDetectionCamera m_noteCamera;
   @Log.NT
@@ -99,7 +98,8 @@ public class RobotContainer implements Logged {
       PhotonCamera.setVersionCheckEnabled(false);
     }
     m_shooterPivotS = new ShooterPivotS();
-    MECH_VISUALIZER_ROOT.append(m_shooterPivotS.SHOOTER_PIVOT);
+    RobotVisualizer.setupVisualizer();
+    RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
@@ -142,7 +142,8 @@ public class RobotContainer implements Logged {
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     m_driverController.a().whileTrue(m_autos.driveToNote());
-    m_driverController.b().whileTrue(m_shooterPivotS.runVoltage(()->12*m_driverController.getRightY()));
+    m_driverController.x().onTrue(m_shooterPivotS.run(()->
+    m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
   }
 
   public void addAutoRoutines() {
