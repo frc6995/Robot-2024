@@ -71,15 +71,12 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
       m_io = new RealShooterPivotIO();
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
-    //setDefaultCommand(runVoltage(()->0));
   }
-  @Log.NT
-  public double getGoal() {return m_desiredState.position;}
-  @Log.NT
-  public double getGoalVelocity() {return m_desiredState.velocity;}
-  public double getAngle() {return m_io.getAngle();}
-  @Log.NT
-  public double getPidVolts() {return m_io.getPidVolts();}
+  @Log.NT public double getGoal() {return m_desiredState.position;}
+  @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
+  @Log.NT public double getAngle() {return m_io.getAngle();}
+  @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
+  @Log.NT public double getVolts() {return m_io.getVolts();}
   public void periodic() {
     // Update our visualization
     SHOOTER_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle()));
@@ -114,6 +111,10 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
 
   public Command runVoltage(DoubleSupplier voltage) {
     return run(()->m_io.setVolts(voltage.getAsDouble()));
+  }
+
+  public Command rotateToAngle(DoubleSupplier angleSupplier) {
+    return run(()->setAngle(angleSupplier.getAsDouble()));
   }
 
   /**
