@@ -50,6 +50,10 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
    */
   private State m_desiredState = new State();
 
+  /**
+   * A feedforward to assist the motor in keeping up with the profile.
+   * 
+   */
   public final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(
     Constants.K_S, Constants.K_V, Constants.K_A);
   /**
@@ -57,10 +61,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
    */
   public final MechanismLigament2d SHOOTER_PIVOT = new MechanismLigament2d(
     "shooter", Constants.CG_DIST * 2, 0, 4, new Color8Bit(235, 137, 52));
-  /**
-   * A feedforward to assist the motor in keeping up with the profile.
-   * 
-   */
+
   /** Creates a new ShooterPivotS. */
   public ShooterPivotS() {
     // Create the IO class.
