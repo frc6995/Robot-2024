@@ -1,22 +1,37 @@
 package frc.robot.subsystems.shooter.pivot;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
-import com.revrobotics.SparkRelativeEncoder;
+import edu.wpi.first.math.util.Units;
+import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.*;
+import static frc.robot.subsystems.shooter.pivot.RealShooterPivotIO.Constants.*;
 import com.revrobotics.CANSparkBase.ControlType;
+import com.revrobotics.CANSparkBase.IdleMode;
 
 import frc.robot.util.sparkmax.SparkDevice;
 
 public class RealShooterPivotIO extends ShooterPivotIO {
     private CANSparkMax m_motor;
     private SparkPIDController m_controller;
-    private SparkRelativeEncoder m_encoder;
+    private RelativeEncoder m_encoder;
     private double ffVolts;
     public RealShooterPivotIO() {
         super();
         m_motor = SparkDevice.getSparkMax(ShooterPivotS.Constants.CAN_ID);
-        // TODO add current limit, set PID constants, etc
+        m_motor.setIdleMode(IdleMode.kBrake);
+        m_motor.setInverted(INVERTED);
+        m_motor.setSmartCurrentLimit(CURRENT_LIMIT);
         m_controller = m_motor.getPIDController();
+        m_encoder = m_motor.getEncoder();
+        m_encoder.setPositionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
+        m_encoder.setVelocityConversionFactor(
+            Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)
+        );
+        m_controller.setP(kP);
+        m_controller.setI(kI);
+        m_controller.setD(kD);
+        m_controller.setFF(0);
     }
 
     @Override
@@ -53,4 +68,14 @@ public class RealShooterPivotIO extends ShooterPivotIO {
         return getVolts() - ffVolts;
     }
     
+    public class Constants {
+        public static final double kP = 0.1;
+        public static final double kI = 0;
+        public static final double kD = 0;
+        /**
+         * We want positive voltage to drive towards the lower hardstop.
+         */
+        public static final boolean INVERTED = false;
+        public static final int CURRENT_LIMIT = 20;
+    }
 }
