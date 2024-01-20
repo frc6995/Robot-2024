@@ -12,7 +12,7 @@ public class RobotVisualizer {
     private static final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", BASE_X, 0);
     private static final MechanismRoot2d SHOOTER_PIVOT_BASE = MECH_VISUALIZER.getRoot("shooter-pivot-base", BASE_X - Units.inchesToMeters(4), Units.inchesToMeters(9));
     private static final MechanismRoot2d INTAKE_PIVOT_BASE = MECH_VISUALIZER.getRoot("intake-pivot-base", BASE_X + Units.inchesToMeters(4), Units.inchesToMeters(9));
-     private static final MechanismRoot2d TRAP_PIVOT_BASE = MECH_VISUALIZER.getRoot("trap-pivot-base", BASE_X + Units.inchesToMeters(4), Units.inchesToMeters(9));
+    private static final MechanismRoot2d CLIMBER_BASE = MECH_VISUALIZER.getRoot("climber-base", BASE_X, Units.inchesToMeters(9));
     private static final MechanismLigament2d BACK_DRIVETRAIN_HALF = new MechanismLigament2d(
         "drive-front", Units.inchesToMeters(12.5), 180);
     public static void setupVisualizer() {
@@ -24,8 +24,8 @@ public class RobotVisualizer {
     public static void addIntake(MechanismLigament2d intake) {
         INTAKE_PIVOT_BASE.append(intake);
     }
-    public static void addTrap(MechanismLigament2d trap) {
-        TRAP_PIVOT_BASE.append(trap);
+    public static void addClimber(MechanismLigament2d climber){
+        CLIMBER_BASE.append(climber);
     }
 
 
