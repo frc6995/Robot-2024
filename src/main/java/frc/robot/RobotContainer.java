@@ -27,6 +27,7 @@ import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
+import frc.robot.subsystems.trap.pivot.TrapPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.InputAxis;
 import frc.robot.util.TimingTracer;
@@ -51,6 +52,7 @@ public class RobotContainer implements Logged {
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   private final ShooterPivotS m_shooterPivotS;
   private final IntakePivotS m_intakePivotS;
+  private final TrapPivotS m_trapPivotS;
   private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
   @Log.NT
@@ -103,11 +105,12 @@ public class RobotContainer implements Logged {
     }
     m_shooterPivotS = new ShooterPivotS();
     m_intakePivotS = new IntakePivotS();
+    m_trapPivotS = new TrapPivotS();
     m_climberS = new ClimberS();
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
-    RobotVisualizer.addClimber(m_climberS.ELEVATOR);
+    RobotVisualizer.addClimber(m_climberS.ELEVATOR.append(m_trapPivotS.TRAP_PIVOT));
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
