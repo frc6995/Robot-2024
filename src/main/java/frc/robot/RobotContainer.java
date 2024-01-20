@@ -25,8 +25,11 @@ import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.climber.ClimberS;
+import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
+import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
 import frc.robot.subsystems.trap.pivot.TrapPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.InputAxis;
@@ -51,17 +54,21 @@ public class RobotContainer implements Logged {
   @Log.NT
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   private final ShooterPivotS m_shooterPivotS;
+  private final ShooterWheelsS m_shooterWheelsS;
   private final IntakePivotS m_intakePivotS;
-  private final TrapPivotS m_trapPivotS;
+  private final IntakeRollerS m_intakeRollerS;
+  private final MidtakeS m_midtakeS;
+  //private final TrapPivotS m_trapPivotS;
   private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
+  private final LightStripS m_lightStripS;
   @Log.NT
   private double loopTime = 0;
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
   @Log.NT
   private final Field2d m_field = new Field2d();
 
-  private final Autos m_autos;
+  private final CommandGroups m_autos;
 
   private InputAxis m_fwdXAxis =
       new InputAxis("Forward", m_driverController::getLeftY)
@@ -104,13 +111,19 @@ public class RobotContainer implements Logged {
       PhotonCamera.setVersionCheckEnabled(false);
     }
     m_shooterPivotS = new ShooterPivotS();
+    m_shooterWheelsS = new ShooterWheelsS();
+    m_midtakeS = new MidtakeS();
     m_intakePivotS = new IntakePivotS();
-    m_trapPivotS = new TrapPivotS();
+    m_intakeRollerS = new IntakeRollerS();
+    m_lightStripS = LightStripS.getInstance();
+    ///m_trapPivotS = new TrapPivotS();
     m_climberS = new ClimberS();
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
+    m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
-    RobotVisualizer.addClimber(m_climberS.ELEVATOR.append(m_trapPivotS.TRAP_PIVOT));
+    //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
+    RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
@@ -132,7 +145,15 @@ public class RobotContainer implements Logged {
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
 
-    m_autos = new Autos(m_drivebaseS, m_noteCamera);
+    m_autos = new CommandGroups(
+      m_drivebaseS,
+      m_noteCamera,
+      m_intakePivotS,
+      m_intakeRollerS,
+      m_midtakeS,
+      m_shooterPivotS,
+      m_shooterWheelsS,
+      m_climberS, m_lightStripS);
     configureButtonBindings();
     addAutoRoutines();
 
@@ -155,10 +176,16 @@ public class RobotContainer implements Logged {
     m_driverController.a().whileTrue(m_autos.driveToNote());
     m_driverController.x().onTrue(m_shooterPivotS.run(()->
     m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
-    m_driverController.y().onTrue(m_intakePivotS.run(()->
-    m_intakePivotS.setAngle((IntakePivotS.Constants.CW_LIMIT + IntakePivotS.Constants.CCW_LIMIT) / 2.0)));
+    m_driverController.y()
+      .whileTrue(
+        parallel(
+         m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.CW_LIMIT),
+         m_intakeRollerS.intakeC()
+        ))
+      .whileFalse(m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.CCW_LIMIT));
     m_driverController.b().onTrue(m_climberS.run(()->
     m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
+        m_driverController.button(5).whileTrue(m_intakeRollerS.intakeC());
   }
 
   public void addAutoRoutines() {

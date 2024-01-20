@@ -60,7 +60,9 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    * For visualization.
    */
   public final MechanismLigament2d INTAKE_PIVOT = new MechanismLigament2d(
-    "intake", Constants.CG_DIST * 2, 0, 4, new Color8Bit(235, 137, 52));
+    "intake", Units.inchesToMeters(6), 0, 4, new Color8Bit(235, 137, 52));
+  public final MechanismLigament2d INTAKE_BEND = new MechanismLigament2d(
+    "intake-bend", Units.inchesToMeters(11), -80, 4, new Color8Bit(235, 137, 52));
 
   /** Creates a new IntakePivotS. */
   public IntakePivotS() {
@@ -72,6 +74,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
       m_io = new RealIntakePivotIO();
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
+    INTAKE_PIVOT.append(INTAKE_BEND);
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
@@ -138,7 +141,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
 
   public class Constants {
     //TODO: determine constants for intake pivot
-    public static final double CCW_LIMIT = Units.degreesToRadians(160);
+    public static final double CCW_LIMIT = Units.degreesToRadians(180);
     public static final double CW_LIMIT = Units.degreesToRadians(0);
     public static final int CAN_ID = 21;
     /**

@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.climber;
 
+import static frc.robot.subsystems.climber.ClimberS.Constants.CLIMBER_ANGLE;
 import static frc.robot.subsystems.climber.ClimberS.Constants.LOWER_LIMIT;
 
 import java.util.function.DoubleSupplier;
@@ -62,8 +63,9 @@ public class ClimberS extends SubsystemBase implements Logged {
    * For visualization.
    */
   public final MechanismLigament2d ELEVATOR = new MechanismLigament2d(
-    "climber", LOWER_LIMIT, 100, 4, new Color8Bit(235, 137, 52));
-
+    "climber", LOWER_LIMIT, Units.radiansToDegrees(CLIMBER_ANGLE), 8, new Color8Bit(235, 137, 52));
+  public final MechanismLigament2d TRAP_PIVOT_BASE = new MechanismLigament2d(
+    "trap-pivot-base", 0, -Units.radiansToDegrees(CLIMBER_ANGLE), 0, new Color8Bit());
   /** Creates a new ShooterPivotS. */
   public ClimberS() {
     // Create the IO class.
@@ -74,6 +76,8 @@ public class ClimberS extends SubsystemBase implements Logged {
       m_io = new RealClimberIO();
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
+    ELEVATOR.append(TRAP_PIVOT_BASE);
+    
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
@@ -116,7 +120,7 @@ public class ClimberS extends SubsystemBase implements Logged {
     return run(()->m_io.setVolts(voltage.getAsDouble()));
   }
 
-  public Command moveToLenghC(DoubleSupplier lengthSupplier) {
+  public Command moveToLengthC(DoubleSupplier lengthSupplier) {
     return run(()->setLength(lengthSupplier.getAsDouble()));
   }
 
@@ -139,11 +143,12 @@ public class ClimberS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
+    public static final double CLIMBER_ANGLE = Units.degreesToRadians(105);
     public static final double UPPER_LIMIT = Units.feetToMeters(3);
     /**
      * The distance between trap pivot axle and bottom of climber when retracted
      */
-    public static final double LOWER_LIMIT = Units.feetToMeters(2);
+    public static final double LOWER_LIMIT = Units.inchesToMeters(24);
     public static final int LEADER_CAN_ID = 51;
     public static final int FOLLOWER_CAN_ID = 52;
     /**
