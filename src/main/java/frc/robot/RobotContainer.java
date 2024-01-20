@@ -110,7 +110,8 @@ public class RobotContainer implements Logged {
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
-    RobotVisualizer.addClimber(m_climberS.ELEVATOR.append(m_trapPivotS.TRAP_PIVOT));
+    m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
+    RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(

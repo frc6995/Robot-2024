@@ -60,7 +60,7 @@ public class TrapPivotS extends SubsystemBase implements Logged {
    * For visualization.
    */
   public final MechanismLigament2d TRAP_PIVOT = new MechanismLigament2d(
-    "trap", Constants.CG_DIST * 2, 0, 4, new Color8Bit(235, 137, 52));
+    "trap", Units.inchesToMeters(10), 0, 4, new Color8Bit(235, 137, 52));
 
   /** Creates a new TrrapPivotS. */
   public TrapPivotS() {
@@ -138,8 +138,8 @@ public class TrapPivotS extends SubsystemBase implements Logged {
 
   public class Constants {
     //TODO: determine constants for trap pivot
-    public static final double CCW_LIMIT = Units.degreesToRadians(160);
-    public static final double CW_LIMIT = Units.degreesToRadians(0);
+    public static final double CCW_LIMIT = Units.degreesToRadians(180+15);
+    public static final double CW_LIMIT = Units.degreesToRadians(-5);
     public static final int CAN_ID = 53;
     /**
      * Also equivalent to motor radians per pivot radian

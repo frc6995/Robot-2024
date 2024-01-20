@@ -75,6 +75,8 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
+  @Log.NT public double getSetpoint() {return m_setpoint.position;}
+  @Log.NT public double getSetpointVelocity() {return m_setpoint.velocity;}
   @Log.NT public double getAngle() {return m_io.getAngle();}
   @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}

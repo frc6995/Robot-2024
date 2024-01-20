@@ -25,7 +25,7 @@ public class SimClimberIO extends ClimberIO {
     private PIDController m_pid = new PIDController(1, 0, 0);
     public SimClimberIO () {
         super();
-        m_elevatorSim.setState(VecBuilder.fill(ClimberS.Constants.UPPER_LIMIT,0));
+        m_elevatorSim.setState(VecBuilder.fill(ClimberS.Constants.LOWER_LIMIT,0));
         // we need this to calculate outputs
         m_elevatorSim.update(0.0001);
 

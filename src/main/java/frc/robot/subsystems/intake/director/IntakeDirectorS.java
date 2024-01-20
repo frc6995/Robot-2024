@@ -20,7 +20,7 @@ public class IntakeDirectorS extends SubsystemBase {
   }
   private CANSparkMax m_motor;
 
-  /** Creates a new IntakeRollerS. */
+  /** Creates a new IntakeDirectorS. */
   public IntakeDirectorS() {
     m_motor = SparkDevice.getSparkMax(Constants.CAN_ID);
     m_motor.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
