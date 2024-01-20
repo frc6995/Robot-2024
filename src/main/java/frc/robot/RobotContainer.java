@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
@@ -50,6 +51,7 @@ public class RobotContainer implements Logged {
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   private final ShooterPivotS m_shooterPivotS;
   private final IntakePivotS m_intakePivotS;
+  private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
   @Log.NT
   private double loopTime = 0;
@@ -101,9 +103,11 @@ public class RobotContainer implements Logged {
     }
     m_shooterPivotS = new ShooterPivotS();
     m_intakePivotS = new IntakePivotS();
+    m_climberS = new ClimberS();
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
+    RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
@@ -150,6 +154,8 @@ public class RobotContainer implements Logged {
     m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
     m_driverController.y().onTrue(m_intakePivotS.run(()->
     m_intakePivotS.setAngle((IntakePivotS.Constants.CW_LIMIT + IntakePivotS.Constants.CCW_LIMIT) / 2.0)));
+    m_driverController.b().onTrue(m_climberS.run(()->
+    m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
   }
 
   public void addAutoRoutines() {
