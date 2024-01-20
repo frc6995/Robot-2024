@@ -7,6 +7,9 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.sparkmax.SparkDevice;
@@ -20,12 +23,20 @@ public class IntakeRollerS extends SubsystemBase {
   }
   private CANSparkMax m_motor;
 
+    public final MechanismLigament2d INTAKE_ROLLER = new MechanismLigament2d(
+    "intake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
+
   /** Creates a new IntakeRollerS. */
   public IntakeRollerS() {
     m_motor = SparkDevice.getSparkMax(Constants.CAN_ID);
     m_motor.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
     m_motor.setIdleMode(IdleMode.kBrake);
     setDefaultCommand(stopC());
+  }
+
+  @Override
+  public void periodic() {
+      INTAKE_ROLLER.setAngle(INTAKE_ROLLER.getAngle() + m_motor.getAppliedOutput());
   }
 
   /**sets motor to outtake */
