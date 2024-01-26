@@ -38,6 +38,10 @@ public class RealIntakePivotIO extends IntakePivotIO {
     public double getAngle() {
         return m_encoder.getPosition();
     }
+    @Override
+    public double getVelocity() {
+        return m_encoder.getVelocity();
+    }
 
     @Override
     public void setPIDFF(double angle, double ffVolts) {

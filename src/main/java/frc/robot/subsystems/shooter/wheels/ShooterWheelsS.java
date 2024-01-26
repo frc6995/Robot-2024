@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter.wheels;
 
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
+
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkFlex;
@@ -11,41 +13,40 @@ import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.util.sparkmax.SparkDevice;
+import monologue.Logged;
 
 /**The shooter wheels that launch the note */
-public class ShooterWheelsS extends SubsystemBase {
-  private CANSparkFlex m_leftMotor;
-  private CANSparkFlex m_rightMotor;
+public class ShooterWheelsS extends SubsystemBase implements Logged {
+  private ShooterRoller m_topRoller;
+  private ShooterRoller m_bottomRoller;
   public class Constants{
-    public static final int LEFT_CAN_ID = 31;
-    public static final int RIGHT_CAN_ID = 32;
+    public static final int TOP_CAN_ID = 31;
+    public static final int BOTTOM_CAN_ID = 32;
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {
-    m_leftMotor = SparkDevice.getSparkFlex(Constants.LEFT_CAN_ID);
-    m_rightMotor = SparkDevice.getSparkFlex(Constants.RIGHT_CAN_ID);
-    m_rightMotor.setInverted(true);
-    m_leftMotor.setIdleMode(IdleMode.kCoast);
-    m_rightMotor.setIdleMode(IdleMode.kCoast);
-
-    setDefaultCommand(stopC());
-  }
-  /**Sets the voltage of the shooter motor to specified voltage */
-  public void setVoltage(double voltage){
-    m_leftMotor.setVoltage(voltage);
-    m_rightMotor.setVoltage(voltage);
+    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID, false, "Top");
+    topSysId = m_topRoller.m_idRoutine;
+    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, "Bottom");
+    bottomSysId = m_bottomRoller.m_idRoutine;
   }
   /**Stops the shooter motors */
   public Command stopC(){
-    return run(()->setVoltage(0));
+    return parallel(
+      m_topRoller.stopC(),
+      m_bottomRoller.stopC()
+    );
   }
-  /**returns a Command that runs the shooter motors at specified voltage */
-  public Command spinC(double voltage){
-    return run(()->setVoltage(voltage));
+
+  public Command spinC(DoubleSupplier topSpeed, DoubleSupplier bottomSpeed){
+    return parallel(
+      m_topRoller.spinC(topSpeed),
+      m_bottomRoller.spinC(bottomSpeed)
+    );
   }
-  /**returns a Command that runs the shooter motors at supplied voltage */
-  public Command spinC(DoubleSupplier voltage){
-    return run(()->setVoltage(voltage.getAsDouble()));
-  }
+
+  public final SysIdRoutine topSysId;
+  public final SysIdRoutine bottomSysId;
 }

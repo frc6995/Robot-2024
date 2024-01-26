@@ -4,6 +4,9 @@
 
 package frc.robot.subsystems.intake.pivot;
 
+import static edu.wpi.first.wpilibj2.command.Commands.idle;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -15,15 +18,24 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.MutableMeasure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
+import static edu.wpi.first.units.Units.*;
 
 /**
  * Convention:
@@ -45,6 +57,8 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    * The setpoint to be tracking at the moment.
    */
   private State m_setpoint = new State();
+
+  private State m_nextSetpoint = new State();
   /**
    * The end goal of the profile (our eventual desired position)
    */
@@ -75,10 +89,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
+    setDefaultCommand(runVoltage(()->0));
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
   @Log.NT public double getAngle() {return m_io.getAngle();}
+  @Log.NT public double getVelocity() {return m_io.getVelocity();}
   @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}
   public void periodic() {
@@ -89,14 +105,15 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     if (DriverStation.isEnabled()) {
       // If enabled, calculate the next step in the profile from our previous setpoint
       // to our desired state
+      m_nextSetpoint = m_profile.calculate(0.04, m_setpoint, m_desiredState);
       m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
       // log that information
       log("setpointVelocity", m_setpoint.velocity);
       log("setpointPosition", m_setpoint.position);
       // Calculate the feedforward. This is partly to counter gravity
       double ffVolts = getGravityFF() + getVelocityFF();
-
-      m_io.setPIDFF(m_setpoint.position, ffVolts);
+      //m_io.setVolts(ffVolts);
+      //m_io.setPIDFF(m_setpoint.position, ffVolts);
     } else {
       // If disabled, continuously update setpoint and goal to avoid
       // sudden movement on re-enable.
@@ -120,7 +137,18 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   public Command rotateToAngle(DoubleSupplier angleSupplier) {
     return run(()->setAngle(angleSupplier.getAsDouble()));
   }
-
+  public Command deploy(){
+    return rotateToAngle(()->Constants.CW_LIMIT);
+  }
+  public Command retract(){
+    return rotateToAngle(()->Constants.CCW_LIMIT);
+  }
+  public Command hold(){
+    return sequence(
+      runOnce(()->setAngle(getAngle())),
+      idle(this)
+    );
+  }
   /**
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
@@ -136,9 +164,29 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    */
   @Log.NT
   public double getVelocityFF() {
-    return m_feedforward.calculate(m_setpoint.velocity);
+    return m_feedforward.calculate(m_setpoint.velocity, m_nextSetpoint.velocity, 0.02);
   }
+  private MutableMeasure<Angle> positionMeasure = MutableMeasure.ofBaseUnits(0, Radians);
+  private MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RadiansPerSecond);
+  private MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
+  public SysIdRoutine m_idRoutine = new SysIdRoutine(
+    new Config(
+      Volts.of(0.5).per(Second),
+      Volts.of(1),
+      Seconds.of(10)
+    ), 
+    new Mechanism(
+      (Measure<Voltage> volts)->m_io.setVolts(volts.in(Volts)),
+      (log)->{
+        log.motor("intakePivot").angularPosition(
+          positionMeasure.mut_replace(getAngle(), Radians)
+        ).angularVelocity(
+          velocityMeasure.mut_replace(getVelocity(), RadiansPerSecond)
+        ).voltage(
+          voltsMeasure.mut_replace(getVolts(), Volts)
+        );
 
+      }, this, "intake"));
   public class Constants {
     //TODO: determine constants for intake pivot
     public static final double CCW_LIMIT = Units.degreesToRadians(180);
@@ -148,7 +196,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      * Also equivalent to motor radians per pivot radian
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 50;
-    public static final double K_G = 0.47;
+    public static final double K_G = 0.15;
     public static final double K_S = 0;
     /**
      * Units: Volts / (Pivot radians/sec)
@@ -160,13 +208,13 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      */
     public static final double K_V =  
       MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.00001;
+    public static final double K_A = 0.06;
     public static final double CG_DIST = Units.inchesToMeters(6);
     /**
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      1, 2);
+      5, 5);
   }
 
 }

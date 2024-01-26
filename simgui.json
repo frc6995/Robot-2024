@@ -1,4 +1,11 @@
 {
+  "HALProvider": {
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "//Robot/m_field": "Field2d",
@@ -15,12 +22,15 @@
         }
       },
       "/Robot/m_field": {
-        "bottom": 544,
-        "builtin": "2024 Crescendo",
-        "height": 8.013679504394531,
-        "left": 46,
-        "right": 1088,
-        "top": 36,
+        "bottom": 1476,
+        "height": 8.210550308227539,
+        "left": 150,
+        "pathplanner": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "right": 2961,
+        "top": 79,
         "width": 16.541748046875,
         "window": {
           "visible": true
@@ -108,6 +118,15 @@
             "open": true
           }
         },
+        "m_field": {
+          "double[]##v_/Robot/m_field/Robot": {
+            "open": true
+          },
+          "open": true
+        },
+        "m_intakePivotS": {
+          "open": true
+        },
         "m_shooterPivotS": {
           "m_io": {
             "open": true
@@ -129,7 +148,8 @@
         "open": true
       },
       "open": true
-    }
+    },
+    "visible": true
   },
   "Plot": {
     "Plot <0>": {
@@ -141,7 +161,88 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 320,
+          "height": 732,
+          "series": [
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getGoal"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getAngle"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/setpointPosition"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getVolts"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getGravityFF"
+            },
+            {
+              "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getVelocityFF"
+            },
+            {
+              "color": [
+                0.8549020290374756,
+                0.545098066329956,
+                0.7647059559822083,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterPivotS/getPidVolts"
+            }
+          ]
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    },
+    "Plot <1>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 471,
           "series": [
             {
               "color": [
@@ -150,7 +251,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Robot/m_drivebaseS/io/getCurrentPositions[0]/angle/value"
+              "id": "NT:/Robot/m_intakePivotS/getVolts"
             },
             {
               "color": [
@@ -159,7 +260,85 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/Robot/m_drivebaseS/io/currentPositions[0]/angle/value"
+              "id": "NT:/Robot/m_intakePivotS/getPidVolts"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getGravityFF"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getVelocityFF"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getAngle"
+            },
+            {
+              "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getGoal"
+            },
+            {
+              "color": [
+                0.8549020290374756,
+                0.545098066329956,
+                0.7647059559822083,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/setpointPosition"
+            }
+          ]
+        }
+      ]
+    },
+    "Plot <2>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 332,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getVelocity"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/setpointVelocity"
             }
           ]
         }

@@ -33,6 +33,10 @@ public class SimIntakePivotIO extends IntakePivotIO {
     public double getAngle() {
         return m_pivotSim.getAngleRads();
     }
+    @Override
+    public double getVelocity() {
+        return m_pivotSim.getVelocityRadPerSec();
+    }
 
     @Override
     public void setPIDFF(double angle, double ffVolts) {
@@ -82,8 +86,7 @@ public class SimIntakePivotIO extends IntakePivotIO {
         public static final LinearSystem<N2, N1, N1> PLANT =
             LinearSystemId.createSingleJointedArmSystem(
                 DCMotor.getNEO(1), 
-                SingleJointedArmSim.estimateMOI(IntakePivotS.Constants.CG_DIST, 5),
+                SingleJointedArmSim.estimateMOI(IntakePivotS.Constants.CG_DIST*2, 5),
             IntakePivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
-    }
-    
+    }    
 }

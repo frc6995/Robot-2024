@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -120,6 +121,7 @@ public class RobotContainer implements Logged {
     m_climberS = new ClimberS();
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
+    RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
@@ -169,6 +171,7 @@ public class RobotContainer implements Logged {
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
+    m_autos.pathWithEvents();
   }
 
   public void configureButtonBindings() {
@@ -178,14 +181,32 @@ public class RobotContainer implements Logged {
     m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
     m_driverController.y()
       .whileTrue(
-        parallel(
-         m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.CW_LIMIT),
-         m_intakeRollerS.intakeC()
-        ))
-      .whileFalse(m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.CCW_LIMIT));
+        sequence(
+        deadline(
+          m_autos.midtakeReceiveNote().asProxy(),
+          m_autos.deployRunIntake()
+        ),
+        m_autos.retractStopIntake()
+      )
+    );
     m_driverController.b().onTrue(m_climberS.run(()->
     m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
-        m_driverController.button(5).whileTrue(m_intakeRollerS.intakeC());
+    // m_driverController.button(5).whileTrue(
+    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
+    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))
+    // );
+    // m_driverController.button(6).whileTrue(
+    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
+    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(5))
+    // );
+    // m_driverController.button(7).whileTrue(
+    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
+    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(10))
+    // );
+    // m_driverController.button(8).whileTrue(
+    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
+    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(10))
+    // );
   }
 
   public void addAutoRoutines() {

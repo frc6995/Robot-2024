@@ -25,6 +25,10 @@ public class RobotVisualizer {
     public static void addShooter(MechanismLigament2d shooter) {
         SHOOTER_PIVOT_BASE.append(shooter);
     }
+
+    public static void addMidtake(MechanismLigament2d midtake) {
+        SHOOTER_PIVOT_BASE.append(midtake);
+    }
     public static void addIntake(MechanismLigament2d intake) {
         INTAKE_PIVOT_BASE.append(intake);
     }
