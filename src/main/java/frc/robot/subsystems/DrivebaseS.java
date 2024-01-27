@@ -31,9 +31,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Robot;
@@ -115,6 +119,22 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
     m_xController.setTolerance(0.01);
     m_yController.setTolerance(0.01);
+    m_linearIdRoutine =  new SysIdRoutine(
+      new Config(),
+      new Mechanism(volts->{
+        double voltage = volts.baseUnitMagnitude();
+        io.setModuleStates(new SwerveModuleState[] {
+          new SwerveModuleState(voltage, new Rotation2d()),
+          new SwerveModuleState(voltage, new Rotation2d()),
+          new SwerveModuleState(voltage, new Rotation2d()),
+          new SwerveModuleState(voltage, new Rotation2d())
+        }, true);
+      },
+      io::logDriveMotors,
+      this,
+      "drivebase"
+      )
+    );
     resetPose(new Pose2d());
   }
 
@@ -244,7 +264,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    * control the linear and rotational values for the modules
    */
   public void setModuleStates(SwerveModuleState[] moduleStates) {
-    io.setModuleStates(moduleStates);
+    io.setModuleStates(moduleStates, false);
   }
 
   /*
@@ -422,6 +442,8 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         m_yController.getSetpoint(),
         new Rotation2d(m_thetaController.getSetpoint()));
   }
+
+  public SysIdRoutine m_linearIdRoutine;
 
   /**** COMMANDS */
 

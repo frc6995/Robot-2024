@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.SPI.Port;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 public abstract class SwerveDriveIO implements Logged {
   protected final AHRS m_navx = new AHRS(Port.kMXP, (byte) 50);
   protected List<ModuleIO> m_modules;
+  public boolean isSysid = false;
 
   @Log.NT
   private SwerveModuleState[] currentStates =
@@ -57,9 +59,11 @@ public abstract class SwerveDriveIO implements Logged {
   private void periodic() {
     updateModulePositions();
     updateModuleStates();
+    m_modules.forEach((m)->m.periodic(isSysid));
   }
 
-  public void setModuleStates(SwerveModuleState[] moduleStates) {
+  public void setModuleStates(SwerveModuleState[] moduleStates, boolean isSysid) {
+    this.isSysid = isSysid;
     for (int i = 0; i < NUM_MODULES; i++) {
       m_modules.get(i).setDesiredState(moduleStates[i]);
     }
@@ -116,5 +120,9 @@ public abstract class SwerveDriveIO implements Logged {
 
   public double getPitch() {
     return Units.degreesToRadians(m_navx.getPitch());
+  }
+
+  public void logDriveMotors(SysIdRoutineLog log) {
+    m_modules.forEach(m->m.logDriveMotor(log));
   }
 }

@@ -78,8 +78,8 @@ public class Vision {
     }
 
     public class Constants {
-        public static final Map<String, Transform3d> cameras = Map.of(
-                "OV9281-1", new Transform3d(0, 0, 0, new Rotation3d()));
+        public static final Map<String, Transform3d> cameras = Map.of();
+             //   "OV9281-1", new Transform3d(0, 0, 0, new Rotation3d()));
         public static AprilTagFieldLayout layout;
         static {
             try {

@@ -22,32 +22,32 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 public class CommandGroups {
   private DrivebaseS m_drivebaseS;
-  private IntakePivotS m_intakePivotS;
-  private IntakeRollerS m_intakeRollerS;
-  private MidtakeS m_midtakeS;
-  private ShooterPivotS m_shooterPivotS;
-  private ShooterWheelsS m_shooterWheelsS;
-  private ClimberS m_climberS;
+  // private IntakePivotS m_intakePivotS;
+  // private IntakeRollerS m_intakeRollerS;
+  // private MidtakeS m_midtakeS;
+  // private ShooterPivotS m_shooterPivotS;
+  // private ShooterWheelsS m_shooterWheelsS;
+  // private ClimberS m_climberS;
   private BlobDetectionCamera m_noteCamera;
   private LightStripS m_lightStripS;
 
   public CommandGroups(
     DrivebaseS drivebaseS, 
     BlobDetectionCamera noteCamera,
-    IntakePivotS intakePivotS,
-    IntakeRollerS intakeRollerS,
-    MidtakeS midtakeS,
-    ShooterPivotS shooterPivotS,
-    ShooterWheelsS shooterWheelsS,
-    ClimberS climberS,
+    // IntakePivotS intakePivotS,
+    // IntakeRollerS intakeRollerS,
+    // MidtakeS midtakeS,
+    // ShooterPivotS shooterPivotS,
+    // ShooterWheelsS shooterWheelsS,
+    // ClimberS climberS,
     LightStripS lightStripS) {
     m_drivebaseS = drivebaseS;
-    m_intakePivotS = intakePivotS;
-    m_intakeRollerS = intakeRollerS;
-    m_midtakeS = midtakeS;
-    m_shooterPivotS = shooterPivotS;
-    m_shooterWheelsS = shooterWheelsS;
-    m_climberS = climberS;
+    // m_intakePivotS = intakePivotS;
+    // m_intakeRollerS = intakeRollerS;
+    // m_midtakeS = midtakeS;
+    // m_shooterPivotS = shooterPivotS;
+    // m_shooterWheelsS = shooterWheelsS;
+    // m_climberS = climberS;
     m_lightStripS = lightStripS;
     m_noteCamera = noteCamera;
   }
@@ -57,21 +57,21 @@ public class CommandGroups {
    * 
    * End: When note is in midtake
    */
-  public Command deployRunIntake() {
-    return parallel(
-      m_intakePivotS.deploy(),
-      m_intakeRollerS.intakeC()
-    );
-  }
-  public Command retractStopIntake() {
-    return parallel(
-      m_intakePivotS.retract(),
-      m_intakeRollerS.stopC()
-    );
-  }
-  public Command midtakeReceiveNote() {
-    return m_midtakeS.intakeC().withTimeout(10); // TODO replace with sensor logic
-  }
+  // public Command deployRunIntake() {
+  //   return parallel(
+  //     m_intakePivotS.deploy(),
+  //     m_intakeRollerS.intakeC()
+  //   );
+  // }
+  // public Command retractStopIntake() {
+  //   return parallel(
+  //     m_intakePivotS.retract(),
+  //     m_intakeRollerS.stopC()
+  //   );
+  // }
+  // public Command midtakeReceiveNote() {
+  //   return m_midtakeS.intakeC().withTimeout(10); // TODO replace with sensor logic
+  // }
   public Command choreo() {
     return m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("NewPath"));
   }
