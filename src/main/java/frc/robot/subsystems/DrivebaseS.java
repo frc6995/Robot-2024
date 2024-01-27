@@ -100,43 +100,22 @@ public class DrivebaseS extends SubsystemBase implements Logged {
           ModuleConstants.BL.centerOffset,
           ModuleConstants.BR.centerOffset);
 
-  /**
-   * odometry for the robot, measured in meters for linear motion and radians for rotational motion
-   * Takes in kinematics and robot angle for parameters
-   */
-  private final SwerveDrivePoseEstimator m_poseEstimator;
-
-  private final List<PhotonPoseEstimator> m_cameras =
-    List.of();
-      // List.of(
-      //     new PhotonPoseEstimator(
-      //         VisionConstants.TAG_FIELD_LAYOUT,
-      //         PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-      //         new PhotonCamera(VisionConstants.CAM_1_NAME),
-      //         VisionConstants.robotToCam1));
-
-  private Pose2d multitagPose = new Pose2d();
+  private final Vision m_vision;
   private final BiConsumer<String, PathPlannerTrajectory> drawTrajectory;
 
   public DrivebaseS(
       Consumer<Runnable> addPeriodic, BiConsumer<String, PathPlannerTrajectory> drawTrajectory) {
     io = Robot.isReal() ? new RealSwerveDriveIO(addPeriodic) : new SimSwerveDriveIO(addPeriodic);
     this.drawTrajectory = drawTrajectory;
-    m_poseEstimator =
-        new SwerveDrivePoseEstimator(
-            m_kinematics,
-            getHeading(),
-            getModulePositions(),
-            new Pose2d(),
-            VecBuilder.fill(0.1, 0.1, 1000),
-            VecBuilder.fill(1, 1, Math.PI));
-    resetPose(new Pose2d(4, 4, new Rotation2d()));
+    m_vision = new Vision(m_kinematics, io::getGyroHeading, io::getCurrentPositions);
+    m_vision.resetPose(new Pose2d(4, 4, new Rotation2d()));
     m_thetaController.setTolerance(Units.degreesToRadians(0.5));
     m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
     m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
     m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
     m_xController.setTolerance(0.01);
     m_yController.setTolerance(0.01);
+    resetPose(new Pose2d());
   }
 
   public Rotation3d getRotation3d() {
@@ -155,24 +134,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
   @Override
   public void periodic() {
-
-    m_poseEstimator.update(getHeading(), getModulePositions());
-    if (RobotBase.isReal()) {
-      for (PhotonPoseEstimator estimator : m_cameras) {
-        var robotPoseOpt = estimator.update();
-        if (robotPoseOpt.isEmpty()) {
-          continue;
-        }
-        var robotPose = robotPoseOpt.get();
-        var confidence =
-            AprilTags.calculateVisionUncertainty(
-                robotPose.estimatedPose.getX(),
-                getPoseHeading(),
-                new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
-        m_poseEstimator.addVisionMeasurement(
-            robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, confidence);
-      }
-    }
+    m_vision.periodic();
   }
 
   /**
@@ -310,7 +272,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    * vision processing.
    */
   public Pose2d getPose() {
-    return m_poseEstimator.getEstimatedPosition();
+    return m_vision.getPose();
   }
 
   /**
@@ -348,7 +310,8 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public void resetPose(Pose2d pose) {
     io.resetPose(pose);
-    m_poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
+
+    m_vision.resetPose(pose);
   }
 
   /** Reset the measured distance driven for each module. */
@@ -414,7 +377,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
-    field.getObject("multitag").setPose(multitagPose);
     // Draw a pose that is based on the robot pose, but shifted by the translation
     // of the module relative to robot center,
     // then rotated around its own center by the angle of the module.

@@ -163,34 +163,30 @@ public class RobotContainer implements Logged {
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
-    // Delay either side of burning flash on all spark maxes (this)
-    Timer.delay(0.3);
     SparkDevice.burnFlashInSync();
-    Timer.delay(0.2);
     Commands.sequence(waitSeconds(4), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
-    m_autos.pathWithEvents();
   }
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    m_driverController.a().whileTrue(m_autos.driveToNote());
-    m_driverController.x().onTrue(m_shooterPivotS.run(()->
-    m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
-    m_driverController.y()
-      .whileTrue(
-        sequence(
-        deadline(
-          m_autos.midtakeReceiveNote().asProxy(),
-          m_autos.deployRunIntake()
-        ),
-        m_autos.retractStopIntake()
-      )
-    );
-    m_driverController.b().onTrue(m_climberS.run(()->
-    m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
+    // m_driverController.a().whileTrue(m_autos.driveToNote());
+    // m_driverController.x().onTrue(m_shooterPivotS.run(()->
+    // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
+    // m_driverController.y()
+    //   .whileTrue(
+    //     sequence(
+    //     deadline(
+    //       m_autos.midtakeReceiveNote().asProxy(),
+    //       m_autos.deployRunIntake()
+    //     ),
+    //     m_autos.retractStopIntake()
+    //   )
+    // );
+    // m_driverController.b().onTrue(m_climberS.run(()->
+    // m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
     // m_driverController.button(5).whileTrue(
     //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
     //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))

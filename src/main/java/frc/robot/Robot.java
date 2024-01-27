@@ -37,7 +37,6 @@ public class Robot extends TimedRobot {
           AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
         },
         0.5);
-
     System.gc();
   }
 
@@ -46,6 +45,7 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     robotContainer.periodic();
     matchTimeEntry.setNumber(DriverStation.getMatchTime());
+    NetworkTableInstance.getDefault().flush();
   }
 
   @Override

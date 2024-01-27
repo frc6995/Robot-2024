@@ -6,12 +6,16 @@ import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sparkmax.SparkDevice;
@@ -20,7 +24,7 @@ import java.util.function.Consumer;
 
 public class RealModuleIO extends ModuleIO {
 
-  protected final CANSparkMax m_driveMotor;
+  protected final CANSparkFlex m_driveMotor;
   protected final CANSparkMax m_steerMotor;
   protected final SparkPIDController m_driveController;
   protected final SparkPIDController m_rotationController;
@@ -34,17 +38,20 @@ public class RealModuleIO extends ModuleIO {
 
   public RealModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
     super(addPeriodic, moduleConstants);
-    m_driveMotor = SparkDevice.getSparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
+    m_driveMotor = SparkDevice.getSparkFlex(moduleConstants.driveMotorID, MotorType.kBrushless);
     m_steerMotor = SparkDevice.getSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
+    m_driveMotor.restoreFactoryDefaults();
+    Timer.delay(0.5);
+    m_steerMotor.restoreFactoryDefaults();
+    Timer.delay(0.5);
     var magEncoder = m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle);
     // Drive motor config
     m_driveMotor.setSmartCurrentLimit(50);
     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-    var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    System.out.println("drive config " + m_moduleConstants.driveMotorID + error.toString());
     m_driveEncoder = m_driveMotor.getEncoder();
     m_driveEncoder.setPositionConversionFactor(
         Math.PI
@@ -68,10 +75,11 @@ public class RealModuleIO extends ModuleIO {
     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
     magEncoder.setPositionConversionFactor(Math.PI * 2);
     magEncoder.setVelocityConversionFactor(Math.PI * 2 * 60);
+    magEncoder.setInverted(true);
+    m_steerMotor.setInverted(true);
     m_magEncoder =
         new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_moduleConstants.magEncoderOffset);
     m_steerMotor.setIdleMode(IdleMode.kBrake);
-    m_steerMotor.setInverted(true);
     m_driveController = m_driveMotor.getPIDController();
     m_rotationController = m_steerMotor.getPIDController();
     m_driveController.setFeedbackDevice(m_driveMotor.getEncoder());
@@ -87,7 +95,14 @@ public class RealModuleIO extends ModuleIO {
     m_rotationController.setP(0.5);
     m_rotationController.setI(0);
     m_rotationController.setD(0);
+    resetDistance();
+    reinitRotationEncoder();
     addPeriodic.accept(this::updateEncoders);
+    new Trigger(RobotController::getUserButton).onTrue(
+      Commands.runOnce(()->m_steerMotor.setIdleMode(IdleMode.kCoast)).ignoringDisable(true)
+    ).onFalse(
+      Commands.runOnce(()->m_steerMotor.setIdleMode(IdleMode.kBrake)).ignoringDisable(true)
+    );
   }
 
   public void updateEncoders() {

@@ -50,10 +50,10 @@ public class Constants {
     private static double HW = WHEEL_BASE_WIDTH_M / 2.0;
 
     public enum ModuleConstants {
-      FL("FL", 18, 17, 6, 0, HW, HW),
-      FR("FR", 12, 11, 7, -0.002726, HW, -HW),
-      BL("BL", 16, 15, 8, -0.002726, -HW, HW),
-      BR("BR", 14, 13, 9, -0.002726, -HW, -HW);
+      FL("FL", 18, 17, 6, Math.PI, HW, HW),
+      FR("FR", 12, 11, 7, 0, HW, -HW),
+      BL("BL", 16, 15, 8, Math.PI, -HW, HW),
+      BR("BR", 14, 13, 9, 0, -HW, -HW);
 
       public final String name;
       public final int driveMotorID;
@@ -85,8 +85,8 @@ public class Constants {
       }
     }
 
-    public static final double WHEEL_REVS_PER_ENC_REV = 1.0 / 5.14;
-    public static final double AZMTH_REVS_PER_ENC_REV = 1.0 / 12.8;
+    public static final double WHEEL_REVS_PER_ENC_REV = 1.0 / 6.12;
+    public static final double AZMTH_REVS_PER_ENC_REV = 7.0 / 150.0;
 
     public static final double STEER_MAX_SPEED_RAD_PER_SEC = 7.8 * 2 * Math.PI;
     public static final double STEER_MAX_ACCEL_RAD_PER_SEC_SQ = 400 * 2 * Math.PI;

@@ -98,14 +98,14 @@ public abstract class ModuleIO implements Logged {
 
   private void setState() {
     SwerveModuleState state =
-        SwerveModuleState.optimize(m_desiredState, new Rotation2d(getAngle()));
+    SwerveModuleState.optimize(m_desiredState, new Rotation2d(getAngle()));
 
     state.speedMetersPerSecond *=
         Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
     double prevVelSetpoint = m_driveSetpoint;
     m_driveSetpoint = state.speedMetersPerSecond;
     double accel = (state.speedMetersPerSecond - prevVelSetpoint) / 0.02;
-    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, accel));
+    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint,0));
 
     m_steerSetpoint = state.angle.getRadians();
     // Get error which is the smallest distance between goal and measurement
@@ -144,6 +144,7 @@ public abstract class ModuleIO implements Logged {
 
   public void resetSteerController() {
     m_steerSetpoint = getAngle();
+    m_desiredState.angle = new Rotation2d(getAngle());
   }
 
   @Log.NT
