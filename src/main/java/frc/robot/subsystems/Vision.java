@@ -13,6 +13,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,11 +21,13 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.AprilTags;
+import monologue.Logged;
 
-public class Vision {
+public class Vision implements Logged {
     private SwerveDrivePoseEstimator m_poseEstimator;
     private Supplier<Rotation2d> getHeading;
     private Supplier<SwerveModulePosition[]> getModulePositions;
@@ -59,12 +62,13 @@ public class Vision {
                     continue;
                 }
                 var robotPose = robotPoseOpt.get();
-                var confidence = AprilTags.calculateVisionUncertainty(
-                        robotPose.estimatedPose.getX(),
-                        getPose().getRotation(),
-                        new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
+                // var confidence = AprilTags.calculateVisionUncertainty(
+                //         robotPose.estimatedPose.getX(),
+                //         getPose().getRotation(),
+                //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
+                log("visionPose3d", robotPose.estimatedPose);
                 m_poseEstimator.addVisionMeasurement(
-                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, confidence);
+                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.1, 0.1, 0.1));
             }
         }
     }
@@ -79,7 +83,10 @@ public class Vision {
 
     public class Constants {
         public static final Map<String, Transform3d> cameras = Map.of(
-                "OV9281-1", new Transform3d(0, 0, 0, new Rotation3d()));
+                "OV9281-3", new Transform3d(
+                    Units.inchesToMeters(0.5), -Units.inchesToMeters(0.5), Units.inchesToMeters(22.75),
+                    new Rotation3d(0, -Units.degreesToRadians(15), Math.PI)
+                ));
         public static AprilTagFieldLayout layout;
         static {
             try {

@@ -54,13 +54,13 @@ public class RobotContainer implements Logged {
 
   @Log.NT
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
-  private final ShooterPivotS m_shooterPivotS;
-  private final ShooterWheelsS m_shooterWheelsS;
-  private final IntakePivotS m_intakePivotS;
-  private final IntakeRollerS m_intakeRollerS;
-  private final MidtakeS m_midtakeS;
-  //private final TrapPivotS m_trapPivotS;
-  private final ClimberS m_climberS;
+  // private final ShooterPivotS m_shooterPivotS;
+  // private final ShooterWheelsS m_shooterWheelsS;
+  // private final IntakePivotS m_intakePivotS;
+  // private final IntakeRollerS m_intakeRollerS;
+  // private final MidtakeS m_midtakeS;
+  // //private final TrapPivotS m_trapPivotS;
+  // private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
   private final LightStripS m_lightStripS;
   @Log.NT
@@ -108,24 +108,24 @@ public class RobotContainer implements Logged {
   }
 
   public RobotContainer(Consumer<Runnable> addPeriodic) {
-    if (RobotBase.isSimulation()) {
+    if (true || RobotBase.isSimulation()) {
       PhotonCamera.setVersionCheckEnabled(false);
     }
-    m_shooterPivotS = new ShooterPivotS();
-    m_shooterWheelsS = new ShooterWheelsS();
-    m_midtakeS = new MidtakeS();
-    m_intakePivotS = new IntakePivotS();
-    m_intakeRollerS = new IntakeRollerS();
+    // m_shooterPivotS = new ShooterPivotS();
+    // m_shooterWheelsS = new ShooterWheelsS();
+    // m_midtakeS = new MidtakeS();
+    // m_intakePivotS = new IntakePivotS();
+    // m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
-    ///m_trapPivotS = new TrapPivotS();
-    m_climberS = new ClimberS();
-    RobotVisualizer.setupVisualizer();
-    RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
-    RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
-    m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
-    RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
-    //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
-    RobotVisualizer.addClimber(m_climberS.ELEVATOR);
+    // ///m_trapPivotS = new TrapPivotS();
+    // m_climberS = new ClimberS();
+    // RobotVisualizer.setupVisualizer();
+    // RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
+    // RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
+    // m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
+    // RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
+    // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
+    // RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
@@ -150,12 +150,13 @@ public class RobotContainer implements Logged {
     m_autos = new CommandGroups(
       m_drivebaseS,
       m_noteCamera,
-      m_intakePivotS,
-      m_intakeRollerS,
-      m_midtakeS,
-      m_shooterPivotS,
-      m_shooterWheelsS,
-      m_climberS, m_lightStripS);
+      // m_intakePivotS,
+      // m_intakeRollerS,
+      // m_midtakeS,
+      // m_shooterPivotS,
+      // m_shooterWheelsS,
+      //m_climberS,
+      m_lightStripS);
     configureButtonBindings();
     addAutoRoutines();
 

@@ -51,7 +51,7 @@ public abstract class SwerveDriveIO implements Logged {
 
   @Log.NT
   public Rotation2d getGyroHeading() {
-    return Rotation2d.fromDegrees(-m_navx.getAngle());
+    return new Rotation2d(Units.degreesToRadians(-m_navx.getAngle()));
   }
 
   private void periodic() {
