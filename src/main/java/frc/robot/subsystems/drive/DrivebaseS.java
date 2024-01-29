@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import static frc.robot.Constants.DriveConstants.*;
 
@@ -37,10 +37,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Robot;
+import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
-import frc.robot.subsystems.drive.RealSwerveDriveIO;
-import frc.robot.subsystems.drive.SimSwerveDriveIO;
-import frc.robot.subsystems.drive.SwerveDriveIO;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.AprilTags;
 import frc.robot.util.InputAxis;
