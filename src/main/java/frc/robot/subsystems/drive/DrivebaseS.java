@@ -82,7 +82,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
           ModuleConstants.BR.centerOffset);
 
   private final Vision m_vision;
-  private final BiConsumer<String, List<Pose2d> drawTrajectory;
+  private final BiConsumer<String, List<Pose2d>> drawTrajectory;
 
   public DrivebaseS(
       Consumer<Runnable> addPeriodic, BiConsumer<String, List<Pose2d>> drawTrajectory) {
