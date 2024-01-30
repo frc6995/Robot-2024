@@ -96,6 +96,19 @@ public class NomadMathUtil {
     return mirrorPose(bluePose);
   }
 
+  public static Translation2d mirrorTranslation(Translation2d blueTranslation) {
+    return new Translation2d(
+        FIELD_LENGTH - blueTranslation.getX(),
+        blueTranslation.getY());
+  }
+
+  public static Translation2d mirrorTranslation(Translation2d blueTranslation, DriverStation.Alliance alliance) {
+    if (alliance != Alliance.Red) {
+      return blueTranslation;
+    }
+    return mirrorTranslation(blueTranslation);
+  }
+
   public static REVLibError retryRev(Supplier<REVLibError> command) {
     REVLibError error = REVLibError.kOk;
     for (int i = 0; i < 5; i++) {

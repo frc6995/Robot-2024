@@ -26,6 +26,7 @@ import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
+import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
@@ -33,7 +34,9 @@ import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
 import frc.robot.subsystems.trap.pivot.TrapPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
+import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sparkmax.SparkDevice;
 import monologue.Logged;
@@ -162,6 +165,18 @@ public class RobotContainer implements Logged {
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
+    m_driverController.rightTrigger().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
+      ()->Pathing.speakerRelativeHeading(
+        m_drivebaseS.getPose(),
+        NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance())
+        ).getRadians(),
+      ()->Pathing.aimingFFVelocity(
+        m_drivebaseS.getPose(),
+        m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance()))));
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
     // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));

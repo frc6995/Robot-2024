@@ -25,7 +25,7 @@ public class SimModuleIO extends ModuleIO {
   public SimModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
     super(addPeriodic, moduleConstants);
     moduleSim.resetAzmth(Math.random() * 2 * Math.PI);
-    m_steerPIDController = new PIDController(10 / (Math.PI), 0.0, STEER_D);
+    m_steerPIDController = new PIDController(10, 0.0, STEER_D);
     // Tell the PID controller that it can move across the -pi to pi rollover point.
     m_steerPIDController.enableContinuousInput(-Math.PI, Math.PI);
 

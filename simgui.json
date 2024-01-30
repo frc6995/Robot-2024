@@ -22,6 +22,9 @@
         }
       },
       "/Robot/m_field": {
+        "Robot": {
+          "length": 10.0
+        },
         "align": {
           "style": "Hidden"
         },
@@ -56,6 +59,9 @@
       "open": false
     },
     "transitory": {
+      "FMSInfo": {
+        "open": true
+      },
       "Robot": {
         "m_drivebaseS": {
           "io": {

@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -71,7 +72,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   // constraints determined from OperatorControlC slew settings.
   // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
   public final ProfiledPIDController m_profiledThetaController =
-      new ProfiledPIDController(3, 0, 0, new Constraints(2 * Math.PI, 4 * Math.PI));
+      new ProfiledPIDController(8, 0, 0, new Constraints(Double.MAX_VALUE, Double.MAX_VALUE));
 
   private final SwerveDriveKinematics m_kinematics =
       new SwerveDriveKinematics(
@@ -481,7 +482,8 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 }));
   }
 
-  /**
+
+    /**
    * Command factory for manual drive with PID heading lock.
    *
    * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
@@ -492,6 +494,19 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public Command manualHeadingDriveC(
       InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingAllianceRelative) {
+        return manualHeadingDriveC(fwdXAxis, fwdYAxis, headingAllianceRelative, ()->0);
+      }
+  /**
+   * Command factory for manual drive with PID heading lock.
+   *
+   * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
+   * @param fwdYAxis the InputAxis for downfield movement (+1 is left from driver POV)
+   * @param headingAllianceRelative the heading to hold, relative to the alliance wall (0 faces away
+   *     from driver station)
+   * @return A command for manual drive with heading lock.
+   */
+  public Command manualHeadingDriveC(
+      InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingAllianceRelative, DoubleSupplier headingFF) {
     return runOnce(
             () -> {
               fwdXAxis.resetSlewRate();
@@ -521,6 +536,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                       m_profiledThetaController.calculate(
                           getPoseHeading().getRadians(),
                           headingAllianceRelative.getAsDouble() + downfield);
+                  rot += headingFF.getAsDouble();
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
                 }));
   }

@@ -12,6 +12,8 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -84,5 +86,25 @@ public class Pathing {
                   state.positionMeters, state.targetHolonomicRotation);
             })
     .collect(Collectors.toList());
+  }
+
+  public static double aimingFFVelocity(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+    return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, 
+      speakerRelativeHeading(currentPose, targetTranslation)
+    ).vyMetersPerSecond
+      / speakerDistance(currentPose, targetTranslation);
+  }
+  public static Rotation2d speakerRelativeHeading(Pose2d currentPose, Translation2d target) {
+    return currentPose.getTranslation().minus(target).getAngle();
+  }
+  public static double speakerDistance(Pose2d currentPose, Translation2d target) {
+    return currentPose.getTranslation().minus(target).getNorm();
+  }
+  public static Pose2d timeAdjustedPose(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds, double time) {
+    return currentPose.transformBy(new Transform2d(
+      robotRelativeSpeeds.vxMetersPerSecond * time,
+      robotRelativeSpeeds.vyMetersPerSecond*time,
+      new Rotation2d(robotRelativeSpeeds.omegaRadiansPerSecond * time)
+    ));
   }
 }
