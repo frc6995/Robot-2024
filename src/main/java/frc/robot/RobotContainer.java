@@ -130,19 +130,8 @@ public class RobotContainer implements Logged {
     m_drivebaseS =
         new DrivebaseS(
             addPeriodic,
-            (name, traj) -> {
-              m_field
-                  .getObject(name)
-                  .setPoses(
-                      traj.getStates().stream()
-                          .map(
-                              (Function<State, Pose2d>)
-                                  (State state) -> {
-                                    return new Pose2d(
-                                        state.positionMeters, state.targetHolonomicRotation);
-                                  })
-                          .collect(Collectors.toList()));
-            });
+            (name, poses) -> m_field.getObject(name).setPoses(poses)
+            );
     m_noteCamera = new BlobDetectionCamera(addPeriodic);
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
