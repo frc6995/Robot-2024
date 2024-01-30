@@ -126,50 +126,7 @@ public class Constants {
         new TrapezoidProfile.Constraints(4 * Math.PI, 16 * Math.PI);
   }
 
-  public static final class VisionConstants {
-
-    public static final String CAM_1_NAME = "OV9281-1";
-    public static final String CAM_2_NAME = "OV9281-2";
-    public static final String CAM_3_NAME = "OV9281-3";
-    public static final String CAM_4_NAME = "OV9281-4";
-    private static final double CAM_HEIGHT = Units.inchesToMeters(16);
-    private static final double CAM_X = Units.inchesToMeters(6.6 / 2.0);
-    private static final double CAM_Y = Units.inchesToMeters(15.3 / 2.0);
-    private static final double CAM_PITCH = Units.degreesToRadians(-15);
-    private static final double CAM_YAW = Units.degreesToRadians(32);
-
-    public static final Transform3d robotToCam1 =
-        new Transform3d(
-            new Translation3d(CAM_X, CAM_Y, CAM_HEIGHT), new Rotation3d(0, CAM_PITCH, CAM_YAW));
-    public static final Transform3d robotToCam2 =
-        new Transform3d(
-            new Translation3d(CAM_X, -CAM_Y - Units.inchesToMeters(0.5), CAM_HEIGHT),
-            new Rotation3d(0, CAM_PITCH, -CAM_YAW));
-    public static final Transform3d robotToCam3 =
-        new Transform3d(
-            new Translation3d(-CAM_X, CAM_Y, CAM_HEIGHT),
-            new Rotation3d(0, CAM_PITCH, (Math.PI) - CAM_YAW));
-    public static final Transform3d robotToCam4 =
-        new Transform3d(
-            new Translation3d(-CAM_X, -CAM_Y, CAM_HEIGHT),
-            new Rotation3d(0, CAM_PITCH, (Math.PI) + CAM_YAW + Units.degreesToRadians(5.5)));
-
-    public static AprilTagFieldLayout TAG_FIELD_LAYOUT =
-        new AprilTagFieldLayout(
-            List.of(
-                new AprilTag(
-                    1, new Pose3d(15.513558, 1.071626, 0.462788, new Rotation3d(0, 0, Math.PI))),
-                new AprilTag(
-                    2, new Pose3d(15.513558, 2.748026, 0.462788, new Rotation3d(0, 0, Math.PI))),
-                new AprilTag(
-                    3, new Pose3d(15.513558, 4.424426, 0.462788, new Rotation3d(0, 0, Math.PI))),
-                new AprilTag(
-                    4, new Pose3d(16.178784, 6.749796, 0.695452, new Rotation3d(0, 0, Math.PI))),
-                new AprilTag(5, new Pose3d(0.36195, 6.749796, 0.695452, new Rotation3d(0, 0, 0))),
-                new AprilTag(6, new Pose3d(1.02743, 4.424426, 0.462788, new Rotation3d(0, 0, 0))),
-                new AprilTag(7, new Pose3d(1.02743, 2.748026, 0.462788, new Rotation3d(0, 0, 0))),
-                new AprilTag(8, new Pose3d(1.02743, 1.071626, 0.462788, new Rotation3d(0, 0, 0)))),
-            16.54175,
-            8.0137);
+  public class Poses {
+    public static final Translation2d SPEAKER = new Translation2d(0.334, 5.547);
   }
 }

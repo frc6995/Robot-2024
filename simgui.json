@@ -22,6 +22,12 @@
         }
       },
       "/Robot/m_field": {
+        "align": {
+          "style": "Hidden"
+        },
+        "alignTarget2": {
+          "width": 0.800000011920929
+        },
         "bottom": 1476,
         "height": 8.210550308227539,
         "left": 150,
@@ -43,6 +49,9 @@
     }
   },
   "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
     "Retained Values": {
       "open": false
     },
