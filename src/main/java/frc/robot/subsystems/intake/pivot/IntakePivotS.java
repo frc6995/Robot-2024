@@ -6,6 +6,7 @@ package frc.robot.subsystems.intake.pivot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.idle;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CCW_LIMIT;
 
 import java.util.function.DoubleSupplier;
 
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -99,7 +101,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   @Log.NT public double getVolts() {return m_io.getVolts();}
   public void periodic() {
     // Update our visualization
-    INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle()));
+    INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle() + Units.degreesToRadians(55-14) ));
 
     
     if (DriverStation.isEnabled()) {
@@ -113,7 +115,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
       // Calculate the feedforward. This is partly to counter gravity
       double ffVolts = getGravityFF() + getVelocityFF();
       //m_io.setVolts(ffVolts);
-      //m_io.setPIDFF(m_setpoint.position, ffVolts);
+      m_io.setPIDFF(m_setpoint.position, ffVolts);
     } else {
       // If disabled, continuously update setpoint and goal to avoid
       // sudden movement on re-enable.
@@ -166,6 +168,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   public double getVelocityFF() {
     return m_feedforward.calculate(m_setpoint.velocity, m_nextSetpoint.velocity, 0.02);
   }
+
+  public Command resetToRetractedC() {
+    return Commands.runOnce(
+      ()->{m_io.resetAngle(CCW_LIMIT);}).ignoringDisable(true);
+  }
+
   private MutableMeasure<Angle> positionMeasure = MutableMeasure.ofBaseUnits(0, Radians);
   private MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RadiansPerSecond);
   private MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
@@ -189,14 +197,14 @@ public class IntakePivotS extends SubsystemBase implements Logged {
       }, this, "intake"));
   public class Constants {
     //TODO: determine constants for intake pivot
-    public static final double CCW_LIMIT = Units.degreesToRadians(180);
-    public static final double CW_LIMIT = Units.degreesToRadians(0);
-    public static final int CAN_ID = 21;
+    public static final double CCW_LIMIT = Units.degreesToRadians(90 + 35);
+    public static final double CW_LIMIT = Units.degreesToRadians(-15);
+    public static final int CAN_ID = 22;
     /**
      * Also equivalent to motor radians per pivot radian
      */
-    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 50;
-    public static final double K_G = 0.15;
+    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 75;
+    public static final double K_G = 0.17 * 0.09 / Math.cos(1.333);
     public static final double K_S = 0;
     /**
      * Units: Volts / (Pivot radians/sec)
@@ -208,13 +216,13 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      */
     public static final double K_V =  
       MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.06;
+    public static final double K_A = 0.00001;
     public static final double CG_DIST = Units.inchesToMeters(6);
     /**
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      5, 5);
+      4.5, 12);
   }
 
 }
