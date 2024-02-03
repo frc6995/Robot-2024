@@ -22,14 +22,18 @@
           "keyRate": 0.009999999776482582
         },
         {
+          "decKey": 75,
           "incKey": 73
         },
         {
           "decKey": 74,
           "incKey": 76
+        },
+        {
+          "incKey": 80
         }
       ],
-      "axisCount": 5,
+      "axisCount": 6,
       "buttonCount": 8,
       "buttonKeys": [
         90,
@@ -38,7 +42,7 @@
         86,
         66,
         78,
-        -1,
+        77,
         44
       ],
       "povConfig": [
@@ -56,12 +60,6 @@
       "povCount": 1
     },
     {
-      "axisConfig": [
-        {},
-        {
-          "incKey": 75
-        }
-      ],
       "axisCount": 2,
       "buttonCount": 4,
       "buttonKeys": [
@@ -105,6 +103,5 @@
     {
       "guid": "Keyboard0"
     }
-  ],
-  "useEnableDisableHotkeys": true
+  ]
 }

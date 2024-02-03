@@ -68,11 +68,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   public final PIDController m_xController = new PIDController(8, 0, 0.0);
 
   public final PIDController m_yController = new PIDController(8, 0, 0.0);
-  public final PIDController m_thetaController = new PIDController(4, 0, 0);
+  public final PIDController m_thetaController = new PIDController(3, 0, 0);
   // constraints determined from OperatorControlC slew settings.
   // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
   public final ProfiledPIDController m_profiledThetaController =
-      new ProfiledPIDController(8, 0, 0, new Constraints(Double.MAX_VALUE, Double.MAX_VALUE));
+      new ProfiledPIDController(4, 0, 0, new Constraints(4, 8));
 
   private final SwerveDriveKinematics m_kinematics =
       new SwerveDriveKinematics(
@@ -133,7 +133,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     SwerveDriveKinematics.desaturateWheelSpeeds(
         states,
         speeds,
-        Units.feetToMeters(19),
+        MAX_MODULE_SPEED_MPS,
         MAX_FWD_REV_SPEED_MPS,
         MAX_ROTATE_SPEED_RAD_PER_SEC);
     setModuleStates(states);
@@ -507,6 +507,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public Command manualHeadingDriveC(
       InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingAllianceRelative, DoubleSupplier headingFF) {
+        return manualFieldHeadingDriveC(fwdXAxis, fwdYAxis, ()->headingAllianceRelative.getAsDouble() + 
+                      ((AllianceWrapper.getAlliance() == Alliance.Red) ? Math.PI : 0.0), headingFF);
+      }
+    public Command manualFieldHeadingDriveC(
+      InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
     return runOnce(
             () -> {
               fwdXAxis.resetSlewRate();
@@ -530,12 +535,13 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
                   double rot;
 
-                  double downfield =
-                      (AllianceWrapper.getAlliance() == Alliance.Red) ? Math.PI : 0.0;
                   rot =
                       m_profiledThetaController.calculate(
                           getPoseHeading().getRadians(),
-                          headingAllianceRelative.getAsDouble() + downfield);
+                          headingFieldRelative.getAsDouble());
+                  log("thetaGoal", m_profiledThetaController.getGoal().position);
+                  log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
+                  log("thetaReal", getPoseHeading().getRadians());
                   rot += headingFF.getAsDouble();
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
                 }));

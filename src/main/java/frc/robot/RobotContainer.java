@@ -165,8 +165,9 @@ public class RobotContainer implements Logged {
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    m_driverController.rightTrigger().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
-      ()->Pathing.speakerRelativeHeading(
+    m_driverController.rightTrigger().whileTrue(
+      m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
+      ()->Pathing.speakerDirection(
         m_drivebaseS.getPose(),
         NomadMathUtil.mirrorTranslation(
           Constants.Poses.SPEAKER,
@@ -177,6 +178,15 @@ public class RobotContainer implements Logged {
         m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
           Constants.Poses.SPEAKER,
           AllianceWrapper.getAlliance()))));
+    m_driverController.leftTrigger().whileTrue(
+      m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
+      ()->Pathing.speakerDirection(
+        m_drivebaseS.getPose(),
+        NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance())
+        ).getRadians(),
+      ()->0));
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
     // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));

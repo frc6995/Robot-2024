@@ -27,13 +27,10 @@ public class Constants {
             * 2; // Model moment of intertia as a square slab slightly bigger than wheelbase with
     // axis through center
     // Drivetrain Performance Mechanical limits
-    public static final double MAX_FWD_REV_SPEED_MPS = Units.feetToMeters(19.0);
-    public static final double MAX_STRAFE_SPEED_MPS = Units.feetToMeters(19.0);
-    public static final double MAX_ROTATE_SPEED_RAD_PER_SEC = Units.degreesToRadians(720.0);
-    public static final double MAX_TRANSLATE_ACCEL_MPS2 =
-        MAX_FWD_REV_SPEED_MPS / 0.125; // 0-full time of 0.25 second
-    public static final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 =
-        MAX_ROTATE_SPEED_RAD_PER_SEC / 0.25; // 0-full time of 0.25 second
+    public static final double MAX_MODULE_SPEED_MPS = 4.708;
+    public static final double MAX_FWD_REV_SPEED_MPS = 4.708;
+    public static final double MAX_STRAFE_SPEED_MPS = 4.708;
+    public static final double MAX_ROTATE_SPEED_RAD_PER_SEC = 11.5;
 
     // For manual driving
     public static final double MAX_LINEAR_SPEED = Units.feetToMeters(5);
@@ -102,8 +99,6 @@ public class Constants {
 
     public static final double DRIVE_P = 16; // 9;
     public static final double DRIVE_D = 0;
-
-    public static final double MAX_MODULE_SPEED_FPS = 19;
 
     public static final int ENC_PULSE_PER_REV = 1;
     public static final double WHEEL_ENC_COUNTS_PER_WHEEL_REV =

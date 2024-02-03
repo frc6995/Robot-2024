@@ -30,13 +30,13 @@ public class Pathing {
           new PIDConstants(8, 0, 0),
           new PIDConstants(4, 0, 0),
           0.02,
-          Units.feetToMeters(MAX_MODULE_SPEED_FPS),
+          MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm());
   public static final HolonomicPathFollowerConfig m_pathPlannerConfig =
       new HolonomicPathFollowerConfig(
           new PIDConstants(8, 0, 0),
           new PIDConstants(4, 0, 0),
-          Units.feetToMeters(MAX_MODULE_SPEED_FPS),
+          MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm(),
           new ReplanningConfig(false, false, 0.1, 0.1));
     /**
@@ -90,12 +90,12 @@ public class Pathing {
 
   public static double aimingFFVelocity(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
     return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, 
-      speakerRelativeHeading(currentPose, targetTranslation)
+      speakerDirection(currentPose, targetTranslation)
     ).vyMetersPerSecond
       / speakerDistance(currentPose, targetTranslation);
   }
-  public static Rotation2d speakerRelativeHeading(Pose2d currentPose, Translation2d target) {
-    return currentPose.getTranslation().minus(target).getAngle();
+  public static Rotation2d speakerDirection(Pose2d currentPose, Translation2d target) {
+    return target.minus(currentPose.getTranslation()).getAngle().minus(new Rotation2d(Math.PI));
   }
   public static double speakerDistance(Pose2d currentPose, Translation2d target) {
     return currentPose.getTranslation().minus(target).getNorm();
