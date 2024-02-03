@@ -18,8 +18,8 @@ public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
 
-  private AddressableLED led = new AddressableLED(0);
-  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(268);
+  private AddressableLED led = new AddressableLED(9);
+  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(40);
   private final PersistentLedState persistentLedState = new PersistentLedState();
   private States previousState = States.Default;
 
@@ -28,7 +28,7 @@ public class LightStripS {
     public int pulseOffset = 0;
   }
 
-  /** Creates a new LedS. */
+  /** Creates a new LightStripS. */
   private LightStripS() {
     led.setLength(buffer.getLength());
 
@@ -44,11 +44,11 @@ public class LightStripS {
   private TreeSet<States> m_states = new TreeSet<>();
 
   /**
-   * Different states of the robot, with an integer that determines the priority of the state (the
-   * lower the number, the higher the priority)
+   * Different states of the robot, states placed higher in the list have higher priority
    */
   public static enum States {
-    ArmAdjust(setColor(0, 0, 255)),
+   
+    CoastMode(setColor(0, 0, 255)),
     SetupDone(setColor(0, 128, 0)), // set in robotPeriodic
     Disabled(setColor(255, 0, 0)), // set in robotPeriodic
     Error(pulse(0.25, setColor(255, 0, 0))),
@@ -62,12 +62,18 @@ public class LightStripS {
           persistentState.rainbowFirstPixelHue += 3;
           persistentState.rainbowFirstPixelHue %= 180;
         }), // set through triggers in RobotContainer
-    IntakedCone(pulse(0.25, setColor(245, 224, 66))),
-    IntakedCube(pulse(0.25, setColor(245, 224, 66))),
-    RequestingCube(setColor(186, 15, 172)),
-    RequestingCone(setColor(128, 128, 0)),
-
+    IntakedNote(pulse(0.25, setColor(245, 224, 66))),
     Scoring(setColor(0, 0, 255)),
+     AutoAlign(
+      (ledBuffer, persistentState) -> {
+          for (int i = 0; i < ledBuffer.getLength(); i++) {
+            final int hue =
+                (persistentState.rainbowFirstPixelHue + (i * 180 / ledBuffer.getLength())) % 180;
+            ledBuffer.setHSV(i, hue - 100, 255, 255);
+          }
+          persistentState.rainbowFirstPixelHue += 3;
+          persistentState.rainbowFirstPixelHue %= 180;
+        }),
     Default(setColor(0, 255, 0));
 
     public final BiConsumer<AddressableLEDBuffer, PersistentLedState> setter;
@@ -91,7 +97,7 @@ public class LightStripS {
   }
 
   public Command stateC(Supplier<States> state) {
-    return Commands.run(() -> requestState(state.get()));
+    return Commands.run(() -> requestState(state.get())).ignoringDisable(true);
   }
 
   /**

@@ -42,6 +42,7 @@ import monologue.Annotations.Log;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.photonvision.PhotonCamera;
 
@@ -171,7 +172,6 @@ public class RobotContainer implements Logged {
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
-    m_autos.pathWithEvents();
   }
 
   public void configureButtonBindings() {
@@ -179,6 +179,7 @@ public class RobotContainer implements Logged {
     m_driverController.a().whileTrue(m_autos.driveToNote());
     m_driverController.x().onTrue(m_shooterPivotS.run(()->
     m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
+    m_driverController.b().whileTrue(m_lightStripS.stateC(()-> States.CoastMode));
     m_driverController.y()
       .whileTrue(
         sequence(
@@ -189,8 +190,8 @@ public class RobotContainer implements Logged {
         m_autos.retractStopIntake()
       )
     );
-    m_driverController.b().onTrue(m_climberS.run(()->
-    m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
+    //m_driverController.b().onTrue(m_climberS.run(()->
+    //m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
     // m_driverController.button(5).whileTrue(
     //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
     //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))
