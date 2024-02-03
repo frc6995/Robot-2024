@@ -133,15 +133,15 @@ public class RobotContainer implements Logged {
             addPeriodic,
             (name, poses) -> m_field.getObject(name).setPoses(poses)
             );
-    m_noteCamera = new BlobDetectionCamera(addPeriodic);
+    m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
 
     m_autos = new CommandGroups(
       m_drivebaseS,
       m_noteCamera,
-      // m_intakePivotS,
-      // m_intakeRollerS,
+      m_intakePivotS,
+      m_intakeRollerS,
       // m_midtakeS,
       // m_shooterPivotS,
       // m_shooterWheelsS,
@@ -163,10 +163,12 @@ public class RobotContainer implements Logged {
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    m_driverController.a().whileTrue(m_intakeRollerS.intakeC());
+    m_driverController.a().whileTrue(m_autos.deployRunIntake());
+    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
     m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
-    m_driverController.y().whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
+    m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
     // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));

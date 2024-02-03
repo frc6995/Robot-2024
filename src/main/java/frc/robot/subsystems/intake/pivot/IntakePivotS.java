@@ -91,7 +91,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
-    setDefaultCommand(runVoltage(()->0));
+    setDefaultCommand(hold());
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}

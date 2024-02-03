@@ -61,7 +61,9 @@ public class Vision implements Logged {
                 if (robotPoseOpt.isEmpty()) {
                     continue;
                 }
+                
                 var robotPose = robotPoseOpt.get();
+                if (robotPose.targetsUsed.size() < 2) {continue;}
                 // var confidence = AprilTags.calculateVisionUncertainty(
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
@@ -83,7 +85,7 @@ public class Vision implements Logged {
 
     public class Constants {
         public static final Map<String, Transform3d> cameras = Map.of(
-                "OV9281-3", new Transform3d(
+                "OV9281-4", new Transform3d(
                     Units.inchesToMeters(0.5), -Units.inchesToMeters(0.5), Units.inchesToMeters(22.75),
                     new Rotation3d(0, -Units.degreesToRadians(15), Math.PI)
                 ));

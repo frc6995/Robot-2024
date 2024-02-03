@@ -61,8 +61,8 @@ public class Pathing {
                     new Pose2d(robotPose.getTranslation(), robotToTargetTranslation.getAngle()),
                     new Pose2d(target.getTranslation(), robotToTargetTranslation.getAngle()))),
             List.of(
-                new RotationTarget(0, robotPose.getRotation()),
-                new RotationTarget(1, target.getRotation(), true)),
+                //new RotationTarget(0, robotPose.getRotation()),
+                new RotationTarget(1, target.getRotation(), false)),
             List.of(),
             List.of(),
             // Start point. At the position of the robot, initial travel direction toward

@@ -22,7 +22,7 @@ public class IntakeRollerS extends SubsystemBase {
     public static final int LEADER_CAN_ID = 20;
     public static final int FOLLOWER_CAN_ID = 21;
     public static final int CURRENT_LIMIT = 40;
-    public static final double OUT_VOLTAGE = 6;
+    public static final double OUT_VOLTAGE = 12;
     public static final double IN_VOLTAGE = -8;
   }
   private CANSparkMax m_leader;
