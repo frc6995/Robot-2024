@@ -45,11 +45,13 @@ public class Vision implements Logged {
                 new Pose2d());
         m_cameras = new ArrayList<>();
         Constants.cameras.entrySet().iterator().forEachRemaining((entry) -> {
-            m_cameras.add(
-                    new PhotonPoseEstimator(
+            var estimator = 
+            new PhotonPoseEstimator(
                             Constants.layout,
                             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new PhotonCamera(entry.getKey()),
-                            entry.getValue()));
+                            entry.getValue());
+                            estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+            m_cameras.add(estimator);
         });
     }
 
@@ -57,18 +59,21 @@ public class Vision implements Logged {
         m_poseEstimator.update(getHeading.get(), getModulePositions.get());
         if (RobotBase.isReal()) {
             for (PhotonPoseEstimator estimator : m_cameras) {
+                estimator.setReferencePose(getPose());
                 var robotPoseOpt = estimator.update();
                 if (robotPoseOpt.isEmpty()) {
                     continue;
                 }
+                
                 var robotPose = robotPoseOpt.get();
+                if (robotPose.targetsUsed.size() < 2) {continue;}
                 // var confidence = AprilTags.calculateVisionUncertainty(
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d", robotPose.estimatedPose);
                 m_poseEstimator.addVisionMeasurement(
-                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.1, 0.1, 0.1));
+                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.3, 0.3, 0.3));
             }
         }
     }
@@ -83,9 +88,11 @@ public class Vision implements Logged {
 
     public class Constants {
         public static final Map<String, Transform3d> cameras = Map.of(
-                "OV9281-3", new Transform3d(
-                    Units.inchesToMeters(0.5), -Units.inchesToMeters(0.5), Units.inchesToMeters(22.75),
-                    new Rotation3d(0, -Units.degreesToRadians(15), Math.PI)
+                "OV9281-4", new Transform3d(
+                    Units.inchesToMeters(1.5),
+                    -Units.inchesToMeters(-0.5),
+                    Units.inchesToMeters(22.625),
+                    new Rotation3d(Units.degreesToRadians(1), -Units.degreesToRadians(15), Math.PI)
                 ));
         public static AprilTagFieldLayout layout;
         static {

@@ -437,10 +437,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 Pathing.generateTrajectoryToPose(
                     startPose,
                     endPose,
-                    getFieldRelativeLinearSpeedsMPS(),
+                    new ChassisSpeeds(), //getFieldRelativeLinearSpeedsMPS(),
                     new PathConstraints(2, 2, 2 * Math.PI, 2 * Math.PI)),
             this)
-        .alongWith(LightStripS.getInstance().stateC(() -> States.Climbing));
+        .deadlineWith(LightStripS.getInstance().stateC(() -> States.Climbing));
   }
 
   /**

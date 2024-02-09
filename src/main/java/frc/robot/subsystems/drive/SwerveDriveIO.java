@@ -13,7 +13,7 @@ import edu.wpi.first.wpilibj.SPI.Port;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
-import com.kauailabs.navx.frc.AHRS;
+import frc.robot.NavX.AHRS;
 import java.util.List;
 import java.util.function.Consumer;
 

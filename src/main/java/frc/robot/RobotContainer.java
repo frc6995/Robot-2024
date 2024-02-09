@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CW_LIMIT;
 
 import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 
@@ -59,8 +60,8 @@ public class RobotContainer implements Logged {
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   // private final ShooterPivotS m_shooterPivotS;
   // private final ShooterWheelsS m_shooterWheelsS;
-  // private final IntakePivotS m_intakePivotS;
-  // private final IntakeRollerS m_intakeRollerS;
+  private final IntakePivotS m_intakePivotS;
+  private final IntakeRollerS m_intakeRollerS;
   // private final MidtakeS m_midtakeS;
   // //private final TrapPivotS m_trapPivotS;
   // private final ClimberS m_climberS;
@@ -117,16 +118,16 @@ public class RobotContainer implements Logged {
     // m_shooterPivotS = new ShooterPivotS();
     // m_shooterWheelsS = new ShooterWheelsS();
     // m_midtakeS = new MidtakeS();
-    // m_intakePivotS = new IntakePivotS();
-    // m_intakeRollerS = new IntakeRollerS();
+    m_intakePivotS = new IntakePivotS();
+    m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
     // ///m_trapPivotS = new TrapPivotS();
     // m_climberS = new ClimberS();
-    // RobotVisualizer.setupVisualizer();
+    RobotVisualizer.setupVisualizer();
     // RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     // RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
-    // m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
-    // RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
+    m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
+    RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
     // RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
@@ -135,15 +136,15 @@ public class RobotContainer implements Logged {
             addPeriodic,
             (name, poses) -> m_field.getObject(name).setPoses(poses)
             );
-    m_noteCamera = new BlobDetectionCamera(addPeriodic);
+    m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
 
     m_autos = new CommandGroups(
       m_drivebaseS,
       m_noteCamera,
-      // m_intakePivotS,
-      // m_intakeRollerS,
+      m_intakePivotS,
+      m_intakeRollerS,
       // m_midtakeS,
       // m_shooterPivotS,
       // m_shooterWheelsS,
@@ -187,6 +188,14 @@ public class RobotContainer implements Logged {
           AllianceWrapper.getAlliance())
         ).getRadians(),
       ()->0));
+    m_driverController.leftBumper().whileTrue(
+      m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis));
+    m_driverController.a().onTrue(m_autos.deployRunIntake());
+    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
+    m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
+    m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
+    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    //m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
     // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));

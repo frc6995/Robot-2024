@@ -30,13 +30,13 @@ public class Pathing {
           new PIDConstants(8, 0, 0),
           new PIDConstants(4, 0, 0),
           0.02,
-          MAX_MODULE_SPEED_MPS,
+          MAX_MODULE_SPEED_MPS/2,
           ModuleConstants.FL.centerOffset.getNorm());
   public static final HolonomicPathFollowerConfig m_pathPlannerConfig =
       new HolonomicPathFollowerConfig(
           new PIDConstants(8, 0, 0),
           new PIDConstants(4, 0, 0),
-          MAX_MODULE_SPEED_MPS,
+          MAX_MODULE_SPEED_MPS/2,
           ModuleConstants.FL.centerOffset.getNorm(),
           new ReplanningConfig(false, false, 0.1, 0.1));
     /**
@@ -64,7 +64,7 @@ public class Pathing {
                     new Pose2d(target.getTranslation(), robotToTargetTranslation.getAngle()))),
             List.of(
                 new RotationTarget(0, robotPose.getRotation()),
-                new RotationTarget(1, target.getRotation(), true)),
+                new RotationTarget(1, target.getRotation(), false)),
             List.of(),
             List.of(),
             // Start point. At the position of the robot, initial travel direction toward
