@@ -35,7 +35,7 @@ public class CommandGroups {
   private DrivebaseS m_drivebaseS;
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
-  // private MidtakeS m_midtakeS;
+   private MidtakeS m_midtakeS;
   // private ShooterPivotS m_shooterPivotS;
   // private ShooterWheelsS m_shooterWheelsS;
   // private ClimberS m_climberS;
@@ -47,7 +47,7 @@ public class CommandGroups {
     BlobDetectionCamera noteCamera,
     IntakePivotS intakePivotS,
     IntakeRollerS intakeRollerS,
-    // MidtakeS midtakeS,
+    MidtakeS midtakeS,
     // ShooterPivotS shooterPivotS,
     // ShooterWheelsS shooterWheelsS,
     // ClimberS climberS,
@@ -55,7 +55,7 @@ public class CommandGroups {
     m_drivebaseS = drivebaseS;
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
-    // m_midtakeS = midtakeS;
+    m_midtakeS = midtakeS;
     // m_shooterPivotS = shooterPivotS;
     // m_shooterWheelsS = shooterWheelsS;
     // m_climberS = climberS;
@@ -71,13 +71,15 @@ public class CommandGroups {
   public Command deployRunIntake() {
     return parallel(
       m_intakePivotS.deploy(),
-      m_intakeRollerS.intakeC()
+      m_intakeRollerS.intakeC(),
+      m_midtakeS.intakeC()
     );
   }
   public Command retractStopIntake() {
     return parallel(
       m_intakePivotS.retract(),
-      m_intakeRollerS.stopC()
+      m_intakeRollerS.stopC(),
+      m_midtakeS.stopC()
     );
   }
   // public Command midtakeReceiveNote() {

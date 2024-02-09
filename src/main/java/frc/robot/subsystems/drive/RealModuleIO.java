@@ -9,6 +9,7 @@ import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkAbsoluteEncoder;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.MathUtil;
@@ -25,10 +26,10 @@ import java.util.function.Consumer;
 public class RealModuleIO extends ModuleIO {
 
   protected final CANSparkFlex m_driveMotor;
-  protected final CANSparkMax m_steerMotor;
+  protected final CANSparkFlex m_steerMotor;
   protected final SparkPIDController m_driveController;
   protected final SparkPIDController m_rotationController;
-  protected final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
+  protected final SparkAbsoluteEncoder m_magEncoder;
   protected double m_driveDistance = 0;
   protected double m_driveVelocity = 0;
   protected double m_steerAngle = 0;
@@ -39,7 +40,7 @@ public class RealModuleIO extends ModuleIO {
   public RealModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
     super(addPeriodic, moduleConstants);
     m_driveMotor = SparkDevice.getSparkFlex(moduleConstants.driveMotorID, MotorType.kBrushless);
-    m_steerMotor = SparkDevice.getSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
+    m_steerMotor = SparkDevice.getSparkFlex(moduleConstants.rotationMotorID, MotorType.kBrushless);
     m_driveMotor.restoreFactoryDefaults();
     Timer.delay(0.5);
     m_steerMotor.restoreFactoryDefaults();
@@ -77,8 +78,7 @@ public class RealModuleIO extends ModuleIO {
     magEncoder.setVelocityConversionFactor(Math.PI * 2 * 60);
     magEncoder.setInverted(true);
     m_steerMotor.setInverted(true);
-    m_magEncoder =
-        new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_moduleConstants.magEncoderOffset);
+    m_magEncoder = m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle);
     m_steerMotor.setIdleMode(IdleMode.kBrake);
     m_driveController = m_driveMotor.getPIDController();
     m_rotationController = m_steerMotor.getPIDController();

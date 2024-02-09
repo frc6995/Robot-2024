@@ -1,5 +1,8 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.DriveConstants.*;
 
 import edu.wpi.first.math.MathUtil;
@@ -7,6 +10,11 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.Distance;
+import edu.wpi.first.units.MutableMeasure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
@@ -150,5 +158,17 @@ public abstract class ModuleIO implements Logged {
   @Log.NT
   public double getDriveCurrent() {
     return 0;
+  }
+
+  
+  private MutableMeasure<Voltage> voltMeasure = MutableMeasure.ofBaseUnits(0, Volts);
+  private MutableMeasure<Distance> distanceMeasure = MutableMeasure.ofBaseUnits(0, Meters);
+  private MutableMeasure<Velocity<Distance>> velocityMeasure = MutableMeasure.ofBaseUnits(0, MetersPerSecond);
+  private String sysIdDriveName;
+  public void logDriveMotor(SysIdRoutineLog log) {
+    log.motor(sysIdDriveName)
+      .linearPosition(distanceMeasure.mut_replace(getDriveDistance(), Meters))
+      .voltage(voltMeasure.mut_replace(getDriveVoltage(), Volts))
+      .linearVelocity(velocityMeasure.mut_replace(getDriveVelocity(), MetersPerSecond));
   }
 }

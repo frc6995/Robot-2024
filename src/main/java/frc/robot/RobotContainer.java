@@ -8,6 +8,7 @@ import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -62,8 +63,7 @@ public class RobotContainer implements Logged {
   // private final ShooterWheelsS m_shooterWheelsS;
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
-  // private final MidtakeS m_midtakeS;
-  // //private final TrapPivotS m_trapPivotS;
+  private final MidtakeS m_midtakeS;
   // private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
   private final LightStripS m_lightStripS;
@@ -117,7 +117,7 @@ public class RobotContainer implements Logged {
     }
     // m_shooterPivotS = new ShooterPivotS();
     // m_shooterWheelsS = new ShooterWheelsS();
-    // m_midtakeS = new MidtakeS();
+   m_midtakeS = new MidtakeS();
     m_intakePivotS = new IntakePivotS();
     m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
@@ -145,7 +145,7 @@ public class RobotContainer implements Logged {
       m_noteCamera,
       m_intakePivotS,
       m_intakeRollerS,
-      // m_midtakeS,
+       m_midtakeS,
       // m_shooterPivotS,
       // m_shooterWheelsS,
       //m_climberS,

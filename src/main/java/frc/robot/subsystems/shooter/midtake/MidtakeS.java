@@ -27,40 +27,46 @@ public class MidtakeS extends SubsystemBase {
     //   c.
     // }
   }
-  private CANSparkMax m_leader;
-  private CANSparkMax m_follower;
+  private CANSparkMax m_front;
+  private CANSparkMax m_back;
 
       public final MechanismLigament2d MIDTAKE_ROLLER = new MechanismLigament2d(
     "midtake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
   /** Creates a new IntakeRollerS. */
   public MidtakeS() {
-    m_leader = SparkDevice.getSparkMax(Constants.FRONT_CAN_ID);
-    m_follower = SparkDevice.getSparkMax(Constants.BACK_CAN_ID);
-    m_leader.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
-    m_leader.setIdleMode(IdleMode.kBrake);
+    m_front = SparkDevice.getSparkMax(Constants.FRONT_CAN_ID);
+    m_back = SparkDevice.getSparkMax(Constants.BACK_CAN_ID);
+    m_front.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
+    m_front.setIdleMode(IdleMode.kBrake);
+    m_back.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
+    m_back.setIdleMode(IdleMode.kBrake);
     setDefaultCommand(stopC());
   }
 
   @Override
   public void periodic() {
-      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_leader.getAppliedOutput());
+      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_front.getAppliedOutput());
   }
 
   /**sets motor to outtake */
-  public void outtake () {
-    m_leader.setVoltage(Constants.OUT_VOLTAGE);
+  public void feed () {
+    m_front.setVoltage(Constants.OUT_VOLTAGE);
+    m_back.setVoltage(Constants.OUT_VOLTAGE);
+
   }
   /**sets motor to intake */
   public void intake () {
-    m_leader.setVoltage(Constants.IN_VOLTAGE);
+    m_front.setVoltage(Constants.IN_VOLTAGE);
+    m_back.setVoltage(Constants.IN_VOLTAGE);
   }
   /**stops the intake motor */
   public void stop() {
-    m_leader.setVoltage(0);
+    m_front.setVoltage(0);
+    m_back.setVoltage(0);
   }
   /**returns the command of the outtake */
   public Command outtakeC() {
-    return run(this::outtake);
+    return run(this::feed);
   }
   /**returns the command of the intake */
   public Command intakeC() {
