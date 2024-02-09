@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import static frc.robot.Constants.DriveConstants.*;
 
@@ -39,12 +39,11 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
-import frc.robot.Constants.VisionConstants;
+import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
-import frc.robot.subsystems.drive.RealSwerveDriveIO;
-import frc.robot.subsystems.drive.SimSwerveDriveIO;
-import frc.robot.subsystems.drive.SwerveDriveIO;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.AprilTags;
 import frc.robot.util.InputAxis;
@@ -69,33 +68,15 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   /** The abstract class for interfacing with the gyro and modules. */
   private final SwerveDriveIO io;
 
-  double lastHeading = 0;
-  boolean isTurning = false;
-  boolean lastIsTurning = false;
-
   /** The X controller used for autonomous movement. */
   public final PIDController m_xController = new PIDController(8, 0, 0.0);
 
   public final PIDController m_yController = new PIDController(8, 0, 0.0);
-  public final PIDController m_thetaController = new PIDController(4, 0, 0);
+  public final PIDController m_thetaController = new PIDController(3, 0, 0);
   // constraints determined from OperatorControlC slew settings.
   // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
   public final ProfiledPIDController m_profiledThetaController =
-      new ProfiledPIDController(3, 0, 0, new Constraints(2 * Math.PI, 4 * Math.PI));
-  public final PPHolonomicDriveController m_holonomicDriveController =
-      new PPHolonomicDriveController(
-          new PIDConstants(8, 0, 0),
-          new PIDConstants(4, 0, 0),
-          0.02,
-          Units.feetToMeters(MAX_MODULE_SPEED_FPS),
-          ModuleConstants.FL.centerOffset.getNorm());
-  public final HolonomicPathFollowerConfig m_pathPlannerConfig =
-      new HolonomicPathFollowerConfig(
-          new PIDConstants(8, 0, 0),
-          new PIDConstants(4, 0, 0),
-          Units.feetToMeters(MAX_MODULE_SPEED_FPS),
-          ModuleConstants.FL.centerOffset.getNorm(),
-          new ReplanningConfig(false, false, 0.1, 0.1));
+      new ProfiledPIDController(4, 0, 0, new Constraints(4, 8));
 
   private final SwerveDriveKinematics m_kinematics =
       new SwerveDriveKinematics(
@@ -105,10 +86,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
           ModuleConstants.BR.centerOffset);
 
   private final Vision m_vision;
-  private final BiConsumer<String, PathPlannerTrajectory> drawTrajectory;
+  private final BiConsumer<String, List<Pose2d>> drawTrajectory;
 
   public DrivebaseS(
-      Consumer<Runnable> addPeriodic, BiConsumer<String, PathPlannerTrajectory> drawTrajectory) {
+      Consumer<Runnable> addPeriodic, BiConsumer<String, List<Pose2d>> drawTrajectory) {
     io = Robot.isReal() ? new RealSwerveDriveIO(addPeriodic) : new SimSwerveDriveIO(addPeriodic);
     this.drawTrajectory = drawTrajectory;
     m_vision = new Vision(m_kinematics, io::getGyroHeading, io::getCurrentPositions);
@@ -123,12 +104,12 @@ public class DrivebaseS extends SubsystemBase implements Logged {
       new Config(),
       new Mechanism(volts->{
         double voltage = volts.baseUnitMagnitude();
-        io.setModuleStates(new SwerveModuleState[] {
-          new SwerveModuleState(voltage, new Rotation2d()),
-          new SwerveModuleState(voltage, new Rotation2d()),
-          new SwerveModuleState(voltage, new Rotation2d()),
-          new SwerveModuleState(voltage, new Rotation2d())
-        }, true);
+        // io.setModuleStates(new SwerveModuleState[] {
+        //   new SwerveModuleState(voltage, new Rotation2d()),
+        //   new SwerveModuleState(voltage, new Rotation2d()),
+        //   new SwerveModuleState(voltage, new Rotation2d()),
+        //   new SwerveModuleState(voltage, new Rotation2d())
+        // });
       },
       io::logDriveMotors,
       this,
@@ -142,12 +123,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     return io.getRotation3d();
   }
 
-  
   public double getGyroHeading() {
     return io.getGyroHeading().getRadians();
   }
 
-  
   public double getPitch() {
     return io.getPitch();
   }
@@ -167,25 +146,14 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     // use kinematics (wheel placements) to convert overall robot state to array of
     // individual module states
     SwerveModuleState[] states;
+    speeds = ChassisSpeeds.discretize(speeds, 0.02);
 
-    // If we are stopped (no wheel velocity commanded) then any number of wheel
-    // angles could be valid.
-    // By default it would point all modules forward when stopped. Here, we override
-    // this.
-    double dt = 0.02;
-    Pose2d veloPose =
-        new Pose2d(
-            speeds.vxMetersPerSecond * dt,
-            speeds.vyMetersPerSecond * dt,
-            Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * dt));
-    Twist2d twist_vel = new Pose2d().log(veloPose);
-    speeds = new ChassisSpeeds(twist_vel.dx / dt, twist_vel.dy / dt, twist_vel.dtheta / dt);
     // make sure the wheels don't try to spin faster than the maximum speed possible
     states = m_kinematics.toSwerveModuleStates(speeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(
         states,
         speeds,
-        Units.feetToMeters(19),
+        MAX_MODULE_SPEED_MPS,
         MAX_FWD_REV_SPEED_MPS,
         MAX_ROTATE_SPEED_RAD_PER_SEC);
     setModuleStates(states);
@@ -225,26 +193,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   }
 
   /**
-   * method for driving the robot Parameters: forward linear value sideways linear value rotation
-   * value if the control is field relative or robot relative
-   */
-  public void drive(double forward, double strafe, double rotation, boolean isFieldRelative) {
-
-    /**
-     * ChassisSpeeds object to represent the overall state of the robot ChassisSpeeds takes a
-     * forward and sideways linear value and a rotational value
-     *
-     * <p>speeds is set to field relative or default (robot relative) based on parameter
-     */
-    ChassisSpeeds speeds =
-        isFieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(forward, strafe, rotation, getPoseHeading())
-            : new ChassisSpeeds(forward, strafe, rotation);
-
-    drive(speeds);
-  }
-
-  /**
    * Return the desired states of the modules when the robot is stopped. This can be an x-shape to
    * hold against defense, or all modules forward. Here we have it stopping all modules but leaving
    * the angles at their current positions.
@@ -273,7 +221,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    * This order is important to remain consistent across the codebase, due to conventions assumed in WPILib
    */
   public SwerveModuleState[] getModuleStates() {
-
     return io.getModuleStates();
   }
 
@@ -283,7 +230,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    * @return an array of 4 SwerveModulePosition objects
    */
   public SwerveModulePosition[] getModulePositions() {
-
     return io.getCurrentPositions();
   }
 
@@ -368,10 +314,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public void resetImu() {
     io.resetIMU();
-  }
-
-  public void setRotationState(double radians) {
-    m_thetaController.setSetpoint(radians);
   }
 
   /** Returns a Translation2d representing the linear robot speed in field coordinates. */
@@ -486,49 +428,12 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             this::getPose,
             this::getRobotRelativeChassisSpeeds,
             this::drive,
-            this.m_pathPlannerConfig,
+            Pathing.m_pathPlannerConfig,
             AllianceWrapper::isRed,
             this);
     return command;
   }
 
-  /**
-   * For use with PPChasePoseCommand Generates a PathPlannerTrajectory on the fly to drive to the
-   * target pose. Takes into account the current speed of the robot for the start point. The
-   * returned PathPlannerTrajectory will go straight towards the target from the robot pose. The
-   * component of the current velocity that points toward the target will be used as the initial
-   * velocity of the trajectory.
-   *
-   * @param robotPose the current robot pose
-   * @param target the target pose
-   * @param currentSpeeds a Translation2d where x and y are the robot's x and y field-relative
-   *     speeds in m/s.
-   * @return a PathPlannerTrajectory to the target pose.
-   */
-  public static PathPlannerTrajectory generateTrajectoryToPose(
-      Pose2d robotPose, Pose2d target, ChassisSpeeds currentSpeeds, PathConstraints constraints) {
-    Translation2d robotToTargetTranslation =
-        target.getTranslation().minus(robotPose.getTranslation());
-    PathPlannerPath pathPlannerTrajectory =
-        new PathPlannerPath(
-            PathPlannerPath.bezierFromPoses(
-                List.of(
-                    new Pose2d(robotPose.getTranslation(), robotToTargetTranslation.getAngle()),
-                    new Pose2d(target.getTranslation(), robotToTargetTranslation.getAngle()))),
-            List.of(
-                new RotationTarget(0, robotPose.getRotation()),
-                new RotationTarget(1, target.getRotation(), true)),
-            List.of(),
-            List.of(),
-            // Start point. At the position of the robot, initial travel direction toward
-            // the target,
-            // robot rotation as the holonomic rotation, and putting in the (possibly 0)
-            // velocity override.
-            constraints,
-            new GoalEndState(0, target.getRotation()),
-            false);
-    return new PathPlannerTrajectory(pathPlannerTrajectory, currentSpeeds, robotPose.getRotation());
-  }
 
   /**
    * Creates a new pose-chase command. This command generates and follows the target pose supplied
@@ -542,22 +447,22 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     return new PPChasePoseCommand(
             targetSupplier,
             this::getPose,
-            m_holonomicDriveController,
+            Pathing.m_holonomicDriveController,
             m_xController,
             m_yController,
             m_thetaController,
             this::drive,
             (PathPlannerTrajectory traj) -> {
-              drawTrajectory.accept("align", traj);
-            }, // empty output for current trajectory.
+              drawTrajectory.accept("align", Pathing.ppTrajectoryToPoseList(traj));
+            },
             (startPose, endPose) ->
-                DrivebaseS.generateTrajectoryToPose(
+                Pathing.generateTrajectoryToPose(
                     startPose,
                     endPose,
-                    getFieldRelativeLinearSpeedsMPS(),
+                    new ChassisSpeeds(), //getFieldRelativeLinearSpeedsMPS(),
                     new PathConstraints(2, 2, 2 * Math.PI, 2 * Math.PI)),
             this)
-        .alongWith(LightStripS.getInstance().stateC(() -> States.Climbing));
+        .deadlineWith(LightStripS.getInstance().stateC(() -> States.Climbing));
   }
 
   /**
@@ -569,15 +474,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    * @return A command for manual drive.
    */
   public Command manualDriveC(InputAxis fwdXAxis, InputAxis fwdYAxis, InputAxis rotAxis) {
-
     return runOnce(
             () -> {
               fwdXAxis.resetSlewRate();
               fwdYAxis.resetSlewRate();
               rotAxis.resetSlewRate();
-              lastHeading = getPoseHeading().getRadians();
-              isTurning = false;
-              lastIsTurning = false;
             })
         .andThen(
             run(
@@ -599,29 +500,12 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                   double rot;
                   rot = rotAxis.getAsDouble();
                   rot *= MAX_TURN_SPEED;
-                  // if still turning, set to false;
-                  // isTurning = true; // Math.abs(rot) >= 0.05; //rad/s
-                  // if it was true on the last iter, no longer true;
-                  // if newly stopped turning
-                  // if (!isTurning && lastIsTurning) {
-                  //   lastHeading = getPoseHeading().getRadians();
-                  //   m_thetaController.reset();
-                  // }
-
-                  // if (!isTurning) {
-                  //   if (Math.abs(getPoseHeading().minus(new Rotation2d(lastHeading)).getRadians())
-                  //       < Units.degreesToRadians(1)) {
-                  //     rot = 0;
-                  //   } else {
-                  //     rot = m_thetaController.calculate(getPoseHeading().getRadians(), lastHeading);
-                  //   }
-                  // }
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
-                  lastIsTurning = isTurning;
                 }));
   }
 
-  /**
+
+    /**
    * Command factory for manual drive with PID heading lock.
    *
    * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
@@ -632,6 +516,24 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public Command manualHeadingDriveC(
       InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingAllianceRelative) {
+        return manualHeadingDriveC(fwdXAxis, fwdYAxis, headingAllianceRelative, ()->0);
+      }
+  /**
+   * Command factory for manual drive with PID heading lock.
+   *
+   * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
+   * @param fwdYAxis the InputAxis for downfield movement (+1 is left from driver POV)
+   * @param headingAllianceRelative the heading to hold, relative to the alliance wall (0 faces away
+   *     from driver station)
+   * @return A command for manual drive with heading lock.
+   */
+  public Command manualHeadingDriveC(
+      InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingAllianceRelative, DoubleSupplier headingFF) {
+        return manualFieldHeadingDriveC(fwdXAxis, fwdYAxis, ()->headingAllianceRelative.getAsDouble() + 
+                      ((AllianceWrapper.getAlliance() == Alliance.Red) ? Math.PI : 0.0), headingFF);
+      }
+    public Command manualFieldHeadingDriveC(
+      InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
     return runOnce(
             () -> {
               fwdXAxis.resetSlewRate();
@@ -655,13 +557,14 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
                   double rot;
 
-                  //
-                  double downfield =
-                      (AllianceWrapper.getAlliance() == Alliance.Red) ? Math.PI : 0.0;
                   rot =
                       m_profiledThetaController.calculate(
                           getPoseHeading().getRadians(),
-                          headingAllianceRelative.getAsDouble() + downfield);
+                          headingFieldRelative.getAsDouble());
+                  log("thetaGoal", m_profiledThetaController.getGoal().position);
+                  log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
+                  log("thetaReal", getPoseHeading().getRadians());
+                  rot += headingFF.getAsDouble();
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
                 }));
   }

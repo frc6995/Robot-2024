@@ -12,7 +12,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.DrivebaseS;
+import frc.robot.subsystems.drive.DrivebaseS;
+
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -112,15 +113,15 @@ public class PPChasePoseCommand extends Command {
   public void execute() {
     // If the target's moved more than 0.2 m since the last regen, generate the
     // trajectory again.
-    if (m_targetPose.get().getTranslation().getDistance(m_lastRegenTarget.getTranslation()) > 0.2) {
-      regenTrajectory();
-    }
+    // if (m_targetPose.get().getTranslation().getDistance(m_lastRegenTarget.getTranslation()) > 0.2) {
+    //   regenTrajectory();
+    // }
 
     State desiredState;
     ChassisSpeeds targetChassisSpeeds;
     // Make sure the trajectory is not empty
     // Make sure it's still time to be following the trajectory.
-    if (m_trajectory.getStates().size() != 0
+    if (false && m_trajectory.getStates().size() != 0
         && m_timer.get() < m_trajectory.getTotalTimeSeconds()) {
       double curTime = m_timer.get();
       desiredState = (State) m_trajectory.sample(curTime);
@@ -132,11 +133,14 @@ public class PPChasePoseCommand extends Command {
       var pose = m_pose.get();
       var target = m_targetPose.get();
       targetChassisSpeeds =
+      ChassisSpeeds.fromFieldRelativeSpeeds(
           new ChassisSpeeds(
               m_xController.calculate(pose.getX(), target.getX()),
               m_yController.calculate(pose.getY(), target.getY()),
               m_thetaController.calculate(
-                  pose.getRotation().getRadians(), target.getRotation().getRadians()));
+                  pose.getRotation().getRadians(), target.getRotation().getRadians())),
+              m_pose.get().getRotation()
+      );
       if (pose.getTranslation().getDistance(target.getTranslation()) < Units.inchesToMeters(0.5)) {
         targetChassisSpeeds.vxMetersPerSecond = 0;
         targetChassisSpeeds.vyMetersPerSecond = 0;
@@ -153,6 +157,7 @@ public class PPChasePoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return m_finishTrigger.getAsBoolean();
+    return m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(2);
+    //return m_finishTrigger.getAsBoolean();
   }
 }

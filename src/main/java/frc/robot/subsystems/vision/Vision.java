@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.vision;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,11 +21,13 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.AprilTags;
+import monologue.Logged;
 
-public class Vision {
+public class Vision implements Logged {
     private SwerveDrivePoseEstimator m_poseEstimator;
     private Supplier<Rotation2d> getHeading;
     private Supplier<SwerveModulePosition[]> getModulePositions;
@@ -42,11 +45,13 @@ public class Vision {
                 new Pose2d());
         m_cameras = new ArrayList<>();
         Constants.cameras.entrySet().iterator().forEachRemaining((entry) -> {
-            m_cameras.add(
-                    new PhotonPoseEstimator(
+            var estimator = 
+            new PhotonPoseEstimator(
                             Constants.layout,
                             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new PhotonCamera(entry.getKey()),
-                            entry.getValue()));
+                            entry.getValue());
+                            estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+            m_cameras.add(estimator);
         });
     }
 
@@ -54,17 +59,21 @@ public class Vision {
         m_poseEstimator.update(getHeading.get(), getModulePositions.get());
         if (RobotBase.isReal()) {
             for (PhotonPoseEstimator estimator : m_cameras) {
+                estimator.setReferencePose(getPose());
                 var robotPoseOpt = estimator.update();
                 if (robotPoseOpt.isEmpty()) {
                     continue;
                 }
+                
                 var robotPose = robotPoseOpt.get();
-                var confidence = AprilTags.calculateVisionUncertainty(
-                        robotPose.estimatedPose.getX(),
-                        getPose().getRotation(),
-                        new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
+                if (robotPose.targetsUsed.size() < 2) {continue;}
+                // var confidence = AprilTags.calculateVisionUncertainty(
+                //         robotPose.estimatedPose.getX(),
+                //         getPose().getRotation(),
+                //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
+                log("visionPose3d", robotPose.estimatedPose);
                 m_poseEstimator.addVisionMeasurement(
-                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, confidence);
+                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.3, 0.3, 0.3));
             }
         }
     }
@@ -78,8 +87,13 @@ public class Vision {
     }
 
     public class Constants {
-        public static final Map<String, Transform3d> cameras = Map.of();
-             //   "OV9281-1", new Transform3d(0, 0, 0, new Rotation3d()));
+        public static final Map<String, Transform3d> cameras = Map.of(
+                "OV9281-4", new Transform3d(
+                    Units.inchesToMeters(1.5),
+                    -Units.inchesToMeters(-0.5),
+                    Units.inchesToMeters(22.625),
+                    new Rotation3d(Units.degreesToRadians(1), -Units.degreesToRadians(15), Math.PI)
+                ));
         public static AprilTagFieldLayout layout;
         static {
             try {

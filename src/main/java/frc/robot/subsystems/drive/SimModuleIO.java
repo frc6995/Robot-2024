@@ -25,7 +25,7 @@ public class SimModuleIO extends ModuleIO {
   public SimModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
     super(addPeriodic, moduleConstants);
     moduleSim.resetAzmth(Math.random() * 2 * Math.PI);
-    m_steerPIDController = new PIDController(10 / (Math.PI), 0.0, STEER_D);
+    m_steerPIDController = new PIDController(10, 0.0, STEER_D);
     // Tell the PID controller that it can move across the -pi to pi rollover point.
     m_steerPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -37,15 +37,15 @@ public class SimModuleIO extends ModuleIO {
   static SwerveModuleSim swerveSimModuleFactory() {
     return new SwerveModuleSim(
         DCMotor.getNEO(1),
-        DCMotor.getNEO(1),
+        DCMotor.getNeoVortex(1),
         WHEEL_RADIUS_M,
         1.0 / AZMTH_REVS_PER_ENC_REV, // steering motor rotations per wheel steer rotation
         1.0 / WHEEL_REVS_PER_ENC_REV,
         1.0 / AZMTH_REVS_PER_ENC_REV, // same as motor rotations because NEO encoder is on motor
         // shaft
         1.0 / WHEEL_REVS_PER_ENC_REV,
-        1.5,
-        2,
+        0.9,
+        0.8,
         ROBOT_MASS_kg * 9.81 / QuadSwerveSim.NUM_MODULES,
         0.01);
   }

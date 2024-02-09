@@ -22,8 +22,8 @@ public class ShooterWheelsS extends SubsystemBase implements Logged {
   private ShooterRoller m_topRoller;
   private ShooterRoller m_bottomRoller;
   public class Constants{
-    public static final int TOP_CAN_ID = 31;
-    public static final int BOTTOM_CAN_ID = 32;
+    public static final int TOP_CAN_ID = 35;
+    public static final int BOTTOM_CAN_ID = 36;
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {

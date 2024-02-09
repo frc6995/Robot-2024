@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
-import com.kauailabs.navx.frc.AHRS;
+import frc.robot.NavX.AHRS;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -53,13 +53,12 @@ public abstract class SwerveDriveIO implements Logged {
 
   @Log.NT
   public Rotation2d getGyroHeading() {
-    return Rotation2d.fromDegrees(-m_navx.getAngle());
+    return new Rotation2d(Units.degreesToRadians(-m_navx.getAngle()));
   }
 
   private void periodic() {
     updateModulePositions();
     updateModuleStates();
-    m_modules.forEach((m)->m.periodic(isSysid));
   }
 
   public void setModuleStates(SwerveModuleState[] moduleStates, boolean isSysid) {

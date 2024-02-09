@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CW_LIMIT;
 
 import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 
@@ -23,10 +24,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.climber.ClimberS;
+import frc.robot.subsystems.drive.DrivebaseS;
+import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
@@ -36,6 +38,7 @@ import frc.robot.subsystems.trap.pivot.TrapPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sparkmax.SparkDevice;
 import monologue.Logged;
@@ -58,10 +61,9 @@ public class RobotContainer implements Logged {
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   // private final ShooterPivotS m_shooterPivotS;
   // private final ShooterWheelsS m_shooterWheelsS;
-  // private final IntakePivotS m_intakePivotS;
-  // private final IntakeRollerS m_intakeRollerS;
-  // private final MidtakeS m_midtakeS;
-  // //private final TrapPivotS m_trapPivotS;
+  private final IntakePivotS m_intakePivotS;
+  private final IntakeRollerS m_intakeRollerS;
+  private final MidtakeS m_midtakeS;
   // private final ClimberS m_climberS;
   private final BlobDetectionCamera m_noteCamera;
   private final LightStripS m_lightStripS;
@@ -115,49 +117,38 @@ public class RobotContainer implements Logged {
     }
     // m_shooterPivotS = new ShooterPivotS();
     // m_shooterWheelsS = new ShooterWheelsS();
-    // m_midtakeS = new MidtakeS();
-    // m_intakePivotS = new IntakePivotS();
-    // m_intakeRollerS = new IntakeRollerS();
+   m_midtakeS = new MidtakeS();
+    m_intakePivotS = new IntakePivotS();
+    m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
-    ///m_trapPivotS = new TrapPivotS();
-    //m_climberS = new ClimberS();
+    // ///m_trapPivotS = new TrapPivotS();
+    // m_climberS = new ClimberS();
     RobotVisualizer.setupVisualizer();
     // RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     // RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
-    // m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
-    // RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
-    //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
-    //RobotVisualizer.addClimber(m_climberS.ELEVATOR);
+    m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
+    RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
+    // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
+    // RobotVisualizer.addClimber(m_climberS.ELEVATOR);
     Timer.delay(0.1);
     m_drivebaseS =
         new DrivebaseS(
             addPeriodic,
-            (name, traj) -> {
-              m_field
-                  .getObject(name)
-                  .setPoses(
-                      traj.getStates().stream()
-                          .map(
-                              (Function<State, Pose2d>)
-                                  (State state) -> {
-                                    return new Pose2d(
-                                        state.positionMeters, state.targetHolonomicRotation);
-                                  })
-                          .collect(Collectors.toList()));
-            });
-    m_noteCamera = new BlobDetectionCamera(addPeriodic);
+            (name, poses) -> m_field.getObject(name).setPoses(poses)
+            );
+    m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
     // Delay to let the motor configuration finish
     Timer.delay(0.1);
 
     m_autos = new CommandGroups(
       m_drivebaseS,
       m_noteCamera,
-      // m_intakePivotS,
-      // m_intakeRollerS,
-      // m_midtakeS,
+      m_intakePivotS,
+      m_intakeRollerS,
+       m_midtakeS,
       // m_shooterPivotS,
       // m_shooterWheelsS,
-      // m_climberS,
+      //m_climberS,
       m_lightStripS);
     configureButtonBindings();
     addAutoRoutines();
@@ -175,11 +166,36 @@ public class RobotContainer implements Logged {
 
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-  //   m_driverController.back().onTrue(Commands.runOnce(
-  //     ()->m_drivebaseS.resetPose(new Pose2d(
-  //       m_drivebaseS.getPose().getTranslation(),
-  //       AllianceWrapper.isRed() ? new Rotation2d(-Math.PI): new Rotation2d()
-  // ))));
+    m_driverController.rightTrigger().whileTrue(
+      m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
+      ()->Pathing.speakerDirection(
+        m_drivebaseS.getPose(),
+        NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance())
+        ).getRadians(),
+      ()->Pathing.aimingFFVelocity(
+        m_drivebaseS.getPose(),
+        m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance()))));
+    m_driverController.leftTrigger().whileTrue(
+      m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
+      ()->Pathing.speakerDirection(
+        m_drivebaseS.getPose(),
+        NomadMathUtil.mirrorTranslation(
+          Constants.Poses.SPEAKER,
+          AllianceWrapper.getAlliance())
+        ).getRadians(),
+      ()->0));
+    m_driverController.leftBumper().whileTrue(
+      m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis));
+    m_driverController.a().onTrue(m_autos.deployRunIntake());
+    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
+    m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
+    m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
+    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    //m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
     // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
