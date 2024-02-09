@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter.midtake;
 
+import java.util.function.Consumer;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
@@ -16,39 +18,45 @@ import frc.robot.util.sparkmax.SparkDevice;
 
 public class MidtakeS extends SubsystemBase {
   public class Constants {
-    public static final int CAN_ID = 30;
+    public static final int FRONT_CAN_ID = 30;
+    public static final int BACK_CAN_ID = 31;
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 6;
     public static final double IN_VOLTAGE = -6;
+    // public static final Consumer<SparkBaseConfig> config = c=>{
+    //   c.
+    // }
   }
-  private CANSparkMax m_motor;
+  private CANSparkMax m_leader;
+  private CANSparkMax m_follower;
 
       public final MechanismLigament2d MIDTAKE_ROLLER = new MechanismLigament2d(
     "midtake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
   /** Creates a new IntakeRollerS. */
   public MidtakeS() {
-    m_motor = SparkDevice.getSparkMax(Constants.CAN_ID);
-    m_motor.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
-    m_motor.setIdleMode(IdleMode.kBrake);
+    m_leader = SparkDevice.getSparkMax(Constants.FRONT_CAN_ID);
+    m_follower = SparkDevice.getSparkMax(Constants.BACK_CAN_ID);
+    m_leader.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
+    m_leader.setIdleMode(IdleMode.kBrake);
     setDefaultCommand(stopC());
   }
 
   @Override
   public void periodic() {
-      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_motor.getAppliedOutput());
+      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_leader.getAppliedOutput());
   }
 
   /**sets motor to outtake */
   public void outtake () {
-    m_motor.setVoltage(Constants.OUT_VOLTAGE);
+    m_leader.setVoltage(Constants.OUT_VOLTAGE);
   }
   /**sets motor to intake */
   public void intake () {
-    m_motor.setVoltage(Constants.IN_VOLTAGE);
+    m_leader.setVoltage(Constants.IN_VOLTAGE);
   }
   /**stops the intake motor */
   public void stop() {
-    m_motor.setVoltage(0);
+    m_leader.setVoltage(0);
   }
   /**returns the command of the outtake */
   public Command outtakeC() {
