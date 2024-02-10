@@ -136,8 +136,7 @@
               },
               "FR-[12,11][1]": {
                 "open": true
-              },
-              "open": true
+              }
             },
             "open": true
           },
@@ -146,10 +145,12 @@
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
             "open": true
-          },
-          "open": true
+          }
         },
         "m_intakePivotS": {
+          "open": true
+        },
+        "m_midtakeS": {
           "open": true
         },
         "m_shooterPivotS": {

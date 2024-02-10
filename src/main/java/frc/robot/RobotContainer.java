@@ -195,6 +195,7 @@ public class RobotContainer implements Logged {
     m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
     m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    m_driverController.start().whileTrue(m_midtakeS.outtakeC());
     //m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->

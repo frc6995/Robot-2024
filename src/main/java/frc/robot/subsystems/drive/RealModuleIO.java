@@ -32,7 +32,12 @@ public class RealModuleIO extends ModuleIO {
     public static SparkBaseConfig DRIVE_CONFIG = new SparkBaseConfig((c)->{
       c.
         freeLimit(50).
-        idleMode(IdleMode.kBrake);//.
+        idleMode(IdleMode.kBrake)
+        .status6(65535)
+        .status5(65535)
+        .status4(65535)
+        .status3(65535)
+        ;//.
         //statusFrames(40, 20, 20, 65535, 65535, 65535, 65535);
       c.hallEncoder.
         positionConversionFactor(
@@ -52,20 +57,27 @@ public class RealModuleIO extends ModuleIO {
       c.
         freeLimit(40).
         inverted(true).
-        idleMode(IdleMode.kBrake);
+        idleMode(IdleMode.kBrake)
+        .status6(40)
+        .status5(10)
+        .status4(65535)
+        .status3(65535);
         //.statusFrames(40, 65535, 65535, 65535, 65535, 40, 65535);
       c.absEncoder.
         positionConversionFactor(Math.PI * 2).
-        velocityConversionFactor(Math.PI * 2 * 60).
-        inverted(true);
+        velocityConversionFactor(Math.PI * 2.0 / 60.0).
+        zeroOffset(0).
+        inverted(false);
       c.hallEncoder.
-        positionConversionFactor(Math.PI * 2 * AZMTH_REVS_PER_ENC_REV);
+        positionConversionFactor(Math.PI * 2 * AZMTH_REVS_PER_ENC_REV)
+        .velocityConversionFactor(Math.PI * 2.0  * AZMTH_REVS_PER_ENC_REV / 60.0);
       c.pid.
         pidFF(0.5, 0, 0, 0).
-        feedbackSensor(FeedbackDevice.kAbsoluteEncoder).
+        feedbackSensor(FeedbackDevice.kHallSensor).
         wrappingEnabled(true).
         wrappingMaxInput(Math.PI).
-        wrappingMinInput(-Math.PI);
+        wrappingMinInput(-Math.PI)
+        ;
     });
   }
 
@@ -73,7 +85,7 @@ public class RealModuleIO extends ModuleIO {
   protected final CANSparkFlex m_steerMotor;
   protected final SparkPIDController m_driveController;
   protected final SparkPIDController m_rotationController;
-  protected final SparkAbsoluteEncoder m_magEncoder;
+  protected final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
   protected double m_driveDistance = 0;
   protected double m_driveVelocity = 0;
   protected double m_steerAngle = 0;
@@ -94,7 +106,8 @@ public class RealModuleIO extends ModuleIO {
       true
     );
     m_driveEncoder = m_driveMotor.getEncoder();
-    m_magEncoder = m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle);
+    m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, 0);
+    Timer.delay(0.5);
     // m_driveMotor = SparkDevice.getSparkFlex(moduleConstants.driveMotorID, MotorType.kBrushless);
     // m_steerMotor = SparkDevice.getSparkFlex(moduleConstants.rotationMotorID, MotorType.kBrushless);
     // m_driveMotor.restoreFactoryDefaults();
@@ -181,7 +194,7 @@ public class RealModuleIO extends ModuleIO {
   @Override
   public double getRelativeAngle() {
 
-    return 0; // m_steerMotor.getEncoder().getPosition();
+    return m_steerMotor.getEncoder().getPosition();
   }
 
   @Override
@@ -216,11 +229,14 @@ public class RealModuleIO extends ModuleIO {
 
   @Override
   public void setRotationPid(double angle, double ffVolts) {
+    log("steerFF", ffVolts);
     m_rotationController.setReference(angle, ControlType.kPosition, 0, ffVolts);
   }
 
   @Override
   public void setDrivePid(double velocity, double ffVolts) {
+    log("driveFF", ffVolts);
+    //m_driveMotor.setVoltage(ffVolts);
     m_driveController.setReference(velocity, ControlType.kVelocity, 0, ffVolts);
   }
 }

@@ -11,11 +11,16 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.*;
 import static frc.robot.subsystems.intake.pivot.RealIntakePivotIO.Constants.*;
+
+import java.util.function.Consumer;
+
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkBase.SoftLimitDirection;
 
 import frc.robot.util.sparkmax.SparkDevice;
+import lib.sparkmax.SparkBaseConfig;
+import lib.sparkmax.PIDControllerConfig.FeedbackDevice;
 
 public class RealIntakePivotIO extends IntakePivotIO {
     private CANSparkMax m_motor;
@@ -26,26 +31,29 @@ public class RealIntakePivotIO extends IntakePivotIO {
     private Trigger m_coastModeButton = new Trigger(m_coastModeInput::get).negate();
     public RealIntakePivotIO() {
         super();
-        m_motor = SparkDevice.getSparkMax(IntakePivotS.Constants.CAN_ID);
-        m_motor.setIdleMode(IdleMode.kBrake);
-        m_motor.setInverted(INVERTED);
-        m_motor.setSmartCurrentLimit(CURRENT_LIMIT);
+        m_motor = new SparkBaseConfig(Constants.config).applyMax(
+            SparkDevice.getSparkMax(IntakePivotS.Constants.CAN_ID)
+            , true);
+        // m_motor = SparkDevice.getSparkMax(IntakePivotS.Constants.CAN_ID);
+        // m_motor.setIdleMode(IdleMode.kBrake);
+        // m_motor.setInverted(INVERTED);
+        // m_motor.setSmartCurrentLimit(CURRENT_LIMIT);
 
-        m_motor.enableSoftLimit(SoftLimitDirection.kForward, true);
-        m_motor.enableSoftLimit(SoftLimitDirection.kReverse, true);
+        // m_motor.enableSoftLimit(SoftLimitDirection.kForward, true);
+        // m_motor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         m_controller = m_motor.getPIDController();
         m_encoder = m_motor.getEncoder();
-        m_encoder.setPositionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
-        m_encoder.setVelocityConversionFactor(
-            Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)
-        );
-        m_motor.setSoftLimit(SoftLimitDirection.kForward, (float) CCW_LIMIT);
-        m_motor.setSoftLimit(SoftLimitDirection.kReverse, (float) CW_LIMIT);
-        m_controller.setP(kP);
-        m_controller.setI(kI);
-        m_controller.setD(kD);
-        m_controller.setFF(0);
-        m_coastModeButton
+        // m_encoder.setPositionConversionFactor();
+        // m_encoder.setVelocityConversionFactor(
+        //     Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)
+        // );
+        // m_motor.setSoftLimit(SoftLimitDirection.kForward, (float) CCW_LIMIT);
+        // m_motor.setSoftLimit(SoftLimitDirection.kReverse, (float) CW_LIMIT);
+        // m_controller.setP(kP);
+        // m_controller.setI(kI);
+        // m_controller.setD(kD);
+        // m_controller.setFF(0);
+        m_coastModeButton.and(DriverStation::isDisabled)
             .onTrue(
             Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kCoast);}).ignoringDisable(true))
             .onFalse(Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kBrake);}).ignoringDisable(true));
@@ -101,5 +109,34 @@ public class RealIntakePivotIO extends IntakePivotIO {
          */
         public static final boolean INVERTED = true;
         public static final int CURRENT_LIMIT = 20;
+        public static final double POSITION_FACTOR = 
+            Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION);
+        public static final double VELOCITY_FACTOR = 
+          Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION);
+        public static final Consumer<SparkBaseConfig> config = c->{
+            c.
+                freeLimit(CURRENT_LIMIT)
+                .stallLimit(CURRENT_LIMIT)
+                .idleMode(IdleMode.kBrake)
+                .inverted(true)
+                .setForwardSoftLimit((float) CCW_LIMIT)
+                .setReverseSoftLimit((float) CW_LIMIT)
+                .enableForwardSoftLimit(true)
+                .enableReverseSoftLimit(true)
+                .status6(65535)
+                .status5(65535)
+                .status4(65535)
+                .status3(65535);
+            c.hallEncoder
+                .positionConversionFactor(POSITION_FACTOR)
+                .velocityConversionFactor(VELOCITY_FACTOR);
+            c.pid
+                .p(0.2)
+                .i(0)
+                .d(0)
+                .ff(0)
+                .feedbackSensor(FeedbackDevice.kHallSensor);
+            
+        };
     }
 }

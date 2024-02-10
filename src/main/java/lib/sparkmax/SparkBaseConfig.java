@@ -59,7 +59,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     public int status5 = 200;
     public int status6 = 200;
 
-    public SparkRelativeEncoder.Type encoderPortType = SparkRelativeEncoder.Type.kNoSensor;
+    public SparkRelativeEncoder.Type encoderPortType = SparkRelativeEncoder.Type.kHallSensor;
     /**
      * This is only used for Spark MAX. For Spark Flex, the altEncoder config will apply 
      * to the External Encoder, and the encoderPortEncoder and limit switches will be configured
@@ -115,7 +115,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
                         c -> new Pair<Double, Boolean>(c.nominalVoltage, c.voltageCompensationEnabled)),
                 call(
                         (s, set) -> s.follow(
-                                set.getFirst() < 0 ? CANSparkBase.ExternalFollower.kFollowerSpark
+                                set.getFirst() >= 0 ? CANSparkBase.ExternalFollower.kFollowerSpark
                                         : CANSparkBase.ExternalFollower.kFollowerDisabled,
                                 set.getFirst(), set.getSecond()),
                         c -> new Pair<Integer, Boolean>(c.followerID, c.followerInvert))
@@ -159,12 +159,12 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     public CANSparkFlex applyFlex(CANSparkFlex s, boolean restoreFactoryDefaults) {
         s = apply(s, restoreFactoryDefaults);
         try {
-            var encoder = s.getExternalEncoder(SparkFlexExternalEncoder.Type.kQuadrature, altEncoder.countsPerRev);
-            altEncoder.apply(encoder, RelativeEncoderConfig.calls, altEncDefaults, restoreFactoryDefaults);
-            if (pid.feedbackSensor == FeedbackDevice.kAlternateEncoder) {
-                var controller = s.getPIDController();
-                SparkBaseConfig.config(()->controller.setFeedbackDevice(encoder));
-            }
+            // var encoder = s.getExternalEncoder(SparkFlexExternalEncoder.Type.kQuadrature, altEncoder.countsPerRev);
+            // altEncoder.apply(encoder, RelativeEncoderConfig.calls, altEncDefaults, restoreFactoryDefaults);
+            // if (pid.feedbackSensor == FeedbackDevice.kAlternateEncoder) {
+            //     var controller = s.getPIDController();
+            //     SparkBaseConfig.config(()->controller.setFeedbackDevice(encoder));
+            // }
         } catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
         }
@@ -174,6 +174,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         } catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
         }
+        Timer.delay(0.2);
         return s;
     }
     public CANSparkMax applyMax(CANSparkMax s, boolean restoreFactoryDefaults) {
@@ -194,6 +195,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
             // limit switches + absolute encoder only available in normal mode
             s = applyAbsEncAndSwitches(s, restoreFactoryDefaults);
         }
+        Timer.delay(0.2);
         return s;
     }
 
@@ -219,9 +221,9 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         for (Call<CANSparkBase, ?, SparkBaseConfig> config : calls) {
             applyConfig(s, this, defaults, config, restoreFactoryDefaults);
         }
-        // for (Call<CANSparkBase, ?, SparkBaseConfig> config : statusFrameCalls) {
-        //     applyConfig(s, this, defaults, config, restoreFactoryDefaults);
-        // }
+        for (Call<CANSparkBase, ?, SparkBaseConfig> config : statusFrameCalls) {
+            applyConfig(s, this, defaults, config, restoreFactoryDefaults);
+        }
 
         // Configure the encoder port;
         if (encoderPortType != SparkRelativeEncoder.Type.kNoSensor) {
@@ -276,7 +278,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
      * Calls the provided method up to 4 times, repeating if the returned REVLibError is not kOk;
      * @param configCall
      */
-    public static void config(Supplier<REVLibError> configCall) {
+    public static boolean config(Supplier<REVLibError> configCall) {
         try {
         int attempts = 0;
         REVLibError error = REVLibError.kOk;
@@ -288,11 +290,13 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
             attempts++;
         } while ((error == REVLibError.kTimeout) && attempts <= 4);
         if (error != REVLibError.kOk) {
+            
             DriverStation.reportError("Error configuring", false);
         }} catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
             DataLogManager.log(e.getMessage());
         }
+        return true;
     }
 
     /**
@@ -339,7 +343,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         return this;
     }
 
-    public SparkBaseConfig setStallLimit(int stallLimit) {
+    public SparkBaseConfig stallLimit(int stallLimit) {
         this.stallLimit = stallLimit;
         return this;
     }

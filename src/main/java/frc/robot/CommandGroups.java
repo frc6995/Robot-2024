@@ -73,13 +73,28 @@ public class CommandGroups {
       m_intakePivotS.deploy(),
       m_intakeRollerS.intakeC(),
       m_midtakeS.intakeC()
-    );
+    ).until(m_midtakeS.hasNote.debounce(0.0))//.or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
+    .andThen(
+      parallel(
+        sequence(
+        m_midtakeS.stopC(),
+        waitSeconds(0.5),
+        m_midtakeS.outtakeC().withTimeout(0.3),
+        m_midtakeS.stopC()),
+      waitSeconds(0.5).andThen(retractStopIntake())
+      )
+      );
+    // .andThen(
+    //   parallel(
+    //   m_intakeRollerS.slowInC(),
+    //   m_midtakeS.outtakeC()
+    //   ).withTimeout(0.3)
+    // );
   }
   public Command retractStopIntake() {
     return parallel(
       m_intakePivotS.retract(),
-      m_intakeRollerS.stopC(),
-      m_midtakeS.stopC()
+      m_intakeRollerS.stopC()
     );
   }
   // public Command midtakeReceiveNote() {

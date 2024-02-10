@@ -132,12 +132,12 @@ public abstract class ModuleIO implements Logged {
 
   @Log.NT
   public SwerveModuleState getCurrentState() {
-    return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAngle()));
+    return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getRelativeAngle()));
   }
 
   @Log.NT
   public SwerveModulePosition getCurrentPosition() {
-    return new SwerveModulePosition(getDriveDistance(), new Rotation2d(getAngle()));
+    return new SwerveModulePosition(getDriveDistance(), new Rotation2d(getRelativeAngle()));
   }
 
   public double getPinionSlip() {

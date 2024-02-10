@@ -1,20 +1,21 @@
 package frc.robot.util.sim;
 
 import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 import frc.robot.Robot;
 
 public class SparkMaxAbsoluteEncoderWrapper {
-  private final CANSparkMax sparkMax;
+  private final CANSparkBase sparkMax;
   private final AbsoluteEncoder sparkMaxEncoder;
   private double lastPosition = 1.0;
   private double simPosition = 1.50;
   private double simVelocity = 0.0;
 
   /** Creates a new SparkMaxDerivedVelocityController using a default set of parameters. */
-  public SparkMaxAbsoluteEncoderWrapper(CANSparkMax sparkMax, double offset) {
+  public SparkMaxAbsoluteEncoderWrapper(CANSparkBase sparkMax, double offset) {
     this.sparkMax = sparkMax;
     this.sparkMaxEncoder = sparkMax.getAbsoluteEncoder(Type.kDutyCycle);
     sparkMaxEncoder.setZeroOffset(offset);

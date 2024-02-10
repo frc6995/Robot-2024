@@ -23,7 +23,7 @@ public class PIDControllerConfig extends Config<SparkPIDController, PIDControlle
     public boolean wrappingEnabled = false;
     public double wrappingMinInput = 0;
     public double wrappingMaxInput = 0;
-    public FeedbackDevice feedbackSensor;
+    public FeedbackDevice feedbackSensor = FeedbackDevice.kHallSensor;
     public static final PIDSlotConfig slotDefaults = new PIDSlotConfig();
 
     public static final PIDControllerConfig defaults = new PIDControllerConfig();

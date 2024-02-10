@@ -12,7 +12,7 @@ public class RelativeEncoderConfig extends Config<RelativeEncoder, RelativeEncod
     public int countsPerRev = 42;
     public int averageDepth = 8;
     public boolean isInverted;
-    public int measurementPeriod = 200;
+    public int measurementPeriod = 32;
     public double positionConversionFactor = 1;
     public double velocityConversionFactor = 1;
     public final static List<Call<RelativeEncoder, ?, RelativeEncoderConfig>> calls = List.of(

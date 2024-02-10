@@ -5,6 +5,9 @@
 package frc.robot.subsystems.intake;
 
 import com.revrobotics.CANSparkMax;
+
+import java.util.function.Consumer;
+
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.util.Units;
@@ -16,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.sparkmax.SparkDevice;
+import lib.sparkmax.SparkBaseConfig;
 
 public class IntakeRollerS extends SubsystemBase {
   public class Constants {
@@ -23,7 +27,19 @@ public class IntakeRollerS extends SubsystemBase {
     public static final int FOLLOWER_CAN_ID = 21;
     public static final int CURRENT_LIMIT = 40;
     public static final double OUT_VOLTAGE = 12;
-    public static final double IN_VOLTAGE = -8;
+    public static final double IN_VOLTAGE = -10.5;
+        public static final Consumer<SparkBaseConfig> config = c->{
+      c.
+        freeLimit(40)
+        .stallLimit(40)
+        .idleMode(IdleMode.kBrake)
+        .inverted(false)
+        .status6(65535)
+        .status5(65535)
+        .status4(65535)
+        .status3(65535)
+        .status2(65535);
+    };
   }
   private CANSparkMax m_leader;
   private CANSparkMax m_follower;
@@ -33,14 +49,23 @@ public class IntakeRollerS extends SubsystemBase {
 
   /** Creates a new IntakeRollerS. */
   public IntakeRollerS() {
-    m_leader = SparkDevice.getSparkMax(Constants.LEADER_CAN_ID);
-    m_follower = SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID);
-    m_leader.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
-    m_follower.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
-    m_leader.setInverted(false);
-    m_follower.follow(m_leader);
-    m_leader.setIdleMode(IdleMode.kCoast);
-    m_follower.setIdleMode(IdleMode.kCoast);
+    m_leader = new SparkBaseConfig(Constants.config)
+    .applyMax(
+      SparkDevice.getSparkMax(Constants.LEADER_CAN_ID), true
+    );
+m_follower = new SparkBaseConfig(Constants.config)
+    .follow(Constants.LEADER_CAN_ID,false)
+    .applyMax(
+      SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID), true
+    );
+    // m_leader = SparkDevice.getSparkMax(Constants.LEADER_CAN_ID);
+    // m_follower = SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID);
+    // m_leader.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
+    // m_follower.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
+    // m_leader.setInverted(false);
+    // m_follower.follow(m_leader);
+    // m_leader.setIdleMode(IdleMode.kCoast);
+    // m_follower.setIdleMode(IdleMode.kCoast);
 
     setDefaultCommand(stopC());
   }
@@ -73,5 +98,9 @@ public class IntakeRollerS extends SubsystemBase {
   /**returns the command to stop the intake */
   public Command stopC(){
     return run(this::stop);
+  }
+
+  public Command slowInC() {
+    return run(()->m_leader.setVoltage(-6));
   }
 }
