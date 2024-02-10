@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class LightStripS {
 
   private static class PersistentLedState {
     public int rainbowFirstPixelHue = 0;
-    public int pulseOffset = 0;
+    public double pulseOffset = 0;
   }
 
   /** Creates a new LightStripS. */
@@ -171,20 +172,20 @@ public class LightStripS {
   }
 
   private static BiConsumer<AddressableLEDBuffer, PersistentLedState> chase(
-    double speed, int width, int r, int g, int b) {
+    double speed, int width, Color8Bit onColor, Color8Bit offColor) {
       return (buffer, state) -> {
         if (state.pulseOffset > buffer.getLength()) {
           state.pulseOffset = 0;
         }
         for (int i = 0; i < buffer.getLength(); i++) {
           if (i >= state.pulseOffset && i < (state.pulseOffset + width)) {
-              buffer.setRGB(i, r, g, b);
+              buffer.setRGB(i, onColor.red, onColor.green, onColor.blue);
           }
           else {
-              buffer.setRGB(i, 0, 0, 0);
+              buffer.setRGB(i, offColor.red, offColor.green, offColor.blue);
           }
         }
-        state.pulseOffset++;
+        state.pulseOffset += speed;
       };
   }
 
