@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,12 +15,14 @@ import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
+
 public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
 
   private AddressableLED led = new AddressableLED(9);
-  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(40);
+  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(117);
   private final PersistentLedState persistentLedState = new PersistentLedState();
   private States previousState = States.Default;
 
@@ -47,7 +50,6 @@ public class LightStripS {
    * Different states of the robot, states placed higher in the list have higher priority
    */
   public static enum States {
-   
     CoastMode(setColor(0, 0, 255)),
     SetupDone(setColor(0, 128, 0)), // set in robotPeriodic
     Disabled(setColor(255, 0, 0)), // set in robotPeriodic
@@ -64,7 +66,7 @@ public class LightStripS {
         }), // set through triggers in RobotContainer
     IntakedNote(pulse(0.25, setColor(245, 224, 66))),
     Scoring(setColor(0, 0, 255)),
-     AutoAlign(
+    AutoAlign(
       (ledBuffer, persistentState) -> {
           for (int i = 0; i < ledBuffer.getLength(); i++) {
             final int hue =
@@ -74,7 +76,30 @@ public class LightStripS {
           persistentState.rainbowFirstPixelHue += 3;
           persistentState.rainbowFirstPixelHue %= 180;
         }),
-    Default(setColor(0, 255, 0));
+      Default(
+        (ledBuffer, persistentState) -> {
+          for (int i = 0; i < ledBuffer.getLength(); i++) {
+            if (i % 2 == 0) {
+              ledBuffer.setRGB(i, 0, 255, 0);
+            }
+            else {
+              // double period = 0.5;
+              // if (Timer.getFPGATimestamp() % period < 0.5 * period) {
+              //   ledBuffer.setRGB(i, 247, 104, 9);
+              // } else {
+              //   ledBuffer.setRGB(i, 0, 0, 0);
+              // }
+              // 
+              if (RobotController.getInputCurrent() < 0.2) {
+                ledBuffer.setRGB(i, 247, 104, 9);
+              } else {
+                            ledBuffer.setRGB(i, 0, 0, 0);    
+              }
+          }
+        }
+        }
+      );
+    //Default(setColor(0, 255, 0));
 
     public final BiConsumer<AddressableLEDBuffer, PersistentLedState> setter;
 
@@ -143,6 +168,24 @@ public class LightStripS {
       }
       state.pulseOffset++;
     };
+  }
+
+  private static BiConsumer<AddressableLEDBuffer, PersistentLedState> chase(
+    double speed, int width, int r, int g, int b) {
+      return (buffer, state) -> {
+        if (state.pulseOffset > buffer.getLength()) {
+          state.pulseOffset = 0;
+        }
+        for (int i = 0; i < buffer.getLength(); i++) {
+          if (i >= state.pulseOffset && i < (state.pulseOffset + width)) {
+              buffer.setRGB(i, r, g, b);
+          }
+          else {
+              buffer.setRGB(i, 0, 0, 0);
+          }
+        }
+        state.pulseOffset++;
+      };
   }
 
   private static BiConsumer<AddressableLEDBuffer, PersistentLedState> pulse(

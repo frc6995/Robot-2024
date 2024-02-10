@@ -179,7 +179,6 @@ public class RobotContainer implements Logged {
     m_driverController.a().whileTrue(m_autos.driveToNote());
     m_driverController.x().onTrue(m_shooterPivotS.run(()->
     m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
-    m_driverController.b().whileTrue(m_lightStripS.stateC(()-> States.CoastMode));
     m_driverController.y()
       .whileTrue(
         sequence(
