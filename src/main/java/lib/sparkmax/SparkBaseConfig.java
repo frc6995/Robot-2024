@@ -58,6 +58,10 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     public int status4 = 20;
     public int status5 = 200;
     public int status6 = 200;
+    /**
+     * Actual rev default is 250ms but we want this off all the time
+     */
+    public int status7 = 65535;
 
     public SparkRelativeEncoder.Type encoderPortType = SparkRelativeEncoder.Type.kHallSensor;
     /**
@@ -73,13 +77,14 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     public LimitSwitchConfig backwardSwitch;
     public PIDControllerConfig pid;
     static List<Call<CANSparkBase, ?, SparkBaseConfig>> statusFrameCalls = List.of(
-        call((s, s0) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus0, s0), c->c.status0),
-        call((s, s1) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus1, s1), c->c.status1),
-        call((s, s2) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus2, s2), c->c.status2),
-        call((s, s3) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus3, s3), c->c.status3),
-        call((s, s4) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus4, s4), c->c.status4),
-        call((s, s5) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus5, s5), c->c.status5),
-        call((s, s6) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus6, s6), c->c.status6)
+        call((s, s0) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus0, s0), c->c.status0, "s0"),
+        call((s, s1) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus1, s1), c->c.status1, "s1"),
+        call((s, s2) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus2, s2), c->c.status2, "s2"),
+        call((s, s3) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus3, s3), c->c.status3, "s3"),
+        call((s, s4) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus4, s4), c->c.status4, "s4"),
+        call((s, s5) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus5, s5), c->c.status5, "s5"),
+        call((s, s6) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus6, s6), c->c.status6, "s6"),
+        call((s, s7) -> s.setPeriodicFramePeriod(PeriodicFrame.kStatus6, s7), c->c.status6, "s7")
     );
     static List<Call<CANSparkBase, ?, SparkBaseConfig>> calls = List.of(
                 // Inversion
@@ -88,37 +93,53 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
                             s.setInverted(inv);
                             return s.getLastError();
                         },
-                        c -> c.isInverted),
+                        c -> c.isInverted,
+                        "inverted"
+                ),
                 // Forward soft limit
                 call(
                         (s, lim) -> s.setSoftLimit(SoftLimitDirection.kForward, lim),
-                        c -> c.forwardSoftLimit),
+                        c -> c.forwardSoftLimit,
+                        "fwdSoft"
+                ),
                 call(
                         (s, en) -> s.enableSoftLimit(SoftLimitDirection.kForward, en),
-                        c -> c.forwardSoftLimitEnabled),
+                        c -> c.forwardSoftLimitEnabled,
+                        "fwdSofEn"
+                ),
                 // Backward soft limit
                 call(
                         (s, lim) -> s.setSoftLimit(SoftLimitDirection.kReverse, lim),
-                        c -> c.reverseSoftLimit),
+                        c -> c.reverseSoftLimit,
+                        "revSoft"
+                ),
                 call(
                         (s, en) -> s.enableSoftLimit(SoftLimitDirection.kReverse, en),
-                        c -> c.reverseSoftLimitEnabled),
+                        c -> c.reverseSoftLimitEnabled,
+                        "revSofEn"
+                ),
                 call(
                         (s, mode) -> s.setIdleMode(mode),
-                        c -> c.idleMode),
+                        c -> c.idleMode,
+                        "idle"
+                ),
                 call(
                         (s, lims) -> s.setSmartCurrentLimit(lims.getFirst(), lims.getSecond()),
-                        c -> new Pair<Integer, Integer>(c.stallLimit, c.freeLimit)),
+                        c -> new Pair<Integer, Integer>(c.stallLimit, c.freeLimit),
+                        "curLim"
+                ),
                 call(
                         (s, set) -> set.getSecond() ? s.enableVoltageCompensation(set.getFirst())
                                 : s.disableVoltageCompensation(),
-                        c -> new Pair<Double, Boolean>(c.nominalVoltage, c.voltageCompensationEnabled)),
+                        c -> new Pair<Double, Boolean>(c.nominalVoltage, c.voltageCompensationEnabled),
+                        "volComp"),
                 call(
                         (s, set) -> s.follow(
                                 set.getFirst() >= 0 ? CANSparkBase.ExternalFollower.kFollowerSpark
                                         : CANSparkBase.ExternalFollower.kFollowerDisabled,
                                 set.getFirst(), set.getSecond()),
-                        c -> new Pair<Integer, Boolean>(c.followerID, c.followerInvert))
+                        c -> new Pair<Integer, Boolean>(c.followerID, c.followerInvert),
+                        "follow")
         );
 
     public SparkBaseConfig() {
@@ -157,6 +178,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     }
 
     public CANSparkFlex applyFlex(CANSparkFlex s, boolean restoreFactoryDefaults) {
+        
         s = apply(s, restoreFactoryDefaults);
         try {
             // var encoder = s.getExternalEncoder(SparkFlexExternalEncoder.Type.kQuadrature, altEncoder.countsPerRev);
@@ -174,7 +196,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         } catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
         }
-        Timer.delay(0.2);
+        //Timer.delay(0.2);
         return s;
     }
     public CANSparkMax applyMax(CANSparkMax s, boolean restoreFactoryDefaults) {
@@ -195,7 +217,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
             // limit switches + absolute encoder only available in normal mode
             s = applyAbsEncAndSwitches(s, restoreFactoryDefaults);
         }
-        Timer.delay(0.2);
+        //Timer.delay(0.2);
         return s;
     }
 
@@ -216,13 +238,16 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
      * @return
      */
     public <S extends CANSparkBase> S apply(S s, boolean restoreFactoryDefaults) {
+        DriverStation.reportError("Config "+s.getDeviceId(), false);
         if (restoreFactoryDefaults)
             config(s::restoreFactoryDefaults);
+        config(()->s.setCANTimeout(50));
         for (Call<CANSparkBase, ?, SparkBaseConfig> config : calls) {
             applyConfig(s, this, defaults, config, restoreFactoryDefaults);
         }
         for (Call<CANSparkBase, ?, SparkBaseConfig> config : statusFrameCalls) {
-            applyConfig(s, this, defaults, config, restoreFactoryDefaults);
+            // restore factory defaults is false here to force-set everything 
+            applyConfig(s, this, defaults, config, false);
         }
 
         // Configure the encoder port;
@@ -283,18 +308,18 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         int attempts = 0;
         REVLibError error = REVLibError.kOk;
         do {
-            if (attempts > 0) {
-                Timer.delay(0.010);
-            }
+            // if (attempts > 0) {
+            //     Timer.delay(0.010);
+            // }
             error = configCall.get();
             attempts++;
-        } while ((error == REVLibError.kTimeout) && attempts <= 4);
+        } while ((error != REVLibError.kOk) && attempts <= 4);
         if (error != REVLibError.kOk) {
             
-            DriverStation.reportError("Error configuring", false);
+            Config.configErrorFeedback.accept("Skipping...");
         }} catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
-            DataLogManager.log(e.getMessage());
+            Config.configErrorFeedback.accept(e.getMessage());
         }
         return true;
     }

@@ -14,10 +14,10 @@ public class PIDSlotConfig extends Config<SparkPIDController, PIDSlotConfig> {
 
     public static List<Call<SparkPIDController, ?, PIDSlotConfig>> createCallsList(int slot) {
         return List.of(
-            call((s, kP)->s.setP(kP, slot), c->c.p),
-            call((s, kI)->s.setI(kI, slot), c->c.i),
-            call((s, kD)->s.setD(kD, slot), c->c.d),
-            call((s, kFF)->s.setFF(kFF, slot), c->c.ff)
+            call((s, kP)->s.setP(kP, slot), c->c.p, "p"+slot),
+            call((s, kI)->s.setI(kI, slot), c->c.i, "i"+slot),
+            call((s, kD)->s.setD(kD, slot), c->c.d, "d"+slot),
+            call((s, kFF)->s.setFF(kFF, slot), c->c.ff, "ff"+slot)
         );
     }
 

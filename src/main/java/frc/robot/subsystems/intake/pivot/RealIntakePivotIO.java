@@ -123,10 +123,10 @@ public class RealIntakePivotIO extends IntakePivotIO {
                 .setReverseSoftLimit((float) CW_LIMIT)
                 .enableForwardSoftLimit(true)
                 .enableReverseSoftLimit(true)
-                .status6(65535)
-                .status5(65535)
-                .status4(65535)
-                .status3(65535);
+                .status6(32767)
+                .status5(32767)
+                .status4(32767)
+                .status3(32767);
             c.hallEncoder
                 .positionConversionFactor(POSITION_FACTOR)
                 .velocityConversionFactor(VELOCITY_FACTOR);

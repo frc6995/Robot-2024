@@ -34,9 +34,9 @@ public class PIDControllerConfig extends Config<SparkPIDController, PIDControlle
         defaults.slot3 = slotDefaults;
     }
     public static final List<Call<SparkPIDController, ?, PIDControllerConfig>> calls = List.of(
-        call(SparkPIDController::setPositionPIDWrappingEnabled, c->c.wrappingEnabled),
-        call(SparkPIDController::setPositionPIDWrappingMinInput, c->c.wrappingMinInput),
-        call(SparkPIDController::setPositionPIDWrappingMaxInput, c->c.wrappingMaxInput)
+        call(SparkPIDController::setPositionPIDWrappingEnabled, c->c.wrappingEnabled, "pidWrapEn"),
+        call(SparkPIDController::setPositionPIDWrappingMinInput, c->c.wrappingMinInput, "pidWrapMin"),
+        call(SparkPIDController::setPositionPIDWrappingMaxInput, c->c.wrappingMaxInput, "pidWrapMax")
     );
     private static final List<Call<SparkPIDController, ?, PIDSlotConfig>> slot0Calls = PIDSlotConfig.createCallsList(0);
     private static final List<Call<SparkPIDController, ?, PIDSlotConfig>> slot1Calls = PIDSlotConfig.createCallsList(1);

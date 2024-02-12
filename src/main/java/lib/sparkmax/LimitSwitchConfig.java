@@ -11,6 +11,7 @@ public class LimitSwitchConfig extends Config<SparkLimitSwitch, LimitSwitchConfi
         call(
             SparkLimitSwitch::enableLimitSwitch,
             c->c.enabled
+            , "limEn"
         )
     );
     public LimitSwitchConfig setEnabled(boolean enabled) {

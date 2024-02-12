@@ -10,13 +10,13 @@ public class RealSwerveDriveIO extends SwerveDriveIO {
   public RealSwerveDriveIO(Consumer<Runnable> addPeriodic) {
     super(addPeriodic);
     m_modules = new ArrayList<>();
-    Timer.delay(0.05);
+    //Timer.delay(0.05);
     m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.FL));
-    Timer.delay(0.05);
+    //Timer.delay(0.05);
     m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.FR));
-    Timer.delay(0.05);
+    //Timer.delay(0.05);
     m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.BL));
-    Timer.delay(0.05);
+    //Timer.delay(0.05);
     m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.BR));
   }
 

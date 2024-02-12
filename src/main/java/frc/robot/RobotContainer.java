@@ -11,10 +11,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -157,7 +159,7 @@ public class RobotContainer implements Logged {
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
-    SparkDevice.burnFlashInSync();
+    //SparkDevice.burnFlashInSync();
     Commands.sequence(waitSeconds(4), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
@@ -195,7 +197,7 @@ public class RobotContainer implements Logged {
     m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
     m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
-    m_driverController.start().whileTrue(m_midtakeS.outtakeC());
+    m_driverController.start().whileTrue(m_midtakeS.intakeC());
     //m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
     // m_driverController.a().whileTrue(m_autos.driveToNote());
     // m_driverController.x().onTrue(m_shooterPivotS.run(()->
@@ -251,7 +253,11 @@ public class RobotContainer implements Logged {
     // /* Trace the loop duration and plot to shuffleboard */
     LightStripS.getInstance().periodic();
     updateFields();
+    var beforeLog = Timer.getFPGATimestamp();
     Monologue.updateAll();
+    var afterLog = Timer.getFPGATimestamp();
+    log("mlUpdate", (afterLog-beforeLog));
+    
   }
 
   public void updateFields() {

@@ -8,28 +8,32 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.REVLibError;
 
 public class AbsoluteEncoderConfig extends Config<AbsoluteEncoder, AbsoluteEncoderConfig>  {
-    public double zeroOffset = 42;
+    public double zeroOffset = 0;
     public int averageDepth = 8;
 
-    public boolean inverted;
+    public boolean inverted = false;
     public double positionConversionFactor = 1;
     public double velocityConversionFactor = 1;
     public static final List<Call<AbsoluteEncoder, ?, AbsoluteEncoderConfig>> calls = List.of(
         call(
             AbsoluteEncoder::setInverted,
-            c->c.inverted
+            c->c.inverted,
+            "absEncInv"
         ),
         call(
             AbsoluteEncoder::setPositionConversionFactor,
-            c->c.positionConversionFactor
+            c->c.positionConversionFactor,
+            "absPosFac"
         ),
         call(
             AbsoluteEncoder::setVelocityConversionFactor,
-            c->c.velocityConversionFactor
+            c->c.velocityConversionFactor,
+            "absVelFac"
         ),
         call(
             AbsoluteEncoder::setZeroOffset,
-            c->c.zeroOffset
+            c->c.zeroOffset,
+            "0off"
         )
     );
     public AbsoluteEncoderConfig zeroOffset(double zeroOffset) {

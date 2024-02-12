@@ -87,13 +87,13 @@ public class Vision implements Logged {
     }
 
     public class Constants {
-        public static final Map<String, Transform3d> cameras = Map.of(
-                "OV9281-4", new Transform3d(
-                    Units.inchesToMeters(1.5),
-                    -Units.inchesToMeters(-0.5),
-                    Units.inchesToMeters(22.625),
-                    new Rotation3d(Units.degreesToRadians(1), -Units.degreesToRadians(15), Math.PI)
-                ));
+        public static final Map<String, Transform3d> cameras= Map.of();// = Map.of(
+                // "OV9281-4", new Transform3d(
+                //     Units.inchesToMeters(1.5),
+                //     -Units.inchesToMeters(-0.5),
+                //     Units.inchesToMeters(22.625),
+                //     new Rotation3d(Units.degreesToRadians(1), -Units.degreesToRadians(15), Math.PI)
+                // ));
         public static AprilTagFieldLayout layout;
         static {
             try {

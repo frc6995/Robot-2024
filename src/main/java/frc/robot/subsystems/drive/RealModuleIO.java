@@ -33,10 +33,11 @@ public class RealModuleIO extends ModuleIO {
       c.
         freeLimit(50).
         idleMode(IdleMode.kBrake)
-        .status6(65535)
-        .status5(65535)
-        .status4(65535)
-        .status3(65535)
+        .status6(32767)
+        .status5(32767)
+        .status4(32767)
+        .status3(32767)
+        .status0(15)
         ;//.
         //statusFrames(40, 20, 20, 65535, 65535, 65535, 65535);
       c.hallEncoder.
@@ -59,9 +60,11 @@ public class RealModuleIO extends ModuleIO {
         inverted(true).
         idleMode(IdleMode.kBrake)
         .status6(40)
-        .status5(10)
-        .status4(65535)
-        .status3(65535);
+        .status5(20)
+        .status4(32767)
+        .status3(32767)
+        .status0(15)
+        ;
         //.statusFrames(40, 65535, 65535, 65535, 65535, 40, 65535);
       c.absEncoder.
         positionConversionFactor(Math.PI * 2).
@@ -107,7 +110,7 @@ public class RealModuleIO extends ModuleIO {
     );
     m_driveEncoder = m_driveMotor.getEncoder();
     m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, 0);
-    Timer.delay(0.5);
+    //Timer.delay(0.5);
     // m_driveMotor = SparkDevice.getSparkFlex(moduleConstants.driveMotorID, MotorType.kBrushless);
     // m_steerMotor = SparkDevice.getSparkFlex(moduleConstants.rotationMotorID, MotorType.kBrushless);
     // m_driveMotor.restoreFactoryDefaults();

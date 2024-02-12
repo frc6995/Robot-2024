@@ -18,23 +18,28 @@ public class RelativeEncoderConfig extends Config<RelativeEncoder, RelativeEncod
     public final static List<Call<RelativeEncoder, ?, RelativeEncoderConfig>> calls = List.of(
         call(
             RelativeEncoder::setInverted,
-            c->c.isInverted
+            c->c.isInverted,
+            "relInv"
         ),
         call(
             RelativeEncoder::setPositionConversionFactor,
-            c->c.positionConversionFactor
+            c->c.positionConversionFactor,
+            "relPosFac"
         ),
         call(
             RelativeEncoder::setVelocityConversionFactor,
-            c->c.velocityConversionFactor
+            c->c.velocityConversionFactor,
+            "relVelFac"
         ),
         call(
             RelativeEncoder::setMeasurementPeriod,
-            c->c.measurementPeriod
+            c->c.measurementPeriod,
+            "relMeasPd"
         ),
         call(
             RelativeEncoder::setAverageDepth,
-            c->c.averageDepth
+            c->c.averageDepth,
+            "relAvgDep"
         )
     );
     public RelativeEncoderConfig countsPerRev(int countsPerRev) {

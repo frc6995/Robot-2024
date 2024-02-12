@@ -34,11 +34,12 @@ public class IntakeRollerS extends SubsystemBase {
         .stallLimit(40)
         .idleMode(IdleMode.kBrake)
         .inverted(false)
-        .status6(65535)
-        .status5(65535)
-        .status4(65535)
-        .status3(65535)
-        .status2(65535);
+        .status6(32767)
+        .status5(32767)
+        .status4(32767)
+        .status3(32767)
+        .status2(32767)
+        .status0(15);
     };
   }
   private CANSparkMax m_leader;
@@ -55,6 +56,9 @@ public class IntakeRollerS extends SubsystemBase {
     );
 m_follower = new SparkBaseConfig(Constants.config)
     .follow(Constants.LEADER_CAN_ID,false)
+    .status0(40)
+    .status1(32767)
+    .status2(32767)
     .applyMax(
       SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID), true
     );
@@ -101,6 +105,6 @@ m_follower = new SparkBaseConfig(Constants.config)
   }
 
   public Command slowInC() {
-    return run(()->m_leader.setVoltage(-6));
+    return run(()->m_leader.setVoltage(-2));
   }
 }

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.climber.ClimberS;
@@ -69,21 +70,45 @@ public class CommandGroups {
    * End: When note is in midtake
    */
   public Command deployRunIntake() {
-    return parallel(
-      m_intakePivotS.deploy(),
-      m_intakeRollerS.intakeC(),
-      m_midtakeS.intakeC()
-    ).until(m_midtakeS.hasNote.debounce(0.0))//.or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
-    .andThen(
+    return sequence(
       parallel(
-        sequence(
-        m_midtakeS.stopC(),
-        waitSeconds(0.5),
-        m_midtakeS.outtakeC().withTimeout(0.3),
-        m_midtakeS.stopC()),
-      waitSeconds(0.5).andThen(retractStopIntake())
+        m_intakePivotS.deploy(),
+        m_intakeRollerS.intakeC(),
+        m_midtakeS.intakeC()
+      ).until(m_midtakeS.hasNote),
+      
+      parallel(
+        m_intakePivotS.retract(),
+        m_intakeRollerS.slowInC().withTimeout(0.3),
+        m_midtakeS.outtakeC())
+      .until(m_midtakeS.hasNote.negate())
+      .onlyIf(m_midtakeS.hasNote),
+      
+        parallel(
+          m_intakeRollerS.stopC(),
+          new ScheduleCommand(m_intakePivotS.retract()),
+          new ScheduleCommand(
+            m_midtakeS.run(
+              ()->m_midtakeS.setVoltage(-1))
+              .withTimeout(1)
+              .until(m_midtakeS.hasNote)
+              .andThen(m_midtakeS.stopC())
+        )
       )
-      );
+
+    )
+//.or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
+    ;
+    // .andThen(
+    //   parallel(
+    //     sequence(
+    //     m_midtakeS.stopC(),
+    //     waitSeconds(0.5),
+    //     m_midtakeS.outtakeC().withTimeout(0.3),
+    //     m_midtakeS.stopC()),
+    //   waitSeconds(0.5).andThen(retractStopIntake())
+    //   )
+    //   );
     // .andThen(
     //   parallel(
     //   m_intakeRollerS.slowInC(),
