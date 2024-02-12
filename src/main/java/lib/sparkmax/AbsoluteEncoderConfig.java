@@ -14,6 +14,8 @@ public class AbsoluteEncoderConfig extends Config<AbsoluteEncoder, AbsoluteEncod
     public boolean inverted = false;
     public double positionConversionFactor = 1;
     public double velocityConversionFactor = 1;
+    // These need to be applied in this order so that the zero offset
+    // is in the converted units and not native;
     public static final List<Call<AbsoluteEncoder, ?, AbsoluteEncoderConfig>> calls = List.of(
         call(
             AbsoluteEncoder::setInverted,
