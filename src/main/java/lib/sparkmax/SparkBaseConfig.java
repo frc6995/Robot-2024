@@ -279,7 +279,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
             absEncoder.apply(encoder, AbsoluteEncoderConfig.calls, absEncDefaults, restoreFactoryDefaults);
             var forward = s.getForwardLimitSwitch(forwardSwitch.type);
             forwardSwitch.apply(forward, LimitSwitchConfig.calls, forwardSwitchDefaults, restoreFactoryDefaults);
-            var backward = s.getReverseLimitSwitch(forwardSwitch.type);
+            var backward = s.getReverseLimitSwitch(backwardSwitch.type);
             backwardSwitch.apply(backward, LimitSwitchConfig.calls, backwardSwitchDefaults, restoreFactoryDefaults);
             if (pid.feedbackSensor == FeedbackDevice.kAbsoluteEncoder) {
                 SparkBaseConfig.config(()->s.getPIDController().setFeedbackDevice(encoder));
