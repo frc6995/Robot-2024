@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -43,7 +44,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+    var beforeLog = Timer.getFPGATimestamp();
     CommandScheduler.getInstance().run();
+    var afterLog = Timer.getFPGATimestamp();
+    robotContainer.log("commandsRun", (afterLog-beforeLog));
+    
     robotContainer.periodic();
     matchTimeEntry.setNumber(DriverStation.getMatchTime());
     NetworkTableInstance.getDefault().flush();
