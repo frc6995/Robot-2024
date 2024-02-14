@@ -27,7 +27,7 @@ public abstract class Config <P, E extends Config<P,E>> implements Cloneable{
                 (restoreFactoryDefaults && !desiredResult.equals(defaultVal))) {
 
             SparkBaseConfig.config(()->call.setter().apply(e, desiredResult));
-            Timer.delay(0.1);
+            //Timer.delay(0.1);
         }
     }
 

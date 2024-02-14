@@ -1,42 +1,25 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CW_LIMIT;
-
-import com.pathplanner.lib.path.PathPlannerTrajectory.State;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
-import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
-import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
-import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
-import frc.robot.subsystems.trap.pivot.TrapPivotS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
@@ -48,8 +31,6 @@ import monologue.Monologue;
 import monologue.Annotations.Log;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.photonvision.PhotonCamera;
 
 public class RobotContainer implements Logged {
@@ -159,7 +140,7 @@ public class RobotContainer implements Logged {
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
-    //SparkDevice.burnFlashInSync();
+    SparkDevice.burnFlashInSync();
     Commands.sequence(waitSeconds(4), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
@@ -193,6 +174,12 @@ public class RobotContainer implements Logged {
     m_driverController.leftBumper().whileTrue(
       m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis));
     m_driverController.a().onTrue(m_autos.deployRunIntake());
+    // m_driverController.a().and(
+    //   new Trigger(m_noteCamera::hasTarget).negate())
+    //   .whileTrue(
+    //     run(()->m_driverController.getHID().setRumble(RumbleType.kRightRumble, 0.8)).ignoringDisable(true))
+    //     .onFalse(
+    //       runOnce(()->m_driverController.getHID().setRumble(RumbleType.kRightRumble, 0.0)).ignoringDisable(true)        );
     m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
     m_driverController.b().whileTrue(m_intakePivotS.runVoltage(()->m_driverController.getRightTriggerAxis() - m_driverController.getLeftTriggerAxis()));
     m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
@@ -256,8 +243,7 @@ public class RobotContainer implements Logged {
     var beforeLog = Timer.getFPGATimestamp();
     Monologue.updateAll();
     var afterLog = Timer.getFPGATimestamp();
-    log("mlUpdate", (afterLog-beforeLog));
-    
+    log("mlUpdate", (afterLog-beforeLog));    
   }
 
   public void updateFields() {
