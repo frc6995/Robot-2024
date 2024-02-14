@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -25,8 +26,9 @@ import monologue.Annotations.Log;
 
 public class MidtakeS extends SubsystemBase implements Logged {
   public class Constants {
-    public static final int FRONT_CAN_ID = 30;
-    public static final int BACK_CAN_ID = 31;
+    public static final double TOF_NO_NOTE = 350;
+    public static final int FRONT_CAN_ID = 31;
+    public static final int BACK_CAN_ID = 30;
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 2;
     public static final double IN_VOLTAGE = 10.5;
@@ -71,7 +73,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 );
     m_tof = new TimeOfFlight(32);
     m_tof.setRangingMode(RangingMode.Short, 24);
-    hasNote = new Trigger(()->m_tof.getRange() < 200);
+    hasNote = new Trigger(()->tofDistance() < 200);
     isRunning = new Trigger(()->getVolts() > 6).debounce(1);
     recvNote = new Trigger(()->m_front.getOutputCurrent() > 20);
     // m_front = SparkDevice.getSparkMax(Constants.FRONT_CAN_ID);
@@ -127,6 +129,9 @@ public class MidtakeS extends SubsystemBase implements Logged {
 
   @Log
   public double tofDistance() {
+    if (RobotBase.isSimulation()) {
+      return Constants.TOF_NO_NOTE;
+    }
     return m_tof.getRange();
   }
 
