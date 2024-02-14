@@ -58,7 +58,7 @@ public class SimIntakePivotIO extends IntakePivotIO {
         IntakePivotS.Constants.CG_DIST * 2,
         IntakePivotS.Constants.CW_LIMIT,
         IntakePivotS.Constants.CCW_LIMIT,
-        true,
+        false,
         IntakePivotS.Constants.CCW_LIMIT,
         null
     );
@@ -68,7 +68,7 @@ public class SimIntakePivotIO extends IntakePivotIO {
     public void setVolts(double volts) {
         volts = MathUtil.clamp(DriverStation.isEnabled() ? volts : 0, -12, 12);
         m_inputVolts = NomadMathUtil.subtractkS(volts, 0);
-        m_pivotSim.setInputVoltage(m_inputVolts); 
+        m_pivotSim.setInputVoltage(m_inputVolts - IntakePivotS.Constants.K_G * Math.cos(getAngle())); 
     }
 
     public void periodic() {
@@ -84,9 +84,6 @@ public class SimIntakePivotIO extends IntakePivotIO {
 
     public class Constants {
         public static final LinearSystem<N2, N1, N1> PLANT =
-            LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getNEO(1), 
-                SingleJointedArmSim.estimateMOI(IntakePivotS.Constants.CG_DIST*2, 5),
-            IntakePivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
+            LinearSystemId.identifyPositionSystem(IntakePivotS.Constants.K_V, IntakePivotS.Constants.K_A);
     }    
 }
