@@ -139,8 +139,7 @@
               }
             },
             "open": true
-          },
-          "open": true
+          }
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
@@ -148,6 +147,9 @@
           }
         },
         "m_intakePivotS": {
+          "double[]##v_/Robot/m_intakePivotS/ff": {
+            "open": true
+          },
           "open": true
         },
         "m_midtakeS": {
@@ -165,6 +167,9 @@
             "open": true
           }
         }
+      },
+      "SmartDashboard": {
+        "open": true
       }
     }
   },
@@ -343,51 +348,18 @@
     "Plot <2>": {
       "plots": [
         {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
           "backgroundColor": [
             0.0,
             0.0,
             0.0,
             0.8500000238418579
           ],
-          "height": 419,
-          "series": [
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getVelocity"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/setpointVelocity"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Robot/m_drivebaseS/io/m_modules/BL-[16,15][2]/getDriveSetpoint"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Robot/m_drivebaseS/io/m_modules/BL-[16,15][2]/getDriveVelocity"
-            }
-          ]
+          "height": 503
         }
       ],
       "window": {
@@ -467,6 +439,60 @@
                 1.0
               ],
               "id": "NT:/Robot/m_intakePivotS/setpointPosition"
+            },
+            {
+              "color": [
+                0.5490196347236633,
+                0.5490196347236633,
+                0.5490196347236633,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getVelocity"
+            },
+            {
+              "color": [
+                0.8000000715255737,
+                0.7254902124404907,
+                0.4549019932746887,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/getGoalVelocity"
+            },
+            {
+              "color": [
+                0.3921568989753723,
+                0.7098039388656616,
+                0.803921639919281,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/setpointVelocity"
+            },
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/totalTile"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/precalSetpot"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Robot/m_intakePivotS/goal"
             }
           ]
         }

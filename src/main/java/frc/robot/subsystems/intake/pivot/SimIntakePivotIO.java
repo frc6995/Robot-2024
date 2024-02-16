@@ -66,9 +66,9 @@ public class SimIntakePivotIO extends IntakePivotIO {
     private double m_inputVolts;
     
     public void setVolts(double volts) {
-        volts = MathUtil.clamp(DriverStation.isEnabled() ? volts : 0, -12, 12);
+        volts = MathUtil.clamp(DriverStation.isEnabled() ? volts - IntakePivotS.Constants.K_G * Math.cos(getAngle()) : 0, -12, 12);
         m_inputVolts = NomadMathUtil.subtractkS(volts, 0);
-        m_pivotSim.setInputVoltage(m_inputVolts - IntakePivotS.Constants.K_G * Math.cos(getAngle())); 
+        m_pivotSim.setInputVoltage(m_inputVolts ); 
     }
 
     public void periodic() {

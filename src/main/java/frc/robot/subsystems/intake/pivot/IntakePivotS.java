@@ -13,9 +13,9 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import frc.robot.util.ExponentialProfile;
+import frc.robot.util.ExponentialProfile.Constraints;
+import frc.robot.util.ExponentialProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -52,9 +52,9 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    */
   private IntakePivotIO m_io;
   /**
-   * The TrapezoidProfile for calculating smooth movement
+   * The ExponentialProfile for calculating smooth movement
    */
-  private TrapezoidProfile m_profile;
+  private ExponentialProfile m_profile;
   /**
    * The setpoint to be tracking at the moment.
    */
@@ -89,10 +89,11 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     else {
       m_io = new RealIntakePivotIO();
     }
-    m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
+    m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
     setDefaultCommand(hold());
   }
+  @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
   @Log.NT public double getAngle() {return m_io.getAngle();}
@@ -107,14 +108,15 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     if (DriverStation.isEnabled()) {
       // If enabled, calculate the next step in the profile from our previous setpoint
       // to our desired state
-      m_nextSetpoint = m_profile.calculate(0.04, m_setpoint, m_desiredState);
+      m_nextSetpoint = m_profile.calculate(0.03, m_setpoint, m_desiredState);
       m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
       // log that information
+      
       log("setpointVelocity", m_setpoint.velocity);
       log("setpointPosition", m_setpoint.position);
+      
       // Calculate the feedforward. This is partly to counter gravity
       double ffVolts = getGravityFF() + getVelocityFF();
-      //m_io.setVolts(ffVolts);
       m_io.setPIDFF(m_setpoint.position, ffVolts);
     } else {
       // If disabled, continuously update setpoint and goal to avoid
@@ -130,6 +132,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
 
   public void setAngle(double angle) {
     m_desiredState.position = angle;
+    m_desiredState.velocity = 0;
   }
 
   public Command runVoltage(DoubleSupplier voltage) {
@@ -166,7 +169,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    */
   @Log.NT
   public double getVelocityFF() {
-    return m_feedforward.calculate(m_setpoint.velocity, m_nextSetpoint.velocity, 0.02);
+    return m_feedforward.calculate(m_setpoint.velocity, m_nextSetpoint.velocity, 0.01);
   }
 
   public Command resetToRetractedC() {
@@ -200,10 +203,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     public static final double CCW_LIMIT = Units.degreesToRadians(90 + 28);
     public static final double CW_LIMIT = -0.3972;
     public static final int CAN_ID = 22;
+    public static final double INTAKE_MASS_KG = Units.lbsToKilograms(7.445);
     /**
      * Also equivalent to motor radians per pivot radian
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 71.429;
+    // volts per (9.8 m/s^2 / CG_dist)
     public static final double K_G = 0.17 * 0.09 / Math.cos(1.333) * 71.429 / 75.0;
     public static final double K_S = 0;
     /**
@@ -216,13 +221,13 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      */
     public static final double K_V =  
       MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.00001;
-    public static final double CG_DIST = Units.inchesToMeters(6);
+      public static final double CG_DIST = Units.inchesToMeters(10);
+    public static final double K_A = K_G * 9.8 / CG_DIST;
+    
     /**
      * radians per second, rad/s^2
      */
-    public static final Constraints CONSTRAINTS = new Constraints(
-      4.5, 12);
+    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(12-K_G, K_V, K_A);
   }
 
 }
