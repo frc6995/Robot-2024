@@ -129,11 +129,12 @@ public class RealIntakePivotIO extends IntakePivotIO {
                 .status3(32767);
             c.hallEncoder
                 .positionConversionFactor(POSITION_FACTOR)
-                .velocityConversionFactor(VELOCITY_FACTOR);
+                .velocityConversionFactor(VELOCITY_FACTOR)
+                .averageDepth(4);
             c.pid
-                .p(0.2)
+                .p(0.2)//5.7359
                 .i(0)
-                .d(0)
+                .d(0)//0.32894
                 .ff(0)
                 .feedbackSensor(FeedbackDevice.kHallSensor);
             

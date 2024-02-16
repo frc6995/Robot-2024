@@ -21,7 +21,7 @@ import frc.robot.util.TimingTracer;
 
 public class SimIntakePivotIO extends IntakePivotIO {
     private double m_pidVolts = 0;
-    private PIDController m_pid = new PIDController(1, 0, 0);
+    private PIDController m_pid = new PIDController(50.219, 0, 3.0547);
     public SimIntakePivotIO () {
         super();
         m_pivotSim.setState(VecBuilder.fill(IntakePivotS.Constants.CCW_LIMIT,0));
@@ -66,9 +66,9 @@ public class SimIntakePivotIO extends IntakePivotIO {
     private double m_inputVolts;
     
     public void setVolts(double volts) {
-        volts = MathUtil.clamp(DriverStation.isEnabled() ? volts - IntakePivotS.Constants.K_G * Math.cos(getAngle()) : 0, -12, 12);
-        m_inputVolts = NomadMathUtil.subtractkS(volts, 0);
-        m_pivotSim.setInputVoltage(m_inputVolts ); 
+        volts = MathUtil.clamp(DriverStation.isEnabled() ? volts : 0, -12, 12);
+        m_inputVolts = NomadMathUtil.subtractkS(volts, IntakePivotS.Constants.K_S);
+        m_pivotSim.setInputVoltage(m_inputVolts - IntakePivotS.Constants.K_G * Math.cos(getAngle())); 
     }
 
     public void periodic() {

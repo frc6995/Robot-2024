@@ -183,7 +183,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   public SysIdRoutine m_idRoutine = new SysIdRoutine(
     new Config(
       Volts.of(0.5).per(Second),
-      Volts.of(1),
+      Volts.of(3),
       Seconds.of(10)
     ), 
     new Mechanism(
@@ -210,7 +210,8 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 71.429;
     // volts per (9.8 m/s^2 / CG_dist)
     public static final double K_G = 0.17 * 0.09 / Math.cos(1.333) * 71.429 / 75.0;
-    public static final double K_S = 0;
+    /** from sysid 2/15/24 */
+    public static final double K_S = 0.085423;
     /**
      * Units: Volts / (Pivot radians/sec)
      * 1/((motor rad/s)/volt) = volts/(motorRad/s)
@@ -219,10 +220,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      * Sanity check: motorRad/pivotRad > 1, so we multiply because we need more volts to get
      * a given pivot speed than to get the same motor speed.
      */
-    public static final double K_V =  
-      MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
+    /** from sysid 2/15/24 */
+    public static final double K_V = 1.3684;
+      //MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
       public static final double CG_DIST = Units.inchesToMeters(10);
-    public static final double K_A = K_G * 9.8 / CG_DIST;
+    /** from sysid 2/15/24 */
+    public static final double K_A = 0.12185;
     
     /**
      * radians per second, rad/s^2

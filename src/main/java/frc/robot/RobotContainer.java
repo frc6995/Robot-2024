@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -37,6 +38,7 @@ public class RobotContainer implements Logged {
 
   /** Establishes the controls and subsystems of the robot */
   private final CommandXboxController m_driverController = new CommandXboxController(0);
+  private final CommandXboxController m_testingController = new CommandXboxController(5);
 
   private final DrivebaseS m_drivebaseS;
 
@@ -201,22 +203,22 @@ public class RobotContainer implements Logged {
     // );
     // m_driverController.b().onTrue(m_climberS.run(()->
     // m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
-    // m_driverController.button(5).whileTrue(
-    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
-    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))
-    // );
-    // m_driverController.button(6).whileTrue(
-    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
-    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(5))
-    // );
-    // m_driverController.button(7).whileTrue(
-    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
-    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(10))
-    // );
-    // m_driverController.button(8).whileTrue(
-    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
-    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(10))
-    // );
+    m_testingController.button(1).whileTrue(
+      m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
+      .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))
+    );
+    m_testingController.button(2).whileTrue(
+      m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
+      .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(5))
+    );
+    m_testingController.button(3).whileTrue(
+      m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
+      .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(10))
+    );
+    m_testingController.button(4).whileTrue(
+      m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
+      .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(10))
+    );
   }
 
   public void addAutoRoutines() {
