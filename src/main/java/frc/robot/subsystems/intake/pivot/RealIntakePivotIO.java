@@ -79,6 +79,11 @@ public class RealIntakePivotIO extends IntakePivotIO {
     }
 
     @Override
+    public double getCurrent() {
+        
+        return m_motor.getOutputCurrent();
+    }
+    @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
             this.ffVolts = 0;    
@@ -108,7 +113,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
          * We want positive voltage to drive towards the retracted end.
          */
         public static final boolean INVERTED = true;
-        public static final int CURRENT_LIMIT = 20;
+        public static final int CURRENT_LIMIT = 80;
         public static final double POSITION_FACTOR = 
             Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION);
         public static final double VELOCITY_FACTOR = 
@@ -119,10 +124,10 @@ public class RealIntakePivotIO extends IntakePivotIO {
                 .stallLimit(CURRENT_LIMIT)
                 .idleMode(IdleMode.kBrake)
                 .inverted(true)
-                .setForwardSoftLimit((float) CCW_LIMIT)
-                .setReverseSoftLimit((float) CW_LIMIT)
-                .enableForwardSoftLimit(true)
-                .enableReverseSoftLimit(true)
+                .forwardSoftLimit((float) CCW_LIMIT)
+                .reverseSoftLimit((float) CW_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimitEnabled(true)
                 .status6(32767)
                 .status5(32767)
                 .status4(32767)
@@ -132,9 +137,9 @@ public class RealIntakePivotIO extends IntakePivotIO {
                 .velocityConversionFactor(VELOCITY_FACTOR)
                 .averageDepth(4);
             c.pid
-                .p(0.2)//5.7359
+                .p(1)
                 .i(0)
-                .d(0)//0.32894
+                .d(0)
                 .ff(0)
                 .feedbackSensor(FeedbackDevice.kHallSensor);
             

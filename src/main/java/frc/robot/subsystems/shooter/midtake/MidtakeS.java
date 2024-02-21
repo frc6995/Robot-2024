@@ -73,7 +73,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 );
     m_tof = new TimeOfFlight(32);
     m_tof.setRangingMode(RangingMode.Short, 24);
-    hasNote = new Trigger(()->tofDistance() < 200);
+    hasNote = new Trigger(()->tofDistance() < 250);
     isRunning = new Trigger(()->getVolts() > 6).debounce(1);
     recvNote = new Trigger(()->m_front.getOutputCurrent() > 20);
     // m_front = SparkDevice.getSparkMax(Constants.FRONT_CAN_ID);

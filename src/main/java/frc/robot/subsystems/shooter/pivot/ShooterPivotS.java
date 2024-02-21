@@ -4,6 +4,9 @@
 
 package frc.robot.subsystems.shooter.pivot;
 
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.CW_LIMIT;
+
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -60,7 +63,10 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
    * For visualization.
    */
   public final MechanismLigament2d SHOOTER_PIVOT = new MechanismLigament2d(
-    "shooter", Constants.CG_DIST * 2, 0, 4, new Color8Bit(235, 137, 52));
+    "shooter", 8, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 137, 52));
+
+  public final MechanismLigament2d SHOOTER_TEST_PIVOT = new MechanismLigament2d(
+    "shooter_test", 8, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 137, 52));
 
   /** Creates a new ShooterPivotS. */
   public ShooterPivotS() {
@@ -72,14 +78,23 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
       m_io = new RealShooterPivotIO();
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
+    resetAngleDown();
+    setDefaultCommand(hold());
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
   @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
   @Log.NT public double getSetpoint() {return m_setpoint.position;}
   @Log.NT public double getSetpointVelocity() {return m_setpoint.velocity;}
   @Log.NT public double getAngle() {return m_io.getAngle();}
+  @Log.NT public double getVelocity() {return m_io.getVelocity();}
   @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}
+  public void resetProfile() {
+    m_setpoint.position = getAngle();
+  }
+  public void resetAngleDown() {
+    m_io.resetAngle(Units.degreesToRadians(180-5));
+  }
   public void periodic() {
     // Update our visualization
     SHOOTER_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle()));
@@ -88,14 +103,8 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     if (DriverStation.isEnabled()) {
       // If enabled, calculate the next step in the profile from our previous setpoint
       // to our desired state
-      m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
-      // log that information
-      log("setpointVelocity", m_setpoint.velocity);
-      log("setpointPosition", m_setpoint.position);
-      // Calculate the feedforward. This is partly to counter gravity
-      double ffVolts = getGravityFF() + getVelocityFF();
 
-      m_io.setPIDFF(m_setpoint.position, ffVolts);
+
     } else {
       // If disabled, continuously update setpoint and goal to avoid
       // sudden movement on re-enable.
@@ -108,8 +117,22 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     m_io.periodic();
   }
 
-  public void setAngle(double angle) {
+    public void setAngle(double angle) {
+      setAngle(angle, 0);
+    }
+  public void setAngle(double angle, double velocity) {
     m_desiredState.position = angle;
+
+    m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
+    // log that information
+    log("setpointVelocity", m_setpoint.velocity);
+    log("setpointPosition", m_setpoint.position);
+    log("dbCompVelocity", velocity);
+    log("totalSetptVel", m_setpoint.velocity + velocity);
+    var totalVelocity = m_setpoint.velocity + velocity;
+    // Calculate the feedforward. This is partly to counter gravity
+    double ffVolts = getGravityFF()+ m_feedforward.calculate(totalVelocity, totalVelocity, 0.02);
+    m_io.setPIDFF(m_setpoint.position, ffVolts);
   }
 
   public Command runVoltage(DoubleSupplier voltage) {
@@ -118,6 +141,19 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
 
   public Command rotateToAngle(DoubleSupplier angleSupplier) {
     return run(()->setAngle(angleSupplier.getAsDouble()));
+  }
+
+  public Command rotateWithVelocity(DoubleSupplier angleSupplier, DoubleSupplier velocitySupplier) {
+    return run(()->setAngle(angleSupplier.getAsDouble(), velocitySupplier.getAsDouble()));
+  }
+  public Command hold(){
+    return sequence(
+      runOnce(()->{
+        resetProfile();
+        setAngle(getAngle());
+      }),
+      run(()->setAngle(m_desiredState.position))
+    );
   }
 
   /**
@@ -139,14 +175,14 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CCW_LIMIT = Units.degreesToRadians(170);
-    public static final double CW_LIMIT = Units.degreesToRadians(100);
+    public static final double CCW_LIMIT = Units.degreesToRadians(180-10);
+    public static final double CW_LIMIT = Units.degreesToRadians(180-50);
     public static final int CAN_ID = 40;
     /**
      * Also equivalent to motor radians per pivot radian
      */
-    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 50;
-    public static final double K_G = 0.47;
+    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 18;
+    public static final double K_G = 0.4;
     public static final double K_S = 0;
     /**
      * Units: Volts / (Pivot radians/sec)
@@ -157,14 +193,14 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
      * a given pivot speed than to get the same motor speed.
      */
     public static final double K_V = 
-      MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNeo550(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.00001;
+      MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
+    public static final double K_A = 0.2;
     public static final double CG_DIST = Units.inchesToMeters(6);
     /**
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      1, 2);
+      0.5, 1);
   }
 
 }

@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.climber;
 
-import static frc.robot.subsystems.climber.ClimberS.Constants.CLIMBER_ANGLE;
 import static frc.robot.subsystems.climber.ClimberS.Constants.LOWER_LIMIT;
 
 import java.util.function.DoubleSupplier;
@@ -62,21 +61,28 @@ public class ClimberS extends SubsystemBase implements Logged {
   /**
    * For visualization.
    */
-  public final MechanismLigament2d ELEVATOR = new MechanismLigament2d(
-    "climber", LOWER_LIMIT, Units.radiansToDegrees(CLIMBER_ANGLE), 8, new Color8Bit(235, 137, 52));
-  public final MechanismLigament2d TRAP_PIVOT_BASE = new MechanismLigament2d(
-    "trap-pivot-base", 0, -Units.radiansToDegrees(CLIMBER_ANGLE), 0, new Color8Bit());
+  public final MechanismLigament2d ELEVATOR; 
+  // public final MechanismLigament2d TRAP_PIVOT_BASE = new MechanismLigament2d(
+  //   "trap-pivot-base", 0, -90, 0, new Color8Bit());
   /** Creates a new ShooterPivotS. */
-  public ClimberS() {
+  public ClimberS(boolean isLeft) {
     // Create the IO class.
     if (Robot.isSimulation()) {
-      m_io = new SimClimberIO();
+      m_io = new SimClimberIO(isLeft);
     }
     else {
-      m_io = new RealClimberIO();
+      m_io = new RealClimberIO(isLeft);
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
-    ELEVATOR.append(TRAP_PIVOT_BASE);
+    if (isLeft){
+      ELEVATOR= new MechanismLigament2d(
+      "leftClimber", LOWER_LIMIT, 90, 12, new Color8Bit(235, 137, 52));
+    } else {
+            ELEVATOR= new MechanismLigament2d(
+      "rightClimber", LOWER_LIMIT, 90, 6, new Color8Bit(235, 0, 0));
+    }
+    setDefaultCommand(runVoltage(()->0));
+    //ELEVATOR.append(TRAP_PIVOT_BASE);
     
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
@@ -92,14 +98,14 @@ public class ClimberS extends SubsystemBase implements Logged {
     if (DriverStation.isEnabled()) {
       // If enabled, calculate the next step in the profile from our previous setpoint
       // to our desired state
-      m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
-      // log that information
-      log("setpointVelocity", m_setpoint.velocity);
-      log("setpointPosition", m_setpoint.position);
-      // Calculate the feedforward. This is partly to counter gravity
-      double ffVolts = getGravityFF() + getVelocityFF();
+      // m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
+      // // log that information
+      // log("setpointVelocity", m_setpoint.velocity);
+      // log("setpointPosition", m_setpoint.position);
+      // // Calculate the feedforward. This is partly to counter gravity
+      // double ffVolts = getGravityFF() + getVelocityFF();
 
-      m_io.setPIDFF(m_setpoint.position, ffVolts);
+      // m_io.setPIDFF(m_setpoint.position, ffVolts);
     } else {
       // If disabled, continuously update setpoint and goal to avoid
       // sudden movement on re-enable.
@@ -143,19 +149,19 @@ public class ClimberS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CLIMBER_ANGLE = Units.degreesToRadians(105);
-    public static final double UPPER_LIMIT = Units.feetToMeters(3);
+    
+    public static final double UPPER_LIMIT = Units.inchesToMeters(38);
     /**
      * The distance between trap pivot axle and bottom of climber when retracted
      */
     public static final double LOWER_LIMIT = Units.inchesToMeters(24);
-    public static final int LEADER_CAN_ID = 51;
-    public static final int FOLLOWER_CAN_ID = 52;
+    public static final int LEFT_CAN_ID = 51;
+    public static final int RIGHT_CAN_ID = 52;
     /**
      * Also equivalent to motor radians per pivot radian
      */
-    public static final double MOTOR_ROTATIONS_PER_METER = 50;
-    public static final double K_G = 0.47;
+    public static final double MOTOR_ROTATIONS_PER_METER = 25.0/(Math.PI*Units.inchesToMeters(1.875));
+    public static final double K_G = 0;
     public static final double K_S = 0;
 
     public static final double K_V = 6.3;

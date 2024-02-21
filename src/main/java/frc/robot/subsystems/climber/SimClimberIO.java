@@ -23,8 +23,8 @@ import frc.robot.util.TimingTracer;
 public class SimClimberIO extends ClimberIO {
     private double m_pidVolts = 0;
     private PIDController m_pid = new PIDController(1, 0, 0);
-    public SimClimberIO () {
-        super();
+    public SimClimberIO (boolean isLeft) {
+        super(isLeft);
         m_elevatorSim.setState(VecBuilder.fill(ClimberS.Constants.LOWER_LIMIT,0));
         // we need this to calculate outputs
         m_elevatorSim.update(0.0001);
@@ -50,7 +50,7 @@ public class SimClimberIO extends ClimberIO {
 
     private final ElevatorSim m_elevatorSim = new ElevatorSim(
         Constants.PLANT,
-        DCMotor.getNEO(2),
+        DCMotor.getNeoVortex(1),
         ClimberS.Constants.LOWER_LIMIT,
         ClimberS.Constants.UPPER_LIMIT,
         true,
@@ -78,7 +78,7 @@ public class SimClimberIO extends ClimberIO {
 
     public class Constants {
         public static final LinearSystem<N2, N1, N1> PLANT =
-            LinearSystemId.createElevatorSystem(DCMotor.getNEO(2), 5, 1.0/(2*Math.PI),ClimberS.Constants.MOTOR_ROTATIONS_PER_METER);
+            LinearSystemId.createElevatorSystem(DCMotor.getNeoVortex(1), 1, 1.0/(2*Math.PI),ClimberS.Constants.MOTOR_ROTATIONS_PER_METER);
     }
     
 }

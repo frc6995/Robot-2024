@@ -4,9 +4,8 @@
 
 package frc.robot.subsystems.intake.pivot;
 
-import static edu.wpi.first.wpilibj2.command.Commands.idle;
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CCW_LIMIT;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+
 
 import java.util.function.DoubleSupplier;
 
@@ -31,6 +30,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
@@ -47,6 +47,9 @@ import static edu.wpi.first.units.Units.*;
  * 
  */
 public class IntakePivotS extends SubsystemBase implements Logged {
+  private Trigger isHomed;
+  @Log
+  private boolean hasHomed = false; 
   /**
    * IO class for interacting with motor.
    */
@@ -85,13 +88,16 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     // Create the IO class.
     if (Robot.isSimulation()) {
       m_io = new SimIntakePivotIO();
+      isHomed = new Trigger(()-> true );
     }
     else {
       m_io = new RealIntakePivotIO();
+        isHomed = new Trigger(()-> getCurrent()>20).debounce(0.6995);
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
-    setDefaultCommand(hold());
+
+    setDefaultCommand(either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
   @Log.NT public double getGoal() {return m_desiredState.position;}
@@ -100,24 +106,15 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   @Log.NT public double getVelocity() {return m_io.getVelocity();}
   @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}
+  @Log.NT public double getCurrent() {return m_io.getCurrent();}
+  @Log public boolean isHomed() {return isHomed.getAsBoolean();}
   public void periodic() {
     // Update our visualization
     INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle() + Units.degreesToRadians(55-14) ));
 
     
     if (DriverStation.isEnabled()) {
-      // If enabled, calculate the next step in the profile from our previous setpoint
-      // to our desired state
-      m_nextSetpoint = m_profile.calculate(0.03, m_setpoint, m_desiredState);
-      m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
-      // log that information
       
-      log("setpointVelocity", m_setpoint.velocity);
-      log("setpointPosition", m_setpoint.position);
-      
-      // Calculate the feedforward. This is partly to counter gravity
-      double ffVolts = getGravityFF() + getVelocityFF();
-      m_io.setPIDFF(m_setpoint.position, ffVolts);
     } else {
       // If disabled, continuously update setpoint and goal to avoid
       // sudden movement on re-enable.
@@ -133,6 +130,21 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   public void setAngle(double angle) {
     m_desiredState.position = angle;
     m_desiredState.velocity = 0;
+      // If enabled, calculate the next step in the profile from our previous setpoint
+      // to our desired state
+      m_nextSetpoint = m_profile.calculate(0.03, m_setpoint, m_desiredState);
+      m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
+      // log that information
+      
+      log("setpointVelocity", m_setpoint.velocity);
+      log("setpointPosition", m_setpoint.position);
+      
+      // Calculate the feedforward. This is partly to counter gravity
+      double ffVolts = getGravityFF() + getVelocityFF();
+      m_io.setPIDFF(m_setpoint.position, ffVolts);
+  }
+  public void resetController() {
+    m_setpoint = new State(m_io.getAngle(), m_io.getVelocity());
   }
 
   public Command runVoltage(DoubleSupplier voltage) {
@@ -143,15 +155,15 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     return run(()->setAngle(angleSupplier.getAsDouble()));
   }
   public Command deploy(){
-    return rotateToAngle(()->Constants.CW_LIMIT);
+    return runOnce(this::resetController).andThen(rotateToAngle(()->Constants.CW_LIMIT));
   }
   public Command retract(){
-    return rotateToAngle(()->Constants.CCW_LIMIT);
+    return runOnce(this::resetController).andThen(rotateToAngle(()->1.958960));
   }
   public Command hold(){
     return sequence(
       runOnce(()->setAngle(getAngle())),
-      idle(this)
+      run(()->setAngle(m_desiredState.position))
     );
   }
   /**
@@ -173,10 +185,37 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   }
 
   public Command resetToRetractedC() {
-    return Commands.runOnce(
-      ()->{m_io.resetAngle(CCW_LIMIT);}).ignoringDisable(true);
+    return
+      deadline(
+        sequence(
+          Commands.runOnce(()->{m_io.resetAngle(Constants.CCW_LIMIT);}),
+          waitSeconds(0.03),
+          Commands.runOnce(()->{resetController();})
+        ),
+        runVoltage(()->0)
+      )
+      .ignoringDisable(true)
+      .finallyDo(()-> hasHomed = true);
   }
-
+  public Command resetToExtendedC() {
+    return 
+      deadline(
+        sequence(
+          Commands.runOnce(()->{m_io.resetAngle(Constants.CW_LIMIT);}),
+          waitSeconds(0.03),
+          Commands.runOnce(()->{resetController();})
+        ),
+        runVoltage(()->0)
+      )
+      .ignoringDisable(true);
+  }
+  public Command homeC(){
+    return Commands.sequence(
+      resetToExtendedC(),
+      runVoltage(()->1).until(isHomed),
+      resetToRetractedC()
+    );
+  }
   private MutableMeasure<Angle> positionMeasure = MutableMeasure.ofBaseUnits(0, Radians);
   private MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RadiansPerSecond);
   private MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
@@ -199,7 +238,6 @@ public class IntakePivotS extends SubsystemBase implements Logged {
 
       }, this, "intake"));
   public class Constants {
-    //TODO: determine constants for intake pivot
     public static final double CCW_LIMIT = Units.degreesToRadians(90 + 28);
     public static final double CW_LIMIT = -0.3972;
     public static final int CAN_ID = 22;
@@ -225,12 +263,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
       //MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
       public static final double CG_DIST = Units.inchesToMeters(10);
     /** from sysid 2/15/24 */
-    public static final double K_A = 0.12185;
+    public static final double K_A = 0.12185 * 0.1;
     
     /**
      * radians per second, rad/s^2
      */
-    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(12-K_G, K_V, K_A);
+    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(11-K_G, K_V, K_A);
   }
 
 }

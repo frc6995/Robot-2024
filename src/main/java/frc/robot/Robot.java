@@ -22,9 +22,6 @@ public class Robot extends TimedRobot {
 
   private Command autonomousCommand;
 
-  private NetworkTableEntry matchTimeEntry =
-      NetworkTableInstance.getDefault().getEntry("/DriverDisplay/matchTime");
-
   @Override
   public void robotInit() {
 
@@ -50,7 +47,6 @@ public class Robot extends TimedRobot {
     robotContainer.log("commandsRun", (afterLog-beforeLog));
     
     robotContainer.periodic();
-    matchTimeEntry.setNumber(DriverStation.getMatchTime());
     NetworkTableInstance.getDefault().flush();
   }
 

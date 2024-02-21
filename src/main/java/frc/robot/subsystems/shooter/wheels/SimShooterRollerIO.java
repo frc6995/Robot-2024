@@ -51,5 +51,9 @@ public class SimShooterRollerIO extends ShooterRollerIO {
     public double getPidVolts() {
         return pidVolts;
     }
+
+    public double getCurrent() {
+        return 0;
+    }
     
 }

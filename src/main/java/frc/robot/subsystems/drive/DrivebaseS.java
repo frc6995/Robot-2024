@@ -52,6 +52,7 @@ import frc.robot.util.trajectory.PPChasePoseCommand;
 import monologue.Logged;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
@@ -239,6 +240,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    */
   public Pose2d getPose() {
     return m_vision.getPose();
+  }
+
+  public Optional<Pose2d> getOldPose(double timestamp) {
+    return m_vision.getOldPose(timestamp);
   }
 
   /**

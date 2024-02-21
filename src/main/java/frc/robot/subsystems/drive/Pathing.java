@@ -89,10 +89,29 @@ public class Pathing {
   }
 
   public static double aimingFFVelocity(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
-    return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, 
-      speakerDirection(currentPose, targetTranslation)
+    return speakerRelativeSpeeds(currentPose, fieldRelativeSpeeds, 
+      targetTranslation
     ).vyMetersPerSecond
       / speakerDistance(currentPose, targetTranslation);
+  }
+  public static double velocityTorwardsSpeaker(
+    Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+       return -speakerRelativeSpeeds(currentPose, fieldRelativeSpeeds, 
+      targetTranslation
+    ).vxMetersPerSecond;
+    }
+
+  /**
+   * Forward is AWAY from the speaker
+   * @param currentPose
+   * @param fieldRelativeSpeeds
+   * @param targetTranslation
+   * @return
+   */
+  public static ChassisSpeeds speakerRelativeSpeeds(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+    return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, 
+      speakerDirection(currentPose, targetTranslation)
+    );
   }
   public static Rotation2d speakerDirection(Pose2d currentPose, Translation2d target) {
     return target.minus(currentPose.getTranslation()).getAngle().minus(new Rotation2d(Math.PI));

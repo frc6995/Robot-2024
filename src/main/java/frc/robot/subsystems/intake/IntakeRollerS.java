@@ -30,8 +30,8 @@ public class IntakeRollerS extends SubsystemBase {
     public static final double IN_VOLTAGE = -10.5;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
-        freeLimit(40)
-        .stallLimit(40)
+        freeLimit(80)
+        .stallLimit(80)
         .idleMode(IdleMode.kBrake)
         .inverted(false)
         .status6(32767)
@@ -43,7 +43,6 @@ public class IntakeRollerS extends SubsystemBase {
     };
   }
   private CANSparkMax m_leader;
-  private CANSparkMax m_follower;
 
     public final MechanismLigament2d INTAKE_ROLLER = new MechanismLigament2d(
     "intake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
@@ -53,14 +52,6 @@ public class IntakeRollerS extends SubsystemBase {
     m_leader = new SparkBaseConfig(Constants.config)
     .applyMax(
       SparkDevice.getSparkMax(Constants.LEADER_CAN_ID), true
-    );
-m_follower = new SparkBaseConfig(Constants.config)
-    .follow(Constants.LEADER_CAN_ID,false)
-    .status0(40)
-    .status1(32767)
-    .status2(32767)
-    .applyMax(
-      SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID), true
     );
     // m_leader = SparkDevice.getSparkMax(Constants.LEADER_CAN_ID);
     // m_follower = SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID);
@@ -105,6 +96,6 @@ m_follower = new SparkBaseConfig(Constants.config)
   }
 
   public Command slowInC() {
-    return run(()->m_leader.setVoltage(-2));
+    return run(()->m_leader.setVoltage(-1));
   }
 }

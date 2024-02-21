@@ -6,7 +6,9 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import monologue.Annotations.Log;
 import monologue.Logged;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.*;
 import static edu.wpi.first.units.Units.*;
 
@@ -18,12 +20,16 @@ public class ShooterRoller implements Subsystem, Logged {
     private int canId;
     private String name;
     public final SysIdRoutine m_idRoutine;
-    public ShooterRoller(int canId, boolean invert, String name){
+    private SimpleMotorFeedforward ff;
+    @Log
+    private double desiredSpeed;
+    public ShooterRoller(int canId, boolean invert, SimpleMotorFeedforward ff, String name){
         if(RobotBase.isReal()) {
             m_io = new RealShooterRollerIO(canId, invert);
         } else {
             m_io = new SimShooterRollerIO();
         }
+        this.ff = ff;
         this.name = name;
         MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RPM);
         MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
@@ -47,12 +53,20 @@ public class ShooterRoller implements Subsystem, Logged {
         setDefaultCommand(stopC());
     }
 
+    @Log.NT public double getGoalVelocity() {return desiredSpeed;}
+    @Log.NT public double getVelocity() {return m_io.getVelocity();}
+    @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
+    @Log.NT public double getVolts() {return m_io.getVolts();}
+    @Log.NT public double getCurrent() {return m_io.getCurrent();}
+
+    
     @Override
     public String getPath() {
         return name;
     }
     public void setSpeed(double rpm) {
-        m_io.setPIDFF(rpm, rpm);
+        desiredSpeed = rpm;
+        m_io.setPIDFF(rpm, ff.calculate(rpm));
     }
 
     public void setVolts(double voltage){

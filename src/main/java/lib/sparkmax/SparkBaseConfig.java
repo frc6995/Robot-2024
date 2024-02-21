@@ -317,7 +317,10 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         if (error != REVLibError.kOk) {
             
             Config.configErrorFeedback.accept("Skipping...");
-        }} catch (Exception e) {
+        } else if (attempts > 1) {
+            Config.configProgressFeedback.accept("ok");
+        }
+    } catch (Exception e) {
             DriverStation.reportError(e.getMessage(), e.getStackTrace());
             Config.configErrorFeedback.accept(e.getMessage());
         }
@@ -348,22 +351,29 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         return this;
     }
 
-    public SparkBaseConfig setForwardSoftLimit(float forwardSoftLimit) {
+    public SparkBaseConfig forwardSoftLimit(float forwardSoftLimit) {
         this.forwardSoftLimit = forwardSoftLimit;
         return this;
     }
 
-    public SparkBaseConfig enableForwardSoftLimit(boolean forwardSoftLimitEnabled) {
+    public SparkBaseConfig forwardSoftLimit(double forwardSoftLimit) {
+        return forwardSoftLimit((float) forwardSoftLimit);
+    }
+
+    public SparkBaseConfig forwardSoftLimitEnabled(boolean forwardSoftLimitEnabled) {
         this.forwardSoftLimitEnabled = forwardSoftLimitEnabled;
         return this;
     }
 
-    public SparkBaseConfig setReverseSoftLimit(float reverseSoftLimit) {
+    public SparkBaseConfig reverseSoftLimit(float reverseSoftLimit) {
         this.reverseSoftLimit = reverseSoftLimit;
         return this;
     }
+    public SparkBaseConfig reverseSoftLimit(double reverseSoftLimit){
+        return reverseSoftLimit((float) reverseSoftLimit);
+    }
 
-    public SparkBaseConfig enableReverseSoftLimit(boolean reverseSoftLimitEnabled) {
+    public SparkBaseConfig reverseSoftLimitEnabled(boolean reverseSoftLimitEnabled) {
         this.reverseSoftLimitEnabled = reverseSoftLimitEnabled;
         return this;
     }
@@ -405,7 +415,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         return this;
     }
 
-    public SparkBaseConfig setAlternateEncoderMode(boolean alternateEncoderMode) {
+    public SparkBaseConfig alternateEncoderMode(boolean alternateEncoderMode) {
         this.alternateEncoderMode = alternateEncoderMode;
         return this;
     }

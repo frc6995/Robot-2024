@@ -1,40 +1,38 @@
 package frc.robot.subsystems.climber;
 
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
 import static frc.robot.subsystems.climber.ClimberS.Constants.*;
 import static frc.robot.subsystems.climber.RealClimberIO.Constants.*;
+
+import java.util.function.Consumer;
+
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.util.sparkmax.SparkDevice;
+import lib.sparkmax.SparkBaseConfig;
 
 public class RealClimberIO extends ClimberIO {
-    private CANSparkMax m_leader;
-    private CANSparkMax m_follower;
+    private CANSparkFlex m_leader;
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
-    public RealClimberIO() {
-        super();
-        m_leader = SparkDevice.getSparkMax(ClimberS.Constants.LEADER_CAN_ID);
-        m_follower = SparkDevice.getSparkMax(ClimberS.Constants.FOLLOWER_CAN_ID);
-        m_leader.setIdleMode(IdleMode.kBrake);
-        m_follower.setIdleMode(IdleMode.kBrake);
-        m_leader.setInverted(INVERTED);
-        m_leader.setSmartCurrentLimit(CURRENT_LIMIT);
-        m_follower.setSmartCurrentLimit(CURRENT_LIMIT);
-        m_follower.follow(m_leader);
+    public RealClimberIO(boolean isLeft) {
+        super(isLeft);
+    m_leader =     new SparkBaseConfig (Constants.config)
+    .inverted(!isLeft)
+    .applyFlex(
+    SparkDevice.getSparkFlex(isLeft ? LEFT_CAN_ID : RIGHT_CAN_ID, MotorType.kBrushless),
+    true
+    );
         m_controller = m_leader.getPIDController();
         m_encoder = m_leader.getEncoder();
-        m_encoder.setPositionConversionFactor(1.0/MOTOR_ROTATIONS_PER_METER);
-        m_encoder.setVelocityConversionFactor(1.0/MOTOR_ROTATIONS_PER_METER/60.0);
-        m_controller.setP(kP);
-        m_controller.setI(kI);
-        m_controller.setD(kD);
-        m_controller.setFF(0);
+        m_encoder.setPosition(LOWER_LIMIT);
     }
 
     @Override
@@ -79,6 +77,22 @@ public class RealClimberIO extends ClimberIO {
          * We want positive voltage to drive up.
          */
         public static final boolean INVERTED = false;
-        public static final int CURRENT_LIMIT = 20;
+        public static final int CURRENT_LIMIT = 5;
+
+        public static final Consumer<SparkBaseConfig> config = c->{
+            c
+                .idleMode(IdleMode.kBrake)
+                .freeLimit(CURRENT_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .forwardSoftLimit(UPPER_LIMIT)
+                .reverseSoftLimit(LOWER_LIMIT)
+                .reverseSoftLimitEnabled(true)
+                .status6(32767)
+                .status5(32767)
+                .status4(32767)
+                .status3(32767);
+            c.pid.pidFF(0.1, 0, 0, 0);
+            c.hallEncoder.positionConversionFactor(1.0/MOTOR_ROTATIONS_PER_METER);
+        };
     }
 }

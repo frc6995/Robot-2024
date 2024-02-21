@@ -12,4 +12,5 @@ public abstract class IntakePivotIO implements Logged {
     public abstract void setVolts(double volts);
     public abstract double getVolts();
     public abstract double getPidVolts();
+    public abstract double getCurrent();
 }

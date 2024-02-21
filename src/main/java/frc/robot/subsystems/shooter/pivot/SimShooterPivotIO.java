@@ -21,7 +21,7 @@ import frc.robot.util.TimingTracer;
 
 public class SimShooterPivotIO extends ShooterPivotIO {
     private double m_pidVolts = 0;
-    private PIDController m_pid = new PIDController(1, 0, 0);
+    private PIDController m_pid = new PIDController(10, 0, 0);
     public SimShooterPivotIO () {
         super();
         m_pivotSim.setState(VecBuilder.fill(ShooterPivotS.Constants.CCW_LIMIT,0));
@@ -49,7 +49,7 @@ public class SimShooterPivotIO extends ShooterPivotIO {
 
     private final SingleJointedArmSim m_pivotSim = new SingleJointedArmSim(
         Constants.PLANT,
-        DCMotor.getNEO(2),
+        DCMotor.getNEO(1),
         ShooterPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION,
         ShooterPivotS.Constants.CG_DIST * 2,
         ShooterPivotS.Constants.CW_LIMIT,
@@ -78,11 +78,15 @@ public class SimShooterPivotIO extends ShooterPivotIO {
         return m_inputVolts;
     }
 
+    public double getVelocity() {
+        return m_pivotSim.getVelocityRadPerSec();
+    }
+
     public class Constants {
         public static final LinearSystem<N2, N1, N1> PLANT =
             LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getNeo550(1), 
-                SingleJointedArmSim.estimateMOI(ShooterPivotS.Constants.CG_DIST, 5),
+                DCMotor.getNEO(1), 
+                SingleJointedArmSim.estimateMOI(ShooterPivotS.Constants.CG_DIST, 3),
             ShooterPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
     }
     

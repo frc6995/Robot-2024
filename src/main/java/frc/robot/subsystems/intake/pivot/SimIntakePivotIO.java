@@ -78,6 +78,11 @@ public class SimIntakePivotIO extends IntakePivotIO {
         m_pivotSim.update(TimingTracer.getLoopTime());
     }
 
+    @Override
+    public double getCurrent() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
     public double getVolts() {
         return m_inputVolts;
     }

@@ -11,6 +11,7 @@
       "//Robot/m_field": "Field2d",
       "/FMSInfo": "FMSInfo",
       "/Robot/MECH_VISUALIZER": "Mechanism2d",
+      "/Robot/m_autoSelector": "String Chooser",
       "/Robot/m_field": "Field2d",
       "/Robot/tree/m_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
@@ -59,7 +60,22 @@
       "open": false
     },
     "transitory": {
+      "DriverDisplay": {
+        "open": true
+      },
       "Robot": {
+        "MECH_VISUALIZER": {
+          "open": true,
+          "shooter-pivot-base": {
+            "open": true,
+            "shooter": {
+              "open": true
+            },
+            "shooter_test": {
+              "open": true
+            }
+          }
+        },
         "m_drivebaseS": {
           "io": {
             "Pose2d##v_/Robot/m_drivebaseS/io/getSimPose": {
@@ -144,22 +160,18 @@
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
             "open": true
-          }
+          },
+          "open": true
         },
         "m_intakePivotS": {
           "double[]##v_/Robot/m_intakePivotS/ff": {
             "open": true
-          },
-          "open": true
-        },
-        "m_midtakeS": {
-          "open": true
+          }
         },
         "m_shooterPivotS": {
           "m_io": {
             "open": true
-          },
-          "open": true
+          }
         },
         "open": true,
         "tree": {

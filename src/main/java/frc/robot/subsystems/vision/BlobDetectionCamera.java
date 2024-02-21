@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
@@ -71,7 +72,8 @@ public class BlobDetectionCamera implements Logged {
         return PhotonUtils.calculateDistanceToTargetMeters(
             Constants.cameraHeight,
             Constants.targetHeight,
-            Constants.cameraPitch, Units.degreesToRadians(target.getPitch())) - Units.inchesToMeters(7);
+            Constants.cameraPitch, Units.degreesToRadians(target.getPitch()))
+        + Units.inchesToMeters(7);
     }
 
     public Translation2d getNoteTargetOffset(PhotonTrackedTarget target) {
@@ -79,23 +81,30 @@ public class BlobDetectionCamera implements Logged {
       .plus(new Translation2d(BlobDetectionCamera.Constants.cameraX, 0));
     }
 
-    public List<Pose2d> getTargets(Pose2d robotPose) {
+    public List<Pose2d> getTargets(Function<Double, Optional<Pose2d>> robotPose) {
+        if (result == null) {
+            return List.of();
+        }
+        var pose = robotPose.apply(result.getTimestampSeconds());
+        if (pose.isEmpty()) {
+            return List.of();
+        }
         if (RobotBase.isSimulation()) {
             return simNotes.getPoses();
         } else {
         if (!hasTarget()) return List.of();
         var list = result.getTargets();
         list.removeIf((t)-> (t.getPitch() > 9));
-        return list.stream().map((t)->robotPose.transformBy(new Transform2d(getNoteTargetOffset(t), Rotation2d.fromDegrees(-t.getYaw())))).toList();
+        return list.stream().map((t)->pose.get().transformBy(new Transform2d(getNoteTargetOffset(t), Rotation2d.fromDegrees(-t.getYaw())))).toList();
         }
 
         
     }
 
     public Optional<Pose2d> getBestTarget(Pose2d robotPose) {
-        var targets = getTargets(robotPose);
+        var targets = getTargets((time)->Optional.of(robotPose));
         if (targets.size() == 0) {return Optional.empty();}
-        return Optional.of(getTargets(robotPose).get(0));
+        return Optional.of(targets.get(0));
     }
     
     public void update() {
@@ -103,9 +112,9 @@ public class BlobDetectionCamera implements Logged {
     }
     public class Constants {
         public static final String CAMERA_NAME = "Arducam_OV9782_USB_Camera";
-        public static final double cameraHeight = Units.inchesToMeters(17.875);
-        public static final double cameraX = Units.inchesToMeters(0);
+        public static final double cameraHeight = Units.inchesToMeters(21.75-2.5);
+        public static final double cameraX = Units.inchesToMeters(-0.5);
         public static final double cameraPitch = Units.degreesToRadians(-15);
-        public static final double targetHeight = Units.inchesToMeters(2);
+        public static final double targetHeight = Units.inchesToMeters(0);
     }
 }

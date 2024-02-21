@@ -33,7 +33,7 @@ public class Constants {
     public static final double MAX_ROTATE_SPEED_RAD_PER_SEC = 11.5;
 
     // For manual driving
-    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(5);
+    public static final double MAX_LINEAR_SPEED = Units.feetToMeters(15);
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(300);
     // HELPER ORGANIZATION CONSTANTS
     public static final int FL = 0; // Front Left Module Index

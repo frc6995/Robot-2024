@@ -3,7 +3,7 @@ package frc.robot.subsystems.climber;
 import monologue.Logged;
 
 public abstract class ClimberIO implements Logged {
-    public ClimberIO(){}
+    public ClimberIO(boolean isLeft){}
     public abstract double getLength();
     public abstract void setPIDFF(double length, double ffVolts);
     public abstract void resetLength(double length);

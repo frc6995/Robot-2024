@@ -1,9 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.photonvision.EstimatedRobotPose;
@@ -14,16 +16,19 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import frc.robot.subsystems.vision.PoseEstimator;
+import frc.robot.subsystems.vision.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.AprilTags;
 import monologue.Logged;
 
@@ -53,6 +58,15 @@ public class Vision implements Logged {
                             estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
             m_cameras.add(estimator);
         });
+    }
+
+    public Optional<Pose2d> getOldPose(double timestamp) {
+        if (Timer.getFPGATimestamp() - timestamp > 1.5) {
+            return Optional.empty();
+        }
+        var interp = m_poseEstimator.m_poseBuffer.getSample(timestamp);
+        if (interp.isEmpty()) {return Optional.empty();}
+        return Optional.of(interp.get().poseMeters);
     }
 
     public void periodic() {
