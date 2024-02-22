@@ -29,7 +29,7 @@ public class RealShooterRollerIO extends ShooterRollerIO {
                 .status4(65535)
                 .status3(65535)
                 .status2(65535);
-            c.pid.p(0.001);
+            c.pid.p(0.0001);
             c.idleMode(IdleMode.kCoast);
         };
     }

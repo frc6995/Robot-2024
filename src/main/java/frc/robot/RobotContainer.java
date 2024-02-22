@@ -284,9 +284,19 @@ public class RobotContainer implements Logged {
     m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(()->1));
     m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(()->-1));
     m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(()->Units.degreesToRadians(180 - 25)));
+    m_keypad.button(6).onTrue(
+      m_shooterPivotS.rotateWithVelocity(
+        this::pivotAngle,
+        ()->0
+        // ()-> Interpolation.dThetadX(distanceToSpeaker()) * 
+        //   -Pathing.velocityTorwardsSpeaker(
+        //     m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), speaker())
+        )
+    );
     m_keypad.button(2).onTrue(
       runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
     m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(()->6000, ()->6300));
+    m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(()->1500, ()->1500));
     // m_testingController.back().onTrue(shootVis());
 
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());

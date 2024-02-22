@@ -175,8 +175,8 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CCW_LIMIT = Units.degreesToRadians(180-10);
-    public static final double CW_LIMIT = Units.degreesToRadians(180-50);
+    public static final double CCW_LIMIT = Units.degreesToRadians(180-5);
+    public static final double CW_LIMIT = Units.degreesToRadians(180-53);
     public static final int CAN_ID = 40;
     /**
      * Also equivalent to motor radians per pivot radian

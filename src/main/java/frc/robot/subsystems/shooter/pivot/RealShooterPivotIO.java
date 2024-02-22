@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.pivot;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.SparkRelativeEncoder;
@@ -23,6 +24,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
+    private double position = CCW_LIMIT;
     public RealShooterPivotIO() {
         super();
         m_motor = new SparkBaseConfig(Constants.config).applyMax(
@@ -34,7 +36,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
 
     @Override
     public double getAngle() {
-        return m_encoder.getPosition();
+        return position;
     }
 
     @Override
@@ -49,6 +51,12 @@ public class RealShooterPivotIO extends ShooterPivotIO {
 
     @Override
     public void periodic() {
+        var newPos = m_encoder.getPosition();
+        if (m_motor.getLastError().equals(REVLibError.kOk)) {
+            if (newPos < Math.PI && newPos > Math.PI/2) {
+                position = newPos;
+            }
+        }
     }
 
     @Override
