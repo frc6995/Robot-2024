@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -43,14 +44,19 @@ import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sparkmax.SparkDevice;
+import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.Log;
 
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.photonvision.PhotonCamera;
+
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 public class RobotContainer implements Logged {
 
@@ -78,26 +84,25 @@ public class RobotContainer implements Logged {
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
   @Log.NT
   private final Field2d m_field = new Field2d();
+  @Log.NT(level = LogLevel.OVERRIDE_FILE_ONLY)
+  private final Field2d m_driverField = new Field2d();
 
   private final CommandGroups m_autos;
 
-  private InputAxis m_fwdXAxis =
-      new InputAxis("Forward", m_driverController::getLeftY)
-          .withDeadband(0.1)
-          .withInvert(true)
-          .withSlewRate(3)
-          .withSquaring(true);
-  private InputAxis m_fwdYAxis =
-      new InputAxis("Strafe", m_driverController::getLeftX)
-          .withDeadband(0.1)
-          .withInvert(true)
-          .withSlewRate(3)
-          .withSquaring(true);
-  private InputAxis m_rotAxis =
-      new InputAxis("Rotate", m_driverController::getRightX)
-          .withDeadband(0.2)
-          .withInvert(true)
-          .withSlewRate(1.33, -6);
+  private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
+      .withDeadband(0.1)
+      .withInvert(true)
+      .withSlewRate(3)
+      .withSquaring(true);
+  private InputAxis m_fwdYAxis = new InputAxis("Strafe", m_driverController::getLeftX)
+      .withDeadband(0.1)
+      .withInvert(true)
+      .withSlewRate(3)
+      .withSquaring(true);
+  private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
+      .withDeadband(0.2)
+      .withInvert(true)
+      .withSlewRate(1.33, -6);
   @Log
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
@@ -134,45 +139,30 @@ public class RobotContainer implements Logged {
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
+    RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
     RobotVisualizer.addClimber(m_leftClimberS.ELEVATOR);
     RobotVisualizer.addClimber(m_rightClimberS.ELEVATOR);
-    m_drivebaseS =
-        new DrivebaseS(
-            addPeriodic,
-            (name, poses) -> m_field.getObject(name).setPoses(poses)
-            );
+    m_drivebaseS = new DrivebaseS(
+        addPeriodic,
+        (name, poses) -> m_field.getObject(name).setPoses(poses));
     m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
 
     m_autos = new CommandGroups(
-      m_drivebaseS,
-      m_noteCamera,
-      m_intakePivotS,
-      m_intakeRollerS,
-       m_midtakeS,
-      // m_shooterPivotS,
-      // m_shooterWheelsS,
-      //m_climberS,
-      m_lightStripS);
-    m_driverDisplay.setHasNoteSupplier(m_midtakeS.hasNote);
-    m_driverDisplay.setInRangeSupplier(()->{
-      var dist = distanceToSpeaker();
-      return dist > Interpolation.MIN_DISTANCE && dist < Interpolation.MAX_DISTANCE;}
-    );
-    m_driverDisplay.setInAngleSupplier(
-      ()->Math.abs(
-        m_drivebaseS.getPoseHeading()
-        .minus(
-          Pathing.speakerDirection(
-            m_drivebaseS.getPose(),
-            speaker()
-          )
-        ).getRadians()) < Units.degreesToRadians(0.5) // TODO set threshold based on dist from spkr
-      );
-    m_driverDisplay.setInPivotSupplier(()->Math.abs(m_shooterPivotS.getAngle() - pivotAngle()) < Units.degreesToRadians(0.5));
+        m_drivebaseS,
+        m_noteCamera,
+        m_intakePivotS,
+        m_intakeRollerS,
+        m_midtakeS,
+        m_shooterFeederS,
+        m_shooterPivotS,
+        m_shooterWheelsS,
+        // m_climberS,
+        m_lightStripS);
+    configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
 
@@ -186,136 +176,129 @@ public class RobotContainer implements Logged {
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
     // m_shooterPivotS.setDefaultCommand(m_shooterPivotS.rotateWithVelocity(
-    //   this::pivotAngle,
-    //   ()-> Interpolation.dThetadX(distanceToSpeaker()) * 
-    //     -Pathing.velocityTorwardsSpeaker(
-    //       m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), speaker())
-    //   )
+    // this::pivotAngle,
+    // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
+    // -Pathing.velocityTorwardsSpeaker(
+    // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+    // speaker())
+    // )
     // );
+    PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
+    PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
+  }
+
+  public void configureDriverDisplay() {
+    m_driverDisplay.setHasNoteSupplier(m_midtakeS.hasNote);
+    m_driverDisplay.setInRangeSupplier(() -> {
+      var dist = distanceToSpeaker();
+      return dist > Interpolation.MIN_DISTANCE && dist < Interpolation.MAX_DISTANCE;
+    });
+    m_driverDisplay.setInAngleSupplier(
+        () -> Math.abs(
+            m_drivebaseS.getPoseHeading()
+                .minus(
+                    Pathing.speakerDirection(
+                        m_drivebaseS.getPose(),
+                        speaker()))
+                .getRadians()) < Units.degreesToRadians(0.5) // TODO set threshold based on dist from spkr
+    );
+    m_driverDisplay
+        .setInPivotSupplier(() -> Math.abs(m_shooterPivotS.getAngle() - pivotAngle()) < Units.degreesToRadians(0.5));
+    m_driverDisplay.setInSpeedSupplier(m_shooterWheelsS.atGoal);
+    m_driverDisplay.setSeeNoteSupplier(m_noteCamera.hasTarget);
   }
 
   public Translation2d speaker() {
-    return NomadMathUtil.mirrorTranslation(
-          Constants.Poses.SPEAKER,
-          AllianceWrapper.getAlliance());
+    return m_autos.speaker();
   }
+
   @Log
   public double directionToSpeaker() {
-    return Pathing.speakerDirection(
-        m_drivebaseS.getPose(),
-       speaker()
-        ).getRadians();
+    return m_autos.directionToSpeaker();
   }
+
   @Log
   public double distanceToSpeaker() {
-    return Pathing.speakerDistance(
-      m_drivebaseS.getPose(),
-      speaker()
-    );
+    return m_autos.distanceToSpeaker();
   }
 
   @Log
   public double pivotAngle() {
-    return Interpolation.PIVOT_MAP.get(distanceToSpeaker());
+    return m_autos.pivotAngle();
   }
 
-  public Command faceSpeaker() { 
+  public Command faceSpeaker() {
     return m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
-      this::directionToSpeaker,
-      ()->Pathing.aimingFFVelocity(
-        m_drivebaseS.getPose(),
-        m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
-          Constants.Poses.SPEAKER,
-          AllianceWrapper.getAlliance())));
+        this::directionToSpeaker,
+        () -> Pathing.aimingFFVelocity(
+            m_drivebaseS.getPose(),
+            m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
+                Constants.Poses.SPEAKER,
+                AllianceWrapper.getAlliance())));
   }
 
+  public Command faceNote() {
+    return m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis,
+                rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
+  }
   public void configureButtonBindings() {
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    m_driverController.rightTrigger().whileTrue(faceSpeaker());
-    m_driverController.leftBumper().whileTrue(
-      m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis, rumble->m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble)));
-    m_driverController.a().onTrue(m_autos.deployRunIntake());
-    // m_driverController.a().and(
-    //   new Trigger(m_noteCamera::hasTarget).negate())
-    //   .whileTrue(
-    //     run(()->m_driverController.getHID().setRumble(RumbleType.kRightRumble, 0.8)).ignoringDisable(true))
-    //     .onFalse(
-    //       runOnce(()->m_driverController.getHID().setRumble(RumbleType.kRightRumble, 0.0)).ignoringDisable(true)        );
-    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
-    m_driverController.y().onTrue(m_autos.retractStopIntake());//.whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT, IntakePivotS.Constants.CW_LIMIT, m_driverController.getRightTriggerAxis())));
-    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
-    m_driverController.start().whileTrue(m_midtakeS.intakeC().alongWith(m_shooterFeederS.feedC()));
-    //m_driverController.leftBumper().whileTrue(m_autos.autoPickupC());
-    // m_driverController.a().whileTrue(m_autos.driveToNote());
-    // m_driverController.x().onTrue(m_shooterPivotS.run(()->
-    // m_shooterPivotS.setAngle((ShooterPivotS.Constants.CW_LIMIT + ShooterPivotS.Constants.CCW_LIMIT) / 2.0)));
-    // m_driverController.y()
-    //   .whileTrue(
-    //     sequence(
-    //     deadline(
-    //       m_autos.midtakeReceiveNote().asProxy(),
-    //       m_autos.deployRunIntake()
-    //     ),
-    //     m_autos.retractStopIntake()
-    //   )
-    // );
-    // m_driverController.b().onTrue(m_climberS.run(()->
-    // m_climberS.setLength(ClimberS.Constants.UPPER_LIMIT)));
-    // m_testingController.button(1).whileTrue(
-    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
-    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(5))
-    // );
-    // m_testingController.button(2).whileTrue(
-    //   m_intakePivotS.m_idRoutine.quasistatic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
-    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(5))
-    // );
-    // m_testingController.button(3).whileTrue(
-    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward)
-    //   .until(()->m_intakePivotS.getAngle() > IntakePivotS.Constants.CCW_LIMIT - Units.degreesToRadians(10))
-    // );
-    // m_testingController.button(4).whileTrue(
-    //   m_intakePivotS.m_idRoutine.dynamic(edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kReverse)
-    //   .until(()->m_intakePivotS.getAngle() < IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(10))
-    // );
-    // m_testingController.a().whileTrue(m_leftClimberS.runVoltage(()->-1));
-    // m_testingController.b().whileTrue(m_leftClimberS.runVoltage(()->1));
-    // m_testingController.x().whileTrue(m_rightClimberS.runVoltage(()->-1));
-    // m_testingController.y().whileTrue(m_rightClimberS.runVoltage(()->1));
-    m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(()->1));
-    m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(()->-1));
-    m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(()->Units.degreesToRadians(180 - 25)));
-    m_keypad.button(6).onTrue(
-      m_shooterPivotS.rotateWithVelocity(
-        this::pivotAngle,
-        ()->0
-        // ()-> Interpolation.dThetadX(distanceToSpeaker()) * 
-        //   -Pathing.velocityTorwardsSpeaker(
-        //     m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), speaker())
-        )
-    );
-    m_keypad.button(2).onTrue(
-      runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
-    m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(()->6000, ()->6300));
-    m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(()->1500, ()->1500));
-    // m_testingController.back().onTrue(shootVis());
+    m_driverController.a().whileTrue(faceSpeaker());
+    m_driverController.rightTrigger().whileTrue(m_shooterWheelsS.spinVoltageC(()->10, ()->10));
+    m_driverController.b().whileTrue(faceNote());
+    m_driverController.rightBumper().onTrue(m_autos.deployRunIntake());
 
+    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
+    m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());// .whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT,
+                                                               // IntakePivotS.Constants.CW_LIMIT,
+                                                               // m_driverController.getRightTriggerAxis())));
+    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    m_driverController.leftTrigger().whileTrue(m_midtakeS.intakeC().alongWith(m_shooterFeederS.feedC()));
+    
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
+    // keypad only below this line
+    m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(() -> 0.1));
+    m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(() -> -0.7));
+    m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(() -> Units.degreesToRadians(180 - 25)));
+    m_keypad.button(6).onTrue(
+            m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> 0));
+    m_shooterPivotS.setDefaultCommand(
+        m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> 0
+        // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
+        // -Pathing.velocityTorwardsSpeaker(
+        // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+        // speaker())
+        ));
+    //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
+    m_keypad.button(2).onTrue(
+        runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
+    m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(() -> 6000, () -> 6000));
+    m_keypad.button(12).whileTrue(m_shooterWheelsS.spinVoltageC(()->10, ()->10));
+    m_keypad.button(11).whileTrue(m_shooterWheelsS.spinC(()->5700, ()->6000));
+    m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(() -> 1500, () -> 1500));
+    // m_testingController.back().onTrue(shootVis());
   }
 
   public Command driveIntakeRelativePOV() {
     return m_drivebaseS.run(() -> {
-        double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
-        double adjustSpeed = 0.75; // m/s
-        m_drivebaseS.drive(
-                new ChassisSpeeds(
-                        Math.cos(pov) * adjustSpeed,
-                        Math.sin(pov) * adjustSpeed,
-                        m_rotAxis.getAsDouble() * DriveConstants.MAX_TURN_SPEED));
+      double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
+      double adjustSpeed = 0.75; // m/s
+      m_drivebaseS.drive(
+          new ChassisSpeeds(
+              Math.cos(pov) * adjustSpeed,
+              Math.sin(pov) * adjustSpeed,
+              m_rotAxis.getAsDouble() * DriveConstants.MAX_TURN_SPEED));
     });
-    }
+  }
 
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
+    m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2")));
+    m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
   }
 
   public Command getAutonomousCommand() {
@@ -338,12 +321,13 @@ public class RobotContainer implements Logged {
     var beforeLog = Timer.getFPGATimestamp();
     Monologue.updateAll();
     var afterLog = Timer.getFPGATimestamp();
-    log("mlUpdate", (afterLog-beforeLog));    
+    log("mlUpdate", (afterLog - beforeLog));
     m_driverDisplay.update();
   }
 
   public void updateFields() {
     m_drivebaseS.drawRobotOnField(m_field);
+    m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
     m_field.getObject("note").setPoses(m_noteCamera.getTargets(m_drivebaseS::getOldPose));
     m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
   }
@@ -352,40 +336,39 @@ public class RobotContainer implements Logged {
     m_drivebaseS.resetRelativeRotationEncoders();
   }
 
-  public void onDisabled() {}
+  public void onDisabled() {
+
+  }
 
   public Command shootVis() {
     return new ScheduleCommand( // Branch off and exit immediately
         Commands.defer(
-                () -> {
-                  final Pose3d startPose =
-                      new Pose3d(m_drivebaseS.getPose()).transformBy(new Transform3d(0, 0, 0.3, new Rotation3d(0, -m_shooterPivotS.getAngle(), 0)));
-                  final boolean isRed =
-                      DriverStation.getAlliance().isPresent()
-                          && DriverStation.getAlliance().get().equals(Alliance.Red);
-                  final Pose3d endPose =
-                      new Pose3d(speaker().getX(), speaker().getY(), 2.1, startPose.getRotation());
+            () -> {
+              final Pose3d startPose = new Pose3d(m_drivebaseS.getPose())
+                  .transformBy(new Transform3d(0, 0, 0.3, new Rotation3d(0, -m_shooterPivotS.getAngle(), 0)));
+              final boolean isRed = DriverStation.getAlliance().isPresent()
+                  && DriverStation.getAlliance().get().equals(Alliance.Red);
+              final Pose3d endPose = new Pose3d(speaker().getX(), speaker().getY(), 2.1, startPose.getRotation());
 
-                  final double duration =
-                      startPose.getTranslation().getDistance(endPose.getTranslation()) / 3;
-                  final Timer timer = new Timer();
-                  timer.start();
-                  return Commands.run(
-                          () -> {
+              final double duration = startPose.getTranslation().getDistance(endPose.getTranslation()) / 3;
+              final Timer timer = new Timer();
+              timer.start();
+              return Commands.run(
+                  () -> {
 
-                            log(
-                                "NoteVisualizer",
-                                new Pose3d[] {
-                                  startPose.interpolate(endPose, timer.get() / duration)
-                                });
-                          })
-                      .until(() -> timer.hasElapsed(duration))
-                      .finallyDo(
-                          () -> {
-                            log("NoteVisualizer", new Pose3d[] {});
-                          });
-                },
-                Set.of())
+                    log(
+                        "NoteVisualizer",
+                        new Pose3d[] {
+                            startPose.interpolate(endPose, timer.get() / duration)
+                        });
+                  })
+                  .until(() -> timer.hasElapsed(duration))
+                  .finallyDo(
+                      () -> {
+                        log("NoteVisualizer", new Pose3d[] {});
+                      });
+            },
+            Set.of())
             .ignoringDisable(true));
   }
 }

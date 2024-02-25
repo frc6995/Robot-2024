@@ -5,6 +5,7 @@
 package frc.robot.subsystems.shooter.pivot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.CCW_LIMIT;
 import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.CW_LIMIT;
 
 import java.util.function.DoubleSupplier;
@@ -67,7 +68,8 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
 
   public final MechanismLigament2d SHOOTER_TEST_PIVOT = new MechanismLigament2d(
     "shooter_test", 8, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 137, 52));
-
+    public final MechanismLigament2d SHOOTER_GOAL_PIVOT = new MechanismLigament2d(
+    "shooter_goal", 4, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 235, 235));
   /** Creates a new ShooterPivotS. */
   public ShooterPivotS() {
     // Create the IO class.
@@ -93,11 +95,13 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     m_setpoint.position = getAngle();
   }
   public void resetAngleDown() {
-    m_io.resetAngle(Units.degreesToRadians(180-5));
+    m_io.resetAngle(CCW_LIMIT);
   }
   public void periodic() {
     // Update our visualization
     SHOOTER_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle()));
+    SHOOTER_GOAL_PIVOT.setAngle(Units.radiansToDegrees(m_desiredState.position));
+    
 
     
     if (DriverStation.isEnabled()) {
@@ -135,6 +139,10 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     m_io.setPIDFF(m_setpoint.position, ffVolts);
   }
 
+  @Log
+  public double getCurrent() {
+    return m_io.getCurrent();
+  }
   public Command runVoltage(DoubleSupplier voltage) {
     return run(()->m_io.setVolts(voltage.getAsDouble()));
   }
@@ -175,14 +183,14 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CCW_LIMIT = Units.degreesToRadians(180-5);
+    public static final double CCW_LIMIT = Units.degreesToRadians(180-19+0.75+0.4);
     public static final double CW_LIMIT = Units.degreesToRadians(180-53);
     public static final int CAN_ID = 40;
     /**
      * Also equivalent to motor radians per pivot radian
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 18;
-    public static final double K_G = 0.4;
+    public static final double K_G = 0.39;
     public static final double K_S = 0;
     /**
      * Units: Volts / (Pivot radians/sec)
@@ -200,7 +208,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      0.5, 1);
+      2, 2);
   }
 
 }

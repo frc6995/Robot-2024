@@ -22,8 +22,11 @@ public class RealShooterRollerIO extends ShooterRollerIO {
 
     class Constants {
         public static final Consumer<SparkBaseConfig> config = c->{
-            c.hallEncoder.measurementPeriod(8).averageDepth(1);
+            c.hallEncoder.measurementPeriod(8).averageDepth(1)
+            .velocityConversionFactor(43.0/26.0);
             c
+                .freeLimit(60)
+                .stallLimit(60)
                 .status6(65535)
                 .status5(65535)
                 .status4(65535)

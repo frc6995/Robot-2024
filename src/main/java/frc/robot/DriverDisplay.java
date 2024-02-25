@@ -40,6 +40,19 @@ public class DriverDisplay {
         this.inPivotSupplier = inPivotSupplier;
     }
 
+    private BooleanPublisher inSpeedEntry =
+        NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/inSpeed").publish();
+    private BooleanSupplier inSpeedSupplier = ()->false;
+    public void setInSpeedSupplier(BooleanSupplier inSpeedSupplier) {
+        this.inSpeedSupplier = inSpeedSupplier;
+    }
+
+    private BooleanPublisher seeNoteEntry =
+        NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/seeNote").publish();
+    private BooleanSupplier seeNoteSupplier = ()->false;
+    public void setSeeNoteSupplier(BooleanSupplier seeNoteSupplier) {
+        this.seeNoteSupplier = seeNoteSupplier;
+    }
     public DriverDisplay() {}
     
     public void update() {
@@ -48,5 +61,7 @@ public class DriverDisplay {
         inRangeEntry.accept(inRangeSupplier.getAsBoolean());
         inAngleEntry.accept(inAngleSupplier.getAsBoolean());
         inPivotEntry.accept(inPivotSupplier.getAsBoolean());
+        inSpeedEntry.accept(inSpeedSupplier.getAsBoolean());
+        seeNoteEntry.accept(seeNoteSupplier.getAsBoolean());
     }
 }

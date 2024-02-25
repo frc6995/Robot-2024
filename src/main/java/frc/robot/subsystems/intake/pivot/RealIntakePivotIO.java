@@ -113,7 +113,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
          * We want positive voltage to drive towards the retracted end.
          */
         public static final boolean INVERTED = true;
-        public static final int CURRENT_LIMIT = 80;
+        public static final int CURRENT_LIMIT = 20;
         public static final double POSITION_FACTOR = 
             Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION);
         public static final double VELOCITY_FACTOR = 
@@ -121,7 +121,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
         public static final Consumer<SparkBaseConfig> config = c->{
             c.
                 freeLimit(CURRENT_LIMIT)
-                .stallLimit(CURRENT_LIMIT)
+                .stallLimit(13)
                 .idleMode(IdleMode.kBrake)
                 .inverted(true)
                 .forwardSoftLimit((float) CCW_LIMIT)

@@ -1,22 +1,26 @@
 package frc.robot.subsystems.shooter.wheels;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 
 public class SimShooterRollerIO extends ShooterRollerIO {
 
-    private PIDController m_controller = new PIDController(1, 0, 0);
+    private PIDController m_controller = new PIDController(0, 0, 0);
 
-    private FlywheelSim m_sim = new FlywheelSim(DCMotor.getNeoVortex(1), 0.5, 1);
+    private FlywheelSim m_sim;
     private double inputVolts = 0;
     private double pidVolts = 0;
+
+    public SimShooterRollerIO(double kS, double kV) {
+        super();
+        m_sim = new FlywheelSim(LinearSystemId.identifyVelocitySystem(Units.radiansPerSecondToRotationsPerMinute(kV), 0.001), DCMotor.getNeoVortex(1), 1);
+    }
     @Override
     public double getVelocity() {
         return m_sim.getAngularVelocityRPM();
@@ -39,7 +43,7 @@ public class SimShooterRollerIO extends ShooterRollerIO {
 
     @Override
     public void setVolts(double volts) {
-        m_sim.setInputVoltage(volts);
+        m_sim.setInputVoltage(NomadMathUtil.subtractkS(volts, 0.1));
     }
 
     @Override

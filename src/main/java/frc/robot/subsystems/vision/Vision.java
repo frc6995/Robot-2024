@@ -80,7 +80,7 @@ public class Vision implements Logged {
                 }
                 
                 var robotPose = robotPoseOpt.get();
-                if (robotPose.targetsUsed.size() < 2) {continue;}
+                //if (robotPose.targetsUsed.size() < 2) {continue;}
                 // var confidence = AprilTags.calculateVisionUncertainty(
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),

@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +21,8 @@ import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.shooter.Interpolation;
+import frc.robot.subsystems.shooter.feeder.ShooterFeederS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
@@ -27,6 +30,7 @@ import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
+import monologue.Annotations.Log;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -38,8 +42,9 @@ public class CommandGroups {
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
-  // private ShooterPivotS m_shooterPivotS;
-  // private ShooterWheelsS m_shooterWheelsS;
+  private ShooterFeederS m_shooterFeederS;
+  private ShooterPivotS m_shooterPivotS;
+  private ShooterWheelsS m_shooterWheelsS;
   // private ClimberS m_climberS;
   private BlobDetectionCamera m_noteCamera;
   private LightStripS m_lightStripS;
@@ -50,16 +55,18 @@ public class CommandGroups {
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
       MidtakeS midtakeS,
-      // ShooterPivotS shooterPivotS,
-      // ShooterWheelsS shooterWheelsS,
+      ShooterFeederS shooterFeederS,
+      ShooterPivotS shooterPivotS,
+      ShooterWheelsS shooterWheelsS,
       // ClimberS climberS,
       LightStripS lightStripS) {
     m_drivebaseS = drivebaseS;
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
     m_midtakeS = midtakeS;
-    // m_shooterPivotS = shooterPivotS;
-    // m_shooterWheelsS = shooterWheelsS;
+    m_shooterFeederS = shooterFeederS;
+    m_shooterPivotS = shooterPivotS;
+    m_shooterWheelsS = shooterWheelsS;
     // m_climberS = climberS;
     m_lightStripS = lightStripS;
     m_noteCamera = noteCamera;
@@ -73,31 +80,44 @@ public class CommandGroups {
    * End: When note is in midtake
    */
   public Command deployRunIntake() {
-    return sequence(
+    return parallel(
+    sequence(
         parallel(
             m_intakePivotS.deploy(),
-            m_intakeRollerS.intakeC(),
-            m_midtakeS.intakeC()).until(m_midtakeS.hasNote),
+            waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
+            waitSeconds(0.1).andThen(m_midtakeS.intakeC())
+        )
+        .until(m_midtakeS.hasNote),
 
         parallel(
             sequence(
                 m_intakePivotS.deploy()),
-            m_intakeRollerS.slowInC().withTimeout(0.3).andThen(m_intakeRollerS.stopC()),
+            m_intakeRollerS.slowInC(),
             m_midtakeS.run(
-                () -> m_midtakeS.setVoltage(3)))
-            .withTimeout(0.5)
-            .until(m_midtakeS.hasNote.negate())
-            .onlyIf(m_midtakeS.hasNote),
+                () -> m_midtakeS.setVoltage(6)),
+            m_shooterFeederS.voltageC(()->1)
+        )
+        .withTimeout(1)
+        .until(m_midtakeS.hasNote.negate())
+        .onlyIf(m_midtakeS.hasNote),
 
         parallel(
             new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
             new ScheduleCommand(m_intakePivotS.hold().withTimeout(0.3).andThen(m_intakePivotS.retract())),
             new ScheduleCommand(
-                m_midtakeS.run(
-                    () -> m_midtakeS.setVoltage(-1))
-                    .withTimeout(1)
+                parallel(
+                  m_midtakeS.run(
+                    () -> m_midtakeS.setVoltage(-2)
+                  ),
+                  m_shooterFeederS.backupC(),
+                  m_shooterPivotS.runVoltage(()->0)
+                )
+
+                    .withTimeout(3)
                     .until(m_midtakeS.hasNote)
-                    .andThen(m_midtakeS.stopC())))
+                    .andThen(parallel(
+                      m_midtakeS.stopOnceC(), m_shooterFeederS.stopC()))))
+    ), m_shooterPivotS.runVoltage(()->0)
 
     )
     // .or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
@@ -153,31 +173,30 @@ public class CommandGroups {
 
   public Command faceNoteC(InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleConsumer rumble) {
     return sequence(
-      run(() -> rumble.accept(0.3))
-        .finallyDo(() -> rumble.accept(0))
-        .until(() -> m_noteCamera.getBestTarget(m_drivebaseS.getPose()).isPresent()),
-      m_drivebaseS.defer(() -> {
-        var note = m_noteCamera.getBestTarget(m_drivebaseS.getPose());
-        if (note.isEmpty()) {
-          return new ScheduleCommand(
-              run(() -> rumble.accept(0.5))
-                  .withTimeout(0.5)
-                  .finallyDo(() -> rumble.accept(0)));
-        } // TODO driver feedback? Must be proxied for duration
-        return parallel(
-            sequence(
-                m_drivebaseS.manualFieldHeadingDriveC(fwdXAxis, fwdYAxis,
-                    () -> Pathing.speakerDirection(
-                        m_drivebaseS.getPose(),
-                        note.get().getTranslation()).getRadians() + Math.PI,
-                    () -> 0)
-        // m_drivebaseS.chasePoseC(()->pickup),
-        // m_drivebaseS.run(()->{
-        // m_drivebaseS.drive(new ChassisSpeeds(0.5, 0, 0));
-        // })
-        ));
-      })
-    );
+        run(() -> rumble.accept(0.3))
+            .finallyDo(() -> rumble.accept(0))
+            .until(() -> m_noteCamera.getBestTarget(m_drivebaseS.getPose()).isPresent()),
+        m_drivebaseS.defer(() -> {
+          var note = m_noteCamera.getBestTarget(m_drivebaseS.getPose());
+          if (note.isEmpty()) {
+            return new ScheduleCommand(
+                run(() -> rumble.accept(0.5))
+                    .withTimeout(0.5)
+                    .finallyDo(() -> rumble.accept(0)));
+          } // TODO driver feedback? Must be proxied for duration
+          return parallel(
+              sequence(
+                  m_drivebaseS.manualFieldHeadingDriveC(fwdXAxis, fwdYAxis,
+                      () -> Pathing.speakerDirection(
+                          m_drivebaseS.getPose(),
+                          note.get().getTranslation()).getRadians() + Math.PI,
+                      () -> 0)
+          // m_drivebaseS.chasePoseC(()->pickup),
+          // m_drivebaseS.run(()->{
+          // m_drivebaseS.drive(new ChassisSpeeds(0.5, 0, 0));
+          // })
+          ));
+        }));
   }
 
   public Command driveToNote() {
@@ -194,6 +213,56 @@ public class CommandGroups {
         m_drivebaseS.drive(new ChassisSpeeds());
       }
     });
+  }
 
+  public Translation2d speaker() {
+    return NomadMathUtil.mirrorTranslation(
+        Constants.Poses.SPEAKER,
+        AllianceWrapper.getAlliance());
+  }
+
+  public double directionToSpeaker() {
+    return Pathing.speakerDirection(
+        m_drivebaseS.getPose(),
+        speaker()).getRadians();
+  }
+
+  public double distanceToSpeaker() {
+    return Pathing.speakerDistance(
+        m_drivebaseS.getPose(),
+        speaker());
+  }
+
+  public double pivotAngle() {
+    return Interpolation.PIVOT_MAP.get(distanceToSpeaker());
+  }
+
+  public Command feed() {
+    return parallel(
+        m_midtakeS.intakeC(),
+        m_shooterFeederS.feedC());
+  }
+
+  public Command centerWingNote(PathPlannerPath startToPrePickup) {
+    return parallel(
+        m_intakePivotS.deploy().asProxy(),
+        m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
+
+        waitSeconds(1).andThen(m_shooterWheelsS.spinC(() -> 6000, () -> 6300).asProxy()),
+        sequence(
+
+            m_drivebaseS.pathPlannerCommand(startToPrePickup),
+            waitSeconds(1),
+            feed().asProxy().withTimeout(1),
+            parallel(
+                m_intakeRollerS.intakeC().asProxy(),
+                feed().asProxy(),
+                m_drivebaseS.run(
+                    () -> m_drivebaseS.drive(new ChassisSpeeds(0.2, 0, 0))).withTimeout(4).until(m_midtakeS.hasNote)
+                    .andThen(m_drivebaseS.stopOnceC())
+
+            ))
+
+    );
   }
 }

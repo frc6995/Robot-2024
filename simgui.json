@@ -12,6 +12,7 @@
       "/FMSInfo": "FMSInfo",
       "/Robot/MECH_VISUALIZER": "Mechanism2d",
       "/Robot/m_autoSelector": "String Chooser",
+      "/Robot/m_driverField": "Field2d",
       "/Robot/m_field": "Field2d",
       "/Robot/tree/m_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
@@ -22,9 +23,26 @@
           "visible": true
         }
       },
+      "/Robot/m_autoSelector": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/Robot/m_driverField": {
+        "bottom": 1476,
+        "height": 8.210550308227539,
+        "left": 150,
+        "right": 2961,
+        "top": 79,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      },
       "/Robot/m_field": {
         "Robot": {
-          "length": 10.0
+          "length": 0.7300000190734863,
+          "width": 0.7300000190734863
         },
         "align": {
           "style": "Hidden"
@@ -508,7 +526,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <4>": {
       "plots": [
@@ -568,10 +589,7 @@
             }
           ]
         }
-      ],
-      "window": {
-        "visible": false
-      }
+      ]
     }
   }
 }

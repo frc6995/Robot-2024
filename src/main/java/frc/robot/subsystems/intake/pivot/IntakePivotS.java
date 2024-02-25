@@ -92,7 +92,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     }
     else {
       m_io = new RealIntakePivotIO();
-        isHomed = new Trigger(()-> getCurrent()>20).debounce(0.6995);
+        isHomed = new Trigger(()-> getCurrent()>10).debounce(0.6995);
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
@@ -268,7 +268,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     /**
      * radians per second, rad/s^2
      */
-    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(11-K_G, K_V, K_A);
+    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(8-K_G, K_V, K_A);
   }
 
 }

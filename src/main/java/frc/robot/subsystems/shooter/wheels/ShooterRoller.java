@@ -1,8 +1,10 @@
 package frc.robot.subsystems.shooter.wheels;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
@@ -17,19 +19,21 @@ import java.util.function.DoubleSupplier;
 public class ShooterRoller implements Subsystem, Logged {
     private ShooterRollerIO m_io;
 
+    public final Trigger atGoal = new Trigger(this::atGoal);
+
     private int canId;
     private String name;
     public final SysIdRoutine m_idRoutine;
     private SimpleMotorFeedforward ff;
     @Log
     private double desiredSpeed;
-    public ShooterRoller(int canId, boolean invert, SimpleMotorFeedforward ff, String name){
+    public ShooterRoller(int canId, boolean invert, double kS, double kV, String name){
         if(RobotBase.isReal()) {
             m_io = new RealShooterRollerIO(canId, invert);
         } else {
-            m_io = new SimShooterRollerIO();
+            m_io = new SimShooterRollerIO(kS, kV);
         }
-        this.ff = ff;
+        this.ff = new SimpleMotorFeedforward(kS, kV);
         this.name = name;
         MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RPM);
         MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
@@ -53,13 +57,24 @@ public class ShooterRoller implements Subsystem, Logged {
         setDefaultCommand(stopC());
     }
 
-    @Log.NT public double getGoalVelocity() {return desiredSpeed;}
-    @Log.NT public double getVelocity() {return m_io.getVelocity();}
-    @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
-    @Log.NT public double getVolts() {return m_io.getVolts();}
-    @Log.NT public double getCurrent() {return m_io.getCurrent();}
+    @Log public double getGoalVelocity() {return desiredSpeed;}
+    @Log public double getVelocity() {return m_io.getVelocity();}
+    @Log public double getPidVolts() {return m_io.getPidVolts();}
+    @Log public double getVolts() {return m_io.getVolts();}
+    @Log public double getCurrent() {return m_io.getCurrent();}
 
-    
+    @Log
+    public boolean atGoal() {
+        return Math.abs(desiredSpeed - getVelocity()) < 50;
+    }
+
+    @Override
+    public void periodic() {
+        if (DriverStation.isDisabled()) {
+            setVolts(0);
+        }
+        m_io.periodic();
+    }
     @Override
     public String getPath() {
         return name;
@@ -79,5 +94,8 @@ public class ShooterRoller implements Subsystem, Logged {
 
     public Command spinC(DoubleSupplier rpm) {
         return run(()->setSpeed(rpm.getAsDouble()));
+    }
+    public Command voltsC(DoubleSupplier volts) {
+        return run(()->setVolts(volts.getAsDouble()));
     }
 }

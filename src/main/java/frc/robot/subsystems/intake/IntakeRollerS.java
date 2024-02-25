@@ -20,18 +20,20 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
-public class IntakeRollerS extends SubsystemBase {
+public class IntakeRollerS extends SubsystemBase implements Logged {
   public class Constants {
     public static final int LEADER_CAN_ID = 20;
     public static final int FOLLOWER_CAN_ID = 21;
-    public static final int CURRENT_LIMIT = 40;
+    public static final int CURRENT_LIMIT = 80;
     public static final double OUT_VOLTAGE = 12;
     public static final double IN_VOLTAGE = -10.5;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
         freeLimit(80)
-        .stallLimit(80)
+        .stallLimit(CURRENT_LIMIT)
         .idleMode(IdleMode.kBrake)
         .inverted(false)
         .status6(32767)
@@ -96,6 +98,9 @@ public class IntakeRollerS extends SubsystemBase {
   }
 
   public Command slowInC() {
-    return run(()->m_leader.setVoltage(-1));
+    return run(()->m_leader.setVoltage(-2));
+  }
+  @Log public double getCurrent() {
+    return m_leader.getOutputCurrent();
   }
 }

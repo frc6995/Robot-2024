@@ -89,5 +89,10 @@ public class SimShooterPivotIO extends ShooterPivotIO {
                 SingleJointedArmSim.estimateMOI(ShooterPivotS.Constants.CG_DIST, 3),
             ShooterPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
     }
+    @Override
+    public double getCurrent() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
     
 }

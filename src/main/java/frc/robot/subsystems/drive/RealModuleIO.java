@@ -31,7 +31,8 @@ public class RealModuleIO extends ModuleIO {
   public static class Constants {
     public static SparkBaseConfig DRIVE_CONFIG = new SparkBaseConfig((c)->{
       c.
-        freeLimit(50).
+        freeLimit(40).
+        stallLimit(60).
         idleMode(IdleMode.kBrake)
         .status6(32767)
         .status5(32767)
@@ -56,7 +57,8 @@ public class RealModuleIO extends ModuleIO {
 
     public static SparkBaseConfig STEER_CONFIG = new SparkBaseConfig((c)->{
       c.
-        freeLimit(40).
+        freeLimit(20).
+        stallLimit(40).
         inverted(true).
         idleMode(IdleMode.kBrake)
         .status6(40)

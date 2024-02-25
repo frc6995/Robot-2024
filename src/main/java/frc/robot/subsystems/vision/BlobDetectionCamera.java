@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -24,6 +25,7 @@ public class BlobDetectionCamera implements Logged {
     private PhotonCamera camera;
     private PhotonPipelineResult result;
     private FieldObject2d simNotes;
+    public final Trigger hasTarget;
     public BlobDetectionCamera(Consumer<Runnable> addPeriodic, FieldObject2d simNotes) {
         camera = new PhotonCamera(Constants.CAMERA_NAME);
         addPeriodic.accept(this::update);
@@ -34,6 +36,7 @@ public class BlobDetectionCamera implements Logged {
                 new Pose2d(1, 2, new Rotation2d()),
                 new Pose2d(1, 3, new Rotation2d()));
         }
+        hasTarget = new Trigger(this::hasTarget);
     }
 
     /**
@@ -111,7 +114,7 @@ public class BlobDetectionCamera implements Logged {
         result = camera.getLatestResult();
     }
     public class Constants {
-        public static final String CAMERA_NAME = "Arducam_OV9782_USB_Camera";
+        public static final String CAMERA_NAME = "Arducam_OV9782_USB_Camera (1)";
         public static final double cameraHeight = Units.inchesToMeters(21.75-2.5);
         public static final double cameraX = Units.inchesToMeters(-0.5);
         public static final double cameraPitch = Units.degreesToRadians(-15);

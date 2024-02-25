@@ -148,9 +148,15 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     // individual module states
     SwerveModuleState[] states;
     speeds = ChassisSpeeds.discretize(speeds, 0.02);
-
+    if (Math.abs(speeds.vxMetersPerSecond) < 0.01
+    && Math.abs(speeds.vyMetersPerSecond) < 0.01
+    && Math.abs(speeds.omegaRadiansPerSecond) < 0.01) {
+      states = getStoppedStates();
+    } else {
+      states = m_kinematics.toSwerveModuleStates(speeds);
+    }
     // make sure the wheels don't try to spin faster than the maximum speed possible
-    states = m_kinematics.toSwerveModuleStates(speeds);
+
     SwerveDriveKinematics.desaturateWheelSpeeds(
         states,
         speeds,

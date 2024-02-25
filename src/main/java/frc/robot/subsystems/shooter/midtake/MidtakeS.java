@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -35,7 +36,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     public static final Consumer<SparkBaseConfig> config = c->{
       c.
         freeLimit(20)
-        .stallLimit(40)
+        .stallLimit(20)
         .idleMode(IdleMode.kBrake)
         .inverted(false)
         .status6(32767)
@@ -62,6 +63,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 .applyMax(
                   SparkDevice.getSparkMax(Constants.FRONT_CAN_ID), true
                 );
+    m_front.setOpenLoopRampRate(0.25);
     m_back = new SparkBaseConfig(Constants.config)
                 .follow(Constants.FRONT_CAN_ID,false)
                 .status1(40)
@@ -87,6 +89,9 @@ public class MidtakeS extends SubsystemBase implements Logged {
 
   @Override
   public void periodic() {
+        if (DriverStation.isDisabled()) {
+            stop();
+        }
       MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_front.getAppliedOutput());
   }
 

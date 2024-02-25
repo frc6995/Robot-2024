@@ -5,10 +5,12 @@
 package frc.robot.subsystems.shooter.feeder;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.sparkmax.SparkDevice;
@@ -19,7 +21,7 @@ public class ShooterFeederS extends SubsystemBase {
     public static final int CAN_ID = 33;
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 12;
-    public static final double THROUGH_VOLTAGE = 6;
+    public static final double THROUGH_VOLTAGE = -3;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.freeLimit(CURRENT_LIMIT).idleMode(IdleMode.kCoast)
       .status6(32767)
@@ -61,6 +63,15 @@ public class ShooterFeederS extends SubsystemBase {
   }
   /**returns the command to stop the intake */
   public Command stopC(){
-    return run(this::stop);
+    return runOnce(this::stop);
   }
+  public Command voltageC(DoubleSupplier volts) {
+    return run(()->m_motor.setVoltage(volts.getAsDouble()));
+  } 
+  @Override
+    public void periodic() {
+        if (DriverStation.isDisabled()) {
+            stop();
+        }
+    }
 }

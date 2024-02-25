@@ -7,6 +7,8 @@ import com.revrobotics.SparkPIDController;
 import com.revrobotics.SparkRelativeEncoder;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+
 import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.*;
 
 import java.util.function.Consumer;
@@ -73,9 +75,14 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     public double getPidVolts() {
         return getVolts() - ffVolts;
     }
+
+    @Override
+    public double getCurrent() {
+        return m_motor.getOutputCurrent();
+    }
     
     public class Constants {
-        public static final double kP = 0.5;
+        public static final double kP = 0.75;
         public static final double kI = 0;
         public static final double kD = 0;
         /**
@@ -88,15 +95,15 @@ public class RealShooterPivotIO extends ShooterPivotIO {
             c
                 .alternateEncoderMode(true)
                 .inverted(false)
-                .freeLimit(20)
-                .stallLimit(30)
+                .freeLimit(CURRENT_LIMIT)
+                .stallLimit(CURRENT_LIMIT)
                 .forwardSoftLimit(ShooterPivotS.Constants.CCW_LIMIT)
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(ShooterPivotS.Constants.CW_LIMIT)
                 .reverseSoftLimitEnabled(true)
                 .status6(65535)
                 .status5(65535)
-                .status4(10)
+                .status4(20)
                 .status3(65535);
             c.altEncoder
                 .countsPerRev(8192)
