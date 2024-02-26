@@ -48,8 +48,6 @@ public abstract class ModuleIO implements Logged {
             + ','
             + moduleConstants.rotationMotorID
             + ']';
-
-    addPeriodic.accept(this::setState);
   }
 
   public String getPath() {
@@ -102,6 +100,7 @@ public abstract class ModuleIO implements Logged {
 
   public void setDesiredState(SwerveModuleState state) {
     m_desiredState = state;
+    setState();
   }
 
   private void setState() {

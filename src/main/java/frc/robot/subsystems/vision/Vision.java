@@ -102,7 +102,7 @@ public class Vision implements Logged {
 
     public class Constants {
         public static final Map<String, Transform3d> cameras= Map.of(
-            "OV9281-5", new Transform3d(
+            "OV9281-SH", new Transform3d(
                 Units.inchesToMeters(-12.5+9.1),
                 Units.inchesToMeters(0),
                 Units.inchesToMeters(23.3),

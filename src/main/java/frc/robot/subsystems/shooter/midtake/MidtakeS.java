@@ -5,6 +5,7 @@
 package frc.robot.subsystems.shooter.midtake;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import com.playingwithfusion.TimeOfFlight;
 import com.playingwithfusion.TimeOfFlight.RangingMode;
@@ -65,7 +66,6 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 );
     m_front.setOpenLoopRampRate(0.25);
     m_back = new SparkBaseConfig(Constants.config)
-                .follow(Constants.FRONT_CAN_ID,false)
                 .status1(40)
                 .status2(32767)
                 //.status0(40)
@@ -75,6 +75,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 );
     m_tof = new TimeOfFlight(32);
     m_tof.setRangingMode(RangingMode.Short, 24);
+    m_tof.setRangeOfInterest(8, 8,12,12);
     hasNote = new Trigger(()->tofDistance() < 250);
     isRunning = new Trigger(()->getVolts() > 6).debounce(1);
     recvNote = new Trigger(()->m_front.getOutputCurrent() > 20);
@@ -98,23 +99,29 @@ public class MidtakeS extends SubsystemBase implements Logged {
   /**sets motor to outtake */
   public void feed () {
     m_front.setVoltage(Constants.OUT_VOLTAGE);
-    //m_back.setVoltage(Constants.OUT_VOLTAGE);
+    m_back.setVoltage(Constants.OUT_VOLTAGE);
 
   }
   /**sets motor to intake */
   public void intake () {
     m_front.setVoltage(Constants.IN_VOLTAGE);
-    //m_back.setVoltage(Constants.IN_VOLTAGE);
+    m_back.setVoltage(Constants.IN_VOLTAGE);
   }
   /**stops the intake motor */
   public void stop() {
     m_front.setVoltage(0);
-    //m_back.setVoltage(0);
+    m_back.setVoltage(0);
   }
 
+  public void setVoltage(double frontVolts, double backVolts) {
+    m_front.setVoltage(frontVolts);
+    m_back.setVoltage(backVolts);
+  }
   public void setVoltage(double volts) {
-    m_front.setVoltage(volts);
-    //m_back.setVoltage(volts);
+    setVoltage(volts, volts);
+  }
+  public Command runVoltage(DoubleSupplier frontVolts, DoubleSupplier backVolts) {
+    return run(()->setVoltage(frontVolts.getAsDouble(), backVolts.getAsDouble()));
   }
   /**returns the command of the outtake */
   public Command outtakeC() {

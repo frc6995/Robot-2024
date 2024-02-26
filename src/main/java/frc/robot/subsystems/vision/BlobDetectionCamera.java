@@ -114,7 +114,7 @@ public class BlobDetectionCamera implements Logged {
         result = camera.getLatestResult();
     }
     public class Constants {
-        public static final String CAMERA_NAME = "Arducam_OV9782_USB_Camera (1)";
+        public static final String CAMERA_NAME = "OV9782-NOTE";
         public static final double cameraHeight = Units.inchesToMeters(21.75-2.5);
         public static final double cameraX = Units.inchesToMeters(-0.5);
         public static final double cameraPitch = Units.degreesToRadians(-15);
