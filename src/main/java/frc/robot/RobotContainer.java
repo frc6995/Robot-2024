@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -253,7 +254,7 @@ public class RobotContainer implements Logged {
                                                                // IntakePivotS.Constants.CW_LIMIT,
                                                                // m_driverController.getRightTriggerAxis())));
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
-    m_driverController.leftTrigger().whileTrue(m_midtakeS.intakeC().alongWith(m_shooterFeederS.feedC()));
+    m_driverController.leftTrigger().whileTrue(m_midtakeS.runVoltage(()->6, ()->6).alongWith(m_shooterFeederS.runVoltageC(()->2)));//m_midtakeS.intakeC().alongWith(m_shooterFeederS.feedC()));
     
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
     // keypad only below this line
@@ -273,14 +274,19 @@ public class RobotContainer implements Logged {
         // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
         // speaker())
         ));
-    //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
+    m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
     m_keypad.button(2).onTrue(
         runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
     m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(() -> 6000, () -> 6000));
-    m_keypad.button(12).whileTrue(m_shooterWheelsS.spinVoltageC(()->10, ()->10));
-    m_keypad.button(11).whileTrue(m_shooterWheelsS.spinC(()->5700, ()->6000));
+    m_keypad.button(12).whileTrue(m_shooterWheelsS.spinC(()-> 5500, ()->6500));
+    m_keypad.button(11).whileTrue(m_shooterWheelsS.spinC(()->7700, ()->8300));
     m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(() -> 1500, () -> 1500));
     // m_testingController.back().onTrue(shootVis());
+    
+    m_keypad.button(10).whileTrue(m_shooterWheelsS.dynamic(Direction.kForward));
+    m_keypad.button(9).whileTrue(m_shooterWheelsS.dynamic(Direction.kReverse));
+    m_keypad.button(8).whileTrue(m_shooterWheelsS.quasistatic(Direction.kForward));
+    m_keypad.button(7).whileTrue(m_shooterWheelsS.quasistatic(Direction.kReverse));
   }
 
   public Command driveIntakeRelativePOV() {

@@ -59,5 +59,10 @@ public class SimShooterRollerIO extends ShooterRollerIO {
     public double getCurrent() {
         return 0;
     }
+
+    @Override
+    public double getPosition() {
+        return 0;
+    }
     
 }

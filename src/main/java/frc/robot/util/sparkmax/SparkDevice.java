@@ -13,6 +13,8 @@ package frc.robot.util.sparkmax;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkRelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -83,5 +85,14 @@ public class SparkDevice {
     Timer.delay(0.25);
     DriverStation.reportWarning("Burn Flash Complete", false);
     // Logger.tag("SparkMax").debug("Burn Flash Complete.");
+  }
+
+  public static RelativeEncoder getMainEncoder(CANSparkBase s) {
+    if (s instanceof CANSparkFlex) {
+      return s.getEncoder(SparkRelativeEncoder.Type.kQuadrature, 7168);
+    }
+    else {
+        return s.getEncoder(SparkRelativeEncoder.Type.kHallSensor, 42);
+    }
   }
 }

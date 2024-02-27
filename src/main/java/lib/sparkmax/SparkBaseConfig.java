@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkAbsoluteEncoder;
 import com.revrobotics.SparkFlexExternalEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
@@ -253,7 +254,13 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         // Configure the encoder port;
         if (encoderPortType != SparkRelativeEncoder.Type.kNoSensor) {
             try {
-                var mainEncoder = s.getEncoder(encoderPortType, hallEncoder.countsPerRev);
+                RelativeEncoder mainEncoder;
+                if (s instanceof CANSparkFlex) {
+                    mainEncoder = s.getEncoder(SparkRelativeEncoder.Type.kQuadrature, 7168);
+                }
+                else {
+                    mainEncoder = s.getEncoder(SparkRelativeEncoder.Type.kHallSensor, 42);
+                }
                 hallEncoder.apply(mainEncoder, RelativeEncoderConfig.calls, hallEncDefaults, restoreFactoryDefaults);
                 if (pid.feedbackSensor == FeedbackDevice.kHallSensor) {
                     SparkBaseConfig.config(()->s.getPIDController().setFeedbackDevice(mainEncoder));

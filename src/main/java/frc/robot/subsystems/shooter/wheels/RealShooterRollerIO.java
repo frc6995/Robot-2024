@@ -22,7 +22,8 @@ public class RealShooterRollerIO extends ShooterRollerIO {
 
     class Constants {
         public static final Consumer<SparkBaseConfig> config = c->{
-            c.hallEncoder.measurementPeriod(8).averageDepth(1)
+            c.hallEncoder.measurementPeriod(1).averageDepth(1)
+            .positionConversionFactor(43.0/26.0)
             .velocityConversionFactor(43.0/26.0);
             c
                 .freeLimit(60)
@@ -31,7 +32,7 @@ public class RealShooterRollerIO extends ShooterRollerIO {
                 .status5(65535)
                 .status4(65535)
                 .status3(65535)
-                .status2(65535);
+                .status2(10);
             c.pid.p(0.0001);
             c.idleMode(IdleMode.kCoast);
         };
@@ -40,7 +41,7 @@ public class RealShooterRollerIO extends ShooterRollerIO {
     public RealShooterRollerIO(int CAN_ID, boolean invert) {
         m_motor = new SparkBaseConfig(Constants.config).inverted(invert)
         .applyFlex(SparkDevice.getSparkFlex(CAN_ID), true);
-        m_encoder = m_motor.getEncoder();
+        m_encoder = SparkDevice.getMainEncoder(m_motor);
         m_pid = m_motor.getPIDController();
     }
 
@@ -76,6 +77,10 @@ public class RealShooterRollerIO extends ShooterRollerIO {
 
     public double getCurrent() {
         return m_motor.getOutputCurrent();
+    }
+    @Override
+    public double getPosition() {
+        return m_encoder.getPosition();
     }
     
 }

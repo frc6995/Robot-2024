@@ -42,7 +42,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
         // m_motor.enableSoftLimit(SoftLimitDirection.kForward, true);
         // m_motor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         m_controller = m_motor.getPIDController();
-        m_encoder = m_motor.getEncoder();
+        m_encoder = SparkDevice.getMainEncoder(m_motor);
         // m_encoder.setPositionConversionFactor();
         // m_encoder.setVelocityConversionFactor(
         //     Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)

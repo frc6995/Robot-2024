@@ -24,7 +24,7 @@ public class RealTrapPivotIO extends TrapPivotIO {
         m_motor.setInverted(INVERTED);
         m_motor.setSmartCurrentLimit(CURRENT_LIMIT);
         m_controller = m_motor.getPIDController();
-        m_encoder = m_motor.getEncoder();
+        m_encoder = SparkDevice.getMainEncoder(m_motor);
         m_encoder.setPositionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
         m_encoder.setVelocityConversionFactor(
             Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)

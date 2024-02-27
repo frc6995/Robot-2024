@@ -9,4 +9,5 @@ public abstract class ShooterRollerIO {
     public abstract double getVolts();
     public abstract double getPidVolts();
     public abstract double getCurrent();
+    public abstract double getPosition();
 }

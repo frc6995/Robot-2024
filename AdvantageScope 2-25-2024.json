@@ -1,0 +1,93 @@
+{
+  "version": "3.0.2",
+  "layout": [
+    {
+      "type": 1,
+      "legends": {
+        "left": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": []
+        },
+        "discrete": {
+          "fields": []
+        },
+        "right": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": []
+        }
+      },
+      "title": "Line Graph"
+    },
+    {
+      "type": 6,
+      "fields": [],
+      "listFields": [
+        [
+          {
+            "type": "Camera Override",
+            "key": "NT:/Robot/m_drivebaseS/m_vision/cam-OV9281-BL",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose3d"
+          },
+          {
+            "type": "Camera Override",
+            "key": "NT:/Robot/m_drivebaseS/m_vision/cam-OV9281-BR",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose3d"
+          },
+          {
+            "type": "Green Ghost",
+            "key": "NT:/Robot/m_drivebaseS/m_vision/visionPose3d-OV9281-BR",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose3d"
+          },
+          {
+            "type": "Yellow Ghost",
+            "key": "NT:/Robot/m_drivebaseS/m_vision/visionPose3d-OV9281-FR",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose3d"
+          },
+          {
+            "type": "Yellow Ghost",
+            "key": "NT:/Robot/m_drivebaseS/m_vision/visionPose3d-OV9281-SH",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose3d"
+          }
+        ],
+        [
+          {
+            "type": "Mechanism (Robot)",
+            "key": "NT:/Robot/MECH_VISUALIZER",
+            "sourceTypeIndex": 8,
+            "sourceType": "Mechanism2d"
+          },
+          {
+            "type": "Robot",
+            "key": "NT:/Robot/m_field/Robot",
+            "sourceTypeIndex": 0,
+            "sourceType": 5
+          }
+        ]
+      ],
+      "options": {
+        "field": "2024 Field",
+        "alliance": "blue",
+        "robot": "KitBot",
+        "unitDistance": "meters",
+        "unitRotation": "degrees",
+        "cameraIndex": -1,
+        "fov": 50
+      },
+      "configHidden": false,
+      "title": "3D Field"
+    }
+  ]
+}

@@ -15,10 +15,12 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
 import frc.robot.subsystems.vision.PoseEstimator;
 import frc.robot.subsystems.vision.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -36,7 +38,7 @@ public class Vision implements Logged {
     private SwerveDrivePoseEstimator m_poseEstimator;
     private Supplier<Rotation2d> getHeading;
     private Supplier<SwerveModulePosition[]> getModulePositions;
-    private List<PhotonPoseEstimator> m_cameras;
+    private List<Pair<String, PhotonPoseEstimator>> m_cameras;
 
     public Vision(
             SwerveDriveKinematics kinematics,
@@ -56,7 +58,7 @@ public class Vision implements Logged {
                             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new PhotonCamera(entry.getKey()),
                             entry.getValue());
                             estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-            m_cameras.add(estimator);
+            m_cameras.add(new Pair<String, PhotonPoseEstimator>(entry.getKey(), estimator));
         });
     }
 
@@ -72,7 +74,8 @@ public class Vision implements Logged {
     public void periodic() {
         m_poseEstimator.update(getHeading.get(), getModulePositions.get());
         if (RobotBase.isReal()) {
-            for (PhotonPoseEstimator estimator : m_cameras) {
+            for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
+                var estimator = pair.getSecond();
                 estimator.setReferencePose(getPose());
                 var robotPoseOpt = estimator.update();
                 if (robotPoseOpt.isEmpty()) {
@@ -85,7 +88,7 @@ public class Vision implements Logged {
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
-                log("visionPose3d", robotPose.estimatedPose);
+                log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
                 m_poseEstimator.addVisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.3, 0.3, 0.3));
             }
@@ -99,15 +102,48 @@ public class Vision implements Logged {
     public Pose2d getPose() {
         return m_poseEstimator.getEstimatedPosition();
     }
+    public void updateCameraPoses(Pose2d drivebasePose) {
+        for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
+            log("cam-"+pair.getFirst(), 
+                new Pose3d(drivebasePose).transformBy(pair.getSecond().getRobotToCameraTransform()));
+        }
+    }
 
     public class Constants {
+        /**
+         * 
+         */
         public static final Map<String, Transform3d> cameras= Map.of(
             "OV9281-SH", new Transform3d(
                 Units.inchesToMeters(-12.5+9.1),
                 Units.inchesToMeters(0),
                 Units.inchesToMeters(23.3),
                 new Rotation3d(Units.degreesToRadians(-90), Units.degreesToRadians(-35), Units.degreesToRadians(180))
-            )
+            ),
+            "OV9281-BR", new Transform3d(
+                Units.inchesToMeters(-12.5+9.2),
+                Units.inchesToMeters(-2),
+                Units.inchesToMeters(23.4),
+                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180+31))
+            ),
+            "OV9281-FR", new Transform3d(
+                Units.inchesToMeters(-12.5+9.2+2.375),
+                Units.inchesToMeters(-2),
+                Units.inchesToMeters(23.4),
+                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(-31))
+            ),
+            "OV9281-FL", new Transform3d(
+                Units.inchesToMeters(-12.5+9.2+2.375),
+                Units.inchesToMeters(2),
+                Units.inchesToMeters(23.4),
+                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(31))
+            )//,
+            // "OV9281-BL", new Transform3d(
+            //     Units.inchesToMeters(-12.5+9.2+2.375),
+            //     Units.inchesToMeters(2),
+            //     Units.inchesToMeters(23.4),
+            //     new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180-31))
+            // )
         );// = Map.of(
                 // "OV9281-4", new Transform3d(
                 //     Units.inchesToMeters(1.5),

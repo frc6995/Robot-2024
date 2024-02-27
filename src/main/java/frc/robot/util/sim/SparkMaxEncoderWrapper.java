@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import frc.robot.Robot;
+import frc.robot.util.sparkmax.SparkDevice;
 
 public class SparkMaxEncoderWrapper {
 
@@ -16,7 +17,7 @@ public class SparkMaxEncoderWrapper {
   /** Creates a new SparkMaxDerivedVelocityController using a default set of parameters. */
   public SparkMaxEncoderWrapper(CANSparkMax sparkMax) {
     this.sparkMax = sparkMax;
-    this.sparkMaxEncoder = sparkMax.getEncoder();
+    this.sparkMaxEncoder = SparkDevice.getMainEncoder(sparkMax);
   }
 
   /** Returns the current position in rotations. */

@@ -31,7 +31,7 @@ public class RealClimberIO extends ClimberIO {
     true
     );
         m_controller = m_leader.getPIDController();
-        m_encoder = m_leader.getEncoder();
+        m_encoder = SparkDevice.getMainEncoder(m_leader);
         m_encoder.setPosition(LOWER_LIMIT);
     }
 

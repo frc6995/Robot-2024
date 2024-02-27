@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.util.sparkmax.SparkDevice;
 import monologue.Logged;
 
@@ -36,9 +37,9 @@ public class ShooterWheelsS implements Logged {
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {
-    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID,  true, 0.1, 7.1/(5753.0), "Top");
+    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID,  true, 0.05, (0.071778)/60.0, "Top");// kA 0.016432/60.0
     topSysId = m_topRoller.m_idRoutine;
-    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, 0.1, 7.1/(6170.0), "Bottom");
+    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, 0, 0.069472/60.0, "Bottom"); //kA 0.017026/60.0
     bottomSysId = m_bottomRoller.m_idRoutine;
 
     topAtGoal = m_topRoller.atGoal;
@@ -69,4 +70,12 @@ public class ShooterWheelsS implements Logged {
 
   public final SysIdRoutine topSysId;
   public final SysIdRoutine bottomSysId;
+
+  public Command dynamic(Direction direction) {
+    return topSysId.dynamic(direction).alongWith(bottomSysId.dynamic(direction));
+  }
+
+  public Command quasistatic(Direction direction) {
+    return topSysId.quasistatic(direction).alongWith(bottomSysId.quasistatic(direction));
+  }
 }

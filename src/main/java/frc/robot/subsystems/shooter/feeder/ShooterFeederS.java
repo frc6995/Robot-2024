@@ -20,7 +20,7 @@ public class ShooterFeederS extends SubsystemBase {
   public class Constants {
     public static final int CAN_ID = 33;
     public static final int CURRENT_LIMIT = 15;
-    public static final double OUT_VOLTAGE = 12;
+    public static final double OUT_VOLTAGE = 10;
     public static final double THROUGH_VOLTAGE = -3;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.freeLimit(CURRENT_LIMIT).idleMode(IdleMode.kCoast)
@@ -65,7 +65,7 @@ public class ShooterFeederS extends SubsystemBase {
   public Command stopC(){
     return runOnce(this::stop);
   }
-  public Command voltageC(DoubleSupplier volts) {
+  public Command runVoltageC(DoubleSupplier volts) {
     return run(()->m_motor.setVoltage(volts.getAsDouble()));
   } 
   @Override

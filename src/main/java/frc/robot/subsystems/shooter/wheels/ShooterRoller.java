@@ -36,22 +36,23 @@ public class ShooterRoller implements Subsystem, Logged {
         this.ff = new SimpleMotorFeedforward(kS, kV);
         this.name = name;
         MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RPM);
+        MutableMeasure<Angle> positionMeasure = MutableMeasure.ofBaseUnits(0, Rotations);
         MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
         String sysidName = "shooter" + this.name;
         m_idRoutine = new SysIdRoutine(
         new Config(
-        Volts.of(0.5).per(Second),
-        Volts.of(1),
-        Seconds.of(10)
+        Volts.of(1).per(Second),
+        Volts.of(7),
+        Seconds.of(20)
         ), 
         new Mechanism(
         (Measure<Voltage> volts)->m_io.setVolts(volts.in(Volts)),
         (log)->{
             log.motor(sysidName).angularVelocity(
-            velocityMeasure.mut_replace(m_io.getVelocity(), RadiansPerSecond)
+            velocityMeasure.mut_replace(m_io.getVelocity(), RPM)
             ).voltage(
             voltsMeasure.mut_replace(m_io.getVolts(), Volts)
-            );
+            ).angularPosition(positionMeasure.mut_replace(m_io.getPosition(), Rotations));
 
         }, this, sysidName));
         setDefaultCommand(stopC());
@@ -62,6 +63,7 @@ public class ShooterRoller implements Subsystem, Logged {
     @Log public double getPidVolts() {return m_io.getPidVolts();}
     @Log public double getVolts() {return m_io.getVolts();}
     @Log public double getCurrent() {return m_io.getCurrent();}
+    @Log public double getPosition() {return m_io.getPosition();}
 
     @Log
     public boolean atGoal() {

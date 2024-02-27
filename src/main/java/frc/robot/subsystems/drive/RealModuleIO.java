@@ -13,6 +13,7 @@ import com.revrobotics.SparkAbsoluteEncoder;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -23,6 +24,7 @@ import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
 import lib.sparkmax.PIDSlotConfig;
 import lib.sparkmax.PIDControllerConfig.FeedbackDevice;
+import monologue.Annotations.Log;
 
 import java.util.function.Consumer;
 
@@ -90,6 +92,7 @@ public class RealModuleIO extends ModuleIO {
   protected final CANSparkFlex m_steerMotor;
   protected final SparkPIDController m_driveController;
   protected final SparkPIDController m_rotationController;
+
   protected final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
   protected double m_driveDistance = 0;
   protected double m_driveVelocity = 0;
@@ -97,6 +100,9 @@ public class RealModuleIO extends ModuleIO {
   protected double m_steerVolts = 0;
   protected double m_driveVolts = 0;
   protected RelativeEncoder m_driveEncoder;
+  protected RelativeEncoder m_steerEncoder;
+  @Log
+  private int absEncResetCtr = 0;
 
   public RealModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
     super(addPeriodic, moduleConstants);
@@ -110,7 +116,8 @@ public class RealModuleIO extends ModuleIO {
       SparkDevice.getSparkFlex(moduleConstants.rotationMotorID, MotorType.kBrushless),
       true
     );
-    m_driveEncoder = m_driveMotor.getEncoder();
+    m_driveEncoder = SparkDevice.getMainEncoder(m_driveMotor);
+    m_steerEncoder = SparkDevice.getMainEncoder(m_steerMotor);
     m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, 0);
     //Timer.delay(0.5);
     // m_driveMotor = SparkDevice.getSparkFlex(moduleConstants.driveMotorID, MotorType.kBrushless);
@@ -167,6 +174,10 @@ public class RealModuleIO extends ModuleIO {
     m_driveDistance = m_driveEncoder.getPosition();
     m_driveVelocity = m_driveEncoder.getVelocity();
     m_steerAngle = MathUtil.angleModulus(m_magEncoder.getPosition());
+    if (DriverStation.isDisabled() && ++absEncResetCtr > 150) {
+      reinitRotationEncoder();
+      absEncResetCtr = 0;
+    }
   }
 
   @Override
@@ -199,17 +210,17 @@ public class RealModuleIO extends ModuleIO {
   @Override
   public double getRelativeAngle() {
 
-    return m_steerMotor.getEncoder().getPosition();
+    return m_steerEncoder.getPosition();
   }
 
   @Override
   public void resetDistance() {
-    m_driveMotor.getEncoder().setPosition(0);
+    m_driveEncoder.setPosition(0);
   }
 
   @Override
   public void reinitRotationEncoder() {
-    m_steerMotor.getEncoder().setPosition(getAngle());
+    m_steerEncoder.setPosition(getAngle());
   }
 
   @Override

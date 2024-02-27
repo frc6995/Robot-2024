@@ -85,7 +85,10 @@ public class CommandGroups {
         parallel(
             m_intakePivotS.deploy(),
             waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
-            waitSeconds(0.1).andThen(m_midtakeS.intakeC())
+            waitSeconds(0.1).andThen(
+              //m_midtakeS.intakeC()
+              m_midtakeS.runVoltage(()->MidtakeS.Constants.IN_VOLTAGE, ()->MidtakeS.Constants.IN_VOLTAGE)
+            )
         )
         .until(m_midtakeS.hasNote),
 
@@ -93,22 +96,19 @@ public class CommandGroups {
             sequence(
                 m_intakePivotS.deploy()),
             m_intakeRollerS.slowInC(),
-            m_midtakeS.run(
-                () -> m_midtakeS.setVoltage(6)),
-            m_shooterFeederS.voltageC(()->1)
+            m_midtakeS.runVoltage(()->1, ()->1),
+            m_shooterFeederS.runVoltageC(()->1)
         )
         .withTimeout(1)
         .until(m_midtakeS.hasNote.negate())
         .onlyIf(m_midtakeS.hasNote),
-
+        // intentionally interrupt the current command to fragment the group
         parallel(
             new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
             new ScheduleCommand(m_intakePivotS.hold().withTimeout(0.3).andThen(m_intakePivotS.retract())),
             new ScheduleCommand(
                 parallel(
-                  m_midtakeS.run(
-                    () -> m_midtakeS.setVoltage(-2)
-                  ),
+                  m_midtakeS.runVoltage(()->0, ()->-1),
                   m_shooterFeederS.backupC(),
                   m_shooterPivotS.runVoltage(()->0)
                 )
