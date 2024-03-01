@@ -114,7 +114,7 @@ public class Vision implements Logged {
          * 
          */
         public static final Map<String, Transform3d> cameras= Map.of(
-            "OV9281-SH", new Transform3d(
+            "Arducam_OV2311_USB_Camera", new Transform3d(
                 Units.inchesToMeters(-12.5+9.1),
                 Units.inchesToMeters(0),
                 Units.inchesToMeters(23.3),
@@ -126,24 +126,24 @@ public class Vision implements Logged {
                 Units.inchesToMeters(23.4),
                 new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180+31))
             ),
-            "OV9281-FR", new Transform3d(
-                Units.inchesToMeters(-12.5+9.2+2.375),
+            "OV9281-FR (1)", new Transform3d(
+                Units.inchesToMeters(12.5-13.875),
                 Units.inchesToMeters(-2),
                 Units.inchesToMeters(23.4),
                 new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(-31))
             ),
             "OV9281-FL", new Transform3d(
-                Units.inchesToMeters(-12.5+9.2+2.375),
+                Units.inchesToMeters(12.5-13.875),
                 Units.inchesToMeters(2),
                 Units.inchesToMeters(23.4),
                 new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(31))
-            )//,
-            // "OV9281-BL", new Transform3d(
-            //     Units.inchesToMeters(-12.5+9.2+2.375),
-            //     Units.inchesToMeters(2),
-            //     Units.inchesToMeters(23.4),
-            //     new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180-31))
-            // )
+            ),
+            "OV9281-BL", new Transform3d(
+                Units.inchesToMeters(-12.5+9.2+2.375),
+                Units.inchesToMeters(2),
+                Units.inchesToMeters(23.4),
+                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180-31))
+            )
         );// = Map.of(
                 // "OV9281-4", new Transform3d(
                 //     Units.inchesToMeters(1.5),
