@@ -54,6 +54,8 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
+
 import org.photonvision.PhotonCamera;
 
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -63,7 +65,7 @@ public class RobotContainer implements Logged {
 
   /** Establishes the controls and subsystems of the robot */
   private final CommandXboxController m_driverController = new CommandXboxController(0);
-  private final CommandXboxController m_testingController = new CommandXboxController(5);
+  private final CommandXboxController m_operatorController = new CommandXboxController(1);
   private final CommandXboxController m_keypad = new CommandXboxController(2);
   private final DriverDisplay m_driverDisplay = new DriverDisplay();
   private final DrivebaseS m_drivebaseS;
@@ -212,6 +214,10 @@ public class RobotContainer implements Logged {
   public Translation2d speaker() {
     return m_autos.speaker();
   }
+  @Log
+  public double xDistToSpeaker() {
+    return Math.abs(m_drivebaseS.getPose().getTranslation().getX() - speaker().getX());
+  }
 
   @Log
   public double directionToSpeaker() {
@@ -226,6 +232,10 @@ public class RobotContainer implements Logged {
   @Log
   public double pivotAngle() {
     return m_autos.pivotAngle();
+  }
+  public Command spinDistance(DoubleSupplier distance) {
+    return m_shooterWheelsS.spinC(()->Interpolation.TOP_MAP.get(distance.getAsDouble()),
+      ()->Interpolation.BOTTOM_MAP.get(distance.getAsDouble()) );
   }
 
   public Command faceSpeaker() {
@@ -243,21 +253,59 @@ public class RobotContainer implements Logged {
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
   }
   public void configureButtonBindings() {
+
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    m_driverController.a().whileTrue(faceSpeaker());
-    m_driverController.rightTrigger().whileTrue(m_shooterWheelsS.spinVoltageC(()->10, ()->10));
-    m_driverController.b().whileTrue(faceNote());
+    
+    //#region driver controller
+
+    // button bindings for stage orientation
+    m_driverController.b().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/3.0));
+    m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
+    m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
+
+    // face note
+    m_driverController.a().whileTrue(faceNote());
+
+    // intaking
+    m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake());
 
-    m_driverController.x().whileTrue(m_intakeRollerS.outtakeC());
-    m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());// .whileTrue(m_intakePivotS.rotateToAngle(()->MathUtil.interpolate(IntakePivotS.Constants.CCW_LIMIT,
-                                                               // IntakePivotS.Constants.CW_LIMIT,
-                                                               // m_driverController.getRightTriggerAxis())));
+    // face amp
+    m_driverController.leftTrigger().whileTrue(m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
+    // face speaker
+    m_driverController.rightTrigger().whileTrue(faceSpeaker());
+
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
-    m_driverController.leftTrigger().whileTrue(m_midtakeS.runVoltage(()->6, ()->6).alongWith(m_shooterFeederS.runVoltageC(()->2)));//m_midtakeS.intakeC().alongWith(m_shooterFeederS.feedC()));
-    
+
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
-    // keypad only below this line
+
+    //#endregion
+
+
+    //#region operator controller start
+
+     m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
+     m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995,()-> -0.6995));
+     m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995,()-> 0.6995));
+
+     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->Interpolation.AMP_SPEED, ()->Interpolation.AMP_SPEED),
+     m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT)));
+     m_operatorController.rightBumper().whileTrue(parallel(
+      spinDistance(this::xDistToSpeaker),
+      m_shooterPivotS.rotateWithVelocity(
+            ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
+            () -> 0)
+
+     ));
+
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->6, ()->6).alongWith(m_shooterFeederS.runVoltageC(()->2)));
+     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker));
+
+    //#endregion
+
+
+    //#region keypad
+
     m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(() -> 0.1));
     m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(() -> -0.7));
     m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(() -> Units.degreesToRadians(180 - 25)));
@@ -287,6 +335,7 @@ public class RobotContainer implements Logged {
     m_keypad.button(9).whileTrue(m_shooterWheelsS.dynamic(Direction.kReverse));
     m_keypad.button(8).whileTrue(m_shooterWheelsS.quasistatic(Direction.kForward));
     m_keypad.button(7).whileTrue(m_shooterWheelsS.quasistatic(Direction.kReverse));
+    //#endregion
   }
 
   public Command driveIntakeRelativePOV() {

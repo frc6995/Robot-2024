@@ -6,6 +6,8 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
 public class Interpolation {
+    public static final double AMP_SPEED = 1500.0;
+    public static final double AMP_PIVOT = CW_LIMIT;
     public static final double MAX_DISTANCE = 5.115; // wingline
     public static final double MIN_DISTANCE = 1.574; // slightly back from subwoofer
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();
