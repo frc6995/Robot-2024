@@ -83,14 +83,32 @@ public class Vision implements Logged {
                 }
                 
                 var robotPose = robotPoseOpt.get();
-                //if (robotPose.targetsUsed.size() < 2) {continue;}
+                double xConfidence;
+                double yConfidence;
+                double angleConfidence;
+                if(robotPose.targetsUsed.size() == 0) {
+                    continue; //should never happen but measurement shouldn't be trusted
+                }
+                double distance = robotPose.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm();
+                if (robotPose.targetsUsed.size() < 2) {
+                    xConfidence = 0.5 * distance;
+                    yConfidence = 0.5 * distance;
+                    angleConfidence = 0.5 * distance;
+                }
+                else {
+                    xConfidence = 0.1 * distance;
+                    yConfidence = 0.1 * distance;
+                    angleConfidence = 0.3*distance;
+                }
                 // var confidence = AprilTags.calculateVisionUncertainty(
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
+    
                 m_poseEstimator.addVisionMeasurement(
-                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds, VecBuilder.fill(0.3, 0.3, 0.3));
+                        robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
+                        VecBuilder.fill(xConfidence, yConfidence, angleConfidence));
             }
         }
     }

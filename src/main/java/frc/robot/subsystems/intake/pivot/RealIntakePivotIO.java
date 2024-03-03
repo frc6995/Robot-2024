@@ -137,7 +137,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
                 .velocityConversionFactor(VELOCITY_FACTOR)
                 .averageDepth(4);
             c.pid
-                .p(1)
+                .p(1.5)
                 .i(0)
                 .d(0)
                 .ff(0)

@@ -68,6 +68,26 @@ public abstract class SwerveDriveIO implements Logged {
     }
   }
 
+  public void sysidLinear(double volts) {
+    for (ModuleIO mod : m_modules) {
+      mod.setRotationPid(0, 0);
+      mod.setDriveVoltage(volts);
+    }
+  }
+
+  public void sysidAngular(double volts) {
+    // FL
+    m_modules.get(0).setRotationPid(3* Math.PI / 4.0, 0);
+    // FR
+    m_modules.get(1).setRotationPid(Math.PI / 4.0, 0);
+    // BL
+    m_modules.get(2).setRotationPid(5*Math.PI / 4.0, 0);
+    m_modules.get(3).setRotationPid(7*Math.PI/4.0, 0);
+    for (ModuleIO mod : m_modules) {
+      mod.setDriveVoltage(volts);
+    }
+  }
+
   @Log.NT
   public SwerveModuleState[] getModuleStates() {
     return currentStates;

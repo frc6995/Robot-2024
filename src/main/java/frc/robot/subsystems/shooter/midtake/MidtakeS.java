@@ -33,7 +33,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     public static final int BACK_CAN_ID = 30;
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 2;
-    public static final double IN_VOLTAGE = 10.5;
+    public static final double IN_VOLTAGE = 8;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.
         freeLimit(20)

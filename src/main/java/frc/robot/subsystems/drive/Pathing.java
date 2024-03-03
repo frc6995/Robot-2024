@@ -27,15 +27,15 @@ import java.util.stream.Collectors;
 public class Pathing {
  public static final PPHolonomicDriveController m_holonomicDriveController =
       new PPHolonomicDriveController(
-          new PIDConstants(8, 0, 0),
-          new PIDConstants(2, 0, 0),
+          new PIDConstants(10, 0, 0),
+          new PIDConstants(4, 0, 0),
           0.02,
           MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm());
   public static final HolonomicPathFollowerConfig m_pathPlannerConfig =
       new HolonomicPathFollowerConfig(
-          new PIDConstants(8, 0, 0),
-          new PIDConstants(2, 0, 0),
+          new PIDConstants(10, 0, 0),
+          new PIDConstants(4, 0, 0),
           MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm(),
           new ReplanningConfig(false, false, 0.1, 0.1));

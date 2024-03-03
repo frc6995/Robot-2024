@@ -41,6 +41,7 @@ public class RealModuleIO extends ModuleIO {
         .status4(32767)
         .status3(32767)
         .status0(15)
+        .enableVoltageCompensation(10)
         ;//.
         //statusFrames(40, 20, 20, 65535, 65535, 65535, 65535);
       c.hallEncoder.
@@ -68,6 +69,7 @@ public class RealModuleIO extends ModuleIO {
         .status4(32767)
         .status3(32767)
         .status0(15)
+        .enableVoltageCompensation(10)
         ;
         //.statusFrames(40, 65535, 65535, 65535, 65535, 40, 65535);
       c.absEncoder.

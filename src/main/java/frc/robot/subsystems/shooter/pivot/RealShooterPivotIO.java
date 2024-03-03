@@ -82,14 +82,14 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     }
     
     public class Constants {
-        public static final double kP = 0.75;
+        public static final double kP = 1.5;
         public static final double kI = 0;
         public static final double kD = 0;
         /**
          * We want positive voltage to drive towards the lower hardstop.
          */
         public static final boolean INVERTED = false;
-        public static final int CURRENT_LIMIT = 20;
+        public static final int CURRENT_LIMIT = 40;
 
         public static final Consumer<SparkBaseConfig> config = c->{
             c

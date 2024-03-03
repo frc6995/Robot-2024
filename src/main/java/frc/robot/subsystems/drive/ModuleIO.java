@@ -27,7 +27,7 @@ public abstract class ModuleIO implements Logged {
   protected double m_steerSetpoint = 0;
   protected double m_driveSetpoint = 0;
   private final SimpleMotorFeedforward m_driveFeedForward =
-      new SimpleMotorFeedforward(Robot.isReal() ? DRIVE_FF_CONST[0] : 0, DRIVE_FF_CONST[1], 0.2);
+      new SimpleMotorFeedforward(Robot.isReal() ? DRIVE_FF_CONST[0] : 0, DRIVE_FF_CONST[1], DRIVE_FF_CONST[2]);
 
   private final SimpleMotorFeedforward m_steerFeedForward =
       new SimpleMotorFeedforward(0.000, STEER_KV, 0.001);

@@ -90,8 +90,15 @@ public class Constants {
 
     // kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
     /** ks, kv, ka */
-    public static final double[] DRIVE_FF_CONST = {0.14315 * 0.8, 2, 0.2};
+    //code orange kaAng 0.77219 V/(m/s^2) kaLin 0.80454
+    //kvLin 2.2538
+    //ka
+    public static final double[] DRIVE_FF_CONST = {0.14315, 2, 0.80454};
+    public static final double DIAG_TW_HALF = 0.336 / 2.0;
+    public static final double ANGULAR_DRIVE_KA = 0.77219;
 
+    public static final double moi = 71.618 * (0.336/2.0) * ANGULAR_DRIVE_KA / 0.80454
+    ;
     public static final double STEER_P = 2.3584;
     public static final double STEER_D = 0.01;
     // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)

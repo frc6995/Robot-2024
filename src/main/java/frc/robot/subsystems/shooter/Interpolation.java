@@ -6,10 +6,10 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
 public class Interpolation {
-    public static final double AMP_SPEED = 1500.0;
+    public static final double AMP_SPEED = 2000.0;
     public static final double AMP_PIVOT = CW_LIMIT;
-    public static final double MAX_DISTANCE = 5.115; // wingline
-    public static final double MIN_DISTANCE = 1.574; // slightly back from subwoofer
+    public static final double MAX_DISTANCE = 3;
+    public static final double MIN_DISTANCE = 1;
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap TOP_MAP = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap BOTTOM_MAP = new InterpolatingDoubleTreeMap();
@@ -20,13 +20,19 @@ public class Interpolation {
     }
     static {
         entry(1.45, CW_LIMIT, 6000,6000);
-        entry(2.100, 2.333, 5700, 6000);
-        entry(2.652, 2.434, 5600, 6400);
-        entry(3.100, 2.496, 5600, 6400);
-        entry(3.670, 2.580, 5500, 6400);
-        entry(4.200, 2.655, 5500, 6500);
-        entry(4.640, 2.665, 5500, 6500);
-
+        // entry(2.100, 2.333, 5700, 6000);
+        // entry(2.652, 2.434, 5600, 6400);
+        // entry(3.100, 2.496, 5600, 6400);
+        // entry(3.670, 2.580, 5500, 6400);
+        // entry(4.200, 2.655, 5500, 6500);
+        // entry(4.640, 2.665, 5500, 6500);
+        
+        entry(1.5, 2.257, 6000, 6000);
+        entry(1.75, 2.336, 6000, 6000);
+        entry(2, 2.41, 6000, 6000);
+        entry(2.5, 2.45, 6000, 6000);
+        entry(2.75, 2.6, 5000, 6000);
+        entry(3, 2.6, 5000, 6000);
         // PIVOT_MAP.put(1.45, CW_LIMIT);
         // TOP_MAP.put(1.45, 6000);
         // final var deg = Units.degreesToRadians(1);

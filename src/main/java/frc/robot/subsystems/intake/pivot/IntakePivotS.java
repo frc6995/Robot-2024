@@ -108,6 +108,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   @Log.NT public double getVolts() {return m_io.getVolts();}
   @Log.NT public double getCurrent() {return m_io.getCurrent();}
   @Log public boolean isHomed() {return isHomed.getAsBoolean();}
+  @Log public boolean hasHomed() {return hasHomed;};
   public void periodic() {
     // Update our visualization
     INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle() + Units.degreesToRadians(55-14) ));
@@ -247,7 +248,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 71.429;
     // volts per (9.8 m/s^2 / CG_dist)
-    public static final double K_G = 0.17 * 0.09 / Math.cos(1.333) * 71.429 / 75.0;
+    public static final double K_G = 0.17 * 0.09 / Math.cos(1.333) * 71.429 / 75.0 * 1.05;
     /** from sysid 2/15/24 */
     public static final double K_S = 0.085423;
     /**

@@ -1,5 +1,7 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.DriveConstants.*;
 
 import com.pathplanner.lib.commands.FollowPathHolonomic;
@@ -28,6 +30,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -70,10 +74,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   private final SwerveDriveIO io;
 
   /** The X controller used for autonomous movement. */
-  public final PIDController m_xController = new PIDController(8, 0, 0.0);
+  public final PIDController m_xController = new PIDController(10, 0, 0.0);
 
-  public final PIDController m_yController = new PIDController(8, 0, 0.0);
-  public final PIDController m_thetaController = new PIDController(3, 0, 0);
+  public final PIDController m_yController = new PIDController(10, 0, 0.0);
+  public final PIDController m_thetaController = new PIDController(7, 0, 0);
   // constraints determined from OperatorControlC slew settings.
   // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
   public final ProfiledPIDController m_profiledThetaController =
@@ -88,6 +92,9 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
   private final Vision m_vision;
   private final BiConsumer<String, List<Pose2d>> drawTrajectory;
+  
+  public SysIdRoutine m_linearIdRoutine;
+  public SysIdRoutine m_angularIdRoutine;
 
   public DrivebaseS(
       Consumer<Runnable> addPeriodic, BiConsumer<String, List<Pose2d>> drawTrajectory) {
@@ -102,19 +109,26 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     m_xController.setTolerance(0.01);
     m_yController.setTolerance(0.01);
     m_linearIdRoutine =  new SysIdRoutine(
-      new Config(),
+      new Config(
+       Volts.per(Second).of(1),Volts.of(4),Second.of(10)),
       new Mechanism(volts->{
         double voltage = volts.baseUnitMagnitude();
-        // io.setModuleStates(new SwerveModuleState[] {
-        //   new SwerveModuleState(voltage, new Rotation2d()),
-        //   new SwerveModuleState(voltage, new Rotation2d()),
-        //   new SwerveModuleState(voltage, new Rotation2d()),
-        //   new SwerveModuleState(voltage, new Rotation2d())
-        // });
+        io.sysidLinear(voltage);
       },
       io::logDriveMotors,
       this,
-      "drivebase"
+      "drivebaseLin"
+      )
+    );
+      m_angularIdRoutine =  new SysIdRoutine(
+      new Config(),
+      new Mechanism(volts->{
+        double voltage = volts.baseUnitMagnitude();
+        io.sysidAngular(voltage);
+      },
+      io::logDriveMotors,
+      this,
+      "drivebaseAng"
       )
     );
     resetPose(new Pose2d());
@@ -148,7 +162,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     // use kinematics (wheel placements) to convert overall robot state to array of
     // individual module states
     SwerveModuleState[] states;
-    speeds = ChassisSpeeds.discretize(speeds, 0.02);
+    speeds = ChassisSpeeds.discretize(speeds, 0.12);
     if (Math.abs(speeds.vxMetersPerSecond) < 0.01
     && Math.abs(speeds.vyMetersPerSecond) < 0.01
     && Math.abs(speeds.omegaRadiansPerSecond) < 0.01) {
@@ -396,8 +410,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         m_yController.getSetpoint(),
         new Rotation2d(m_thetaController.getSetpoint()));
   }
-
-  public SysIdRoutine m_linearIdRoutine;
 
   /**** COMMANDS */
 

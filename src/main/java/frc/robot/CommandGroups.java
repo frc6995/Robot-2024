@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,6 +36,7 @@ import monologue.Annotations.Log;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
 
 public class CommandGroups {
@@ -79,7 +81,8 @@ public class CommandGroups {
    * 
    * End: When note is in midtake
    */
-  public Command deployRunIntake() {
+  public Command deployRunIntake(Trigger overrideTOF) {
+    Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
     return parallel(
     sequence(
         parallel(
@@ -90,7 +93,7 @@ public class CommandGroups {
               m_midtakeS.runVoltage(()->MidtakeS.Constants.IN_VOLTAGE, ()->MidtakeS.Constants.IN_VOLTAGE)
             )
         )
-        .until(m_midtakeS.hasNote),
+        .until(hasNote),
 
         parallel(
             sequence(
@@ -100,8 +103,8 @@ public class CommandGroups {
             m_shooterFeederS.runVoltageC(()->1)
         )
         .withTimeout(1)
-        .until(m_midtakeS.hasNote.negate())
-        .onlyIf(m_midtakeS.hasNote),
+        .until(hasNote.negate())
+        .onlyIf(hasNote),
         // intentionally interrupt the current command to fragment the group
         parallel(
             new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
@@ -109,15 +112,14 @@ public class CommandGroups {
             new ScheduleCommand(
                 parallel(
                   m_midtakeS.runVoltage(()->0, ()->-1),
-                  m_shooterFeederS.backupC(),
-                  m_shooterPivotS.runVoltage(()->0)
+                  m_shooterFeederS.backupC()
                 )
 
                     .withTimeout(3)
-                    .until(m_midtakeS.hasNote)
+                    .until(hasNote)
                     .andThen(parallel(
                       m_midtakeS.stopOnceC(), m_shooterFeederS.stopC()))))
-    ), m_shooterPivotS.runVoltage(()->0)
+    )
 
     )
     // .or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
@@ -167,7 +169,7 @@ public class CommandGroups {
               m_drivebaseS.run(() -> {
                 m_drivebaseS.drive(new ChassisSpeeds(0.5, 0, 0));
               })),
-          deployRunIntake());
+          deployRunIntake(new Trigger(()->false)));
     }, Set.of(m_drivebaseS, m_intakePivotS, m_intakeRollerS));
   }
 
@@ -246,9 +248,9 @@ public class CommandGroups {
   public Command centerWingNote(PathPlannerPath startToPrePickup) {
     return parallel(
         m_intakePivotS.deploy().asProxy(),
-        m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
+        m_shooterPivotS.rotateToAngle(() -> 2.367).asProxy(),
 
-        waitSeconds(1).andThen(m_shooterWheelsS.spinC(() -> 6000, () -> 6300).asProxy()),
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000),
         sequence(
 
             m_drivebaseS.pathPlannerCommand(startToPrePickup),
@@ -265,4 +267,72 @@ public class CommandGroups {
 
     );
   }
+    public Command w3w2() {
+    return parallel(
+        m_intakePivotS.deploy().asProxy(),
+        m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
+
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000),
+        sequence(
+
+            m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("W3.1")),
+            feed().asProxy().withTimeout(1),
+            deadline(
+                sequence(
+                  m_drivebaseS.pathPlannerCommand(
+                    PathPlannerPath.fromChoreoTrajectory("W3.2")
+                  ),
+                  waitSeconds(1),
+                  m_drivebaseS.pathPlannerCommand(
+                    PathPlannerPath.fromChoreoTrajectory("W3.3")
+                  ),
+                  m_drivebaseS.stopC()
+                ),
+                m_intakeRollerS.intakeC().asProxy(),
+                feed().asProxy()
+
+
+              )
+
+            ))
+
+  ;
+  }
+
+      public Command c5() {
+    return parallel(
+        new ScheduleCommand(m_intakePivotS.deploy().asProxy()),
+        m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
+
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy(),
+        sequence(
+            m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("C5.1")),
+            m_drivebaseS.stopOnceC(),
+            feed().asProxy().withTimeout(1),
+            deadline(
+              sequence(
+                m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("C5.2")),
+                m_drivebaseS.stopOnceC()
+                
+              ),
+              
+              deployRunIntake(new Trigger(()->false)).asProxy()
+            ),
+            feed().asProxy().withTimeout(1),
+            deadline(
+              sequence(
+                m_drivebaseS.pathPlannerCommand(
+                    PathPlannerPath.fromChoreoTrajectory("C5.3")
+                  ),
+                  m_drivebaseS.stopOnceC()
+              ),
+              
+              deployRunIntake(new Trigger(()->false)).asProxy()
+            ),
+            feed().asProxy().withTimeout(0.5)
+            
+        ))
+
+  ;
+      }
 }

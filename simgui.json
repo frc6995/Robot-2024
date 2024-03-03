@@ -170,10 +170,12 @@
               },
               "FR-[12,11][1]": {
                 "open": true
-              }
+              },
+              "open": true
             },
             "open": true
-          }
+          },
+          "open": true
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {

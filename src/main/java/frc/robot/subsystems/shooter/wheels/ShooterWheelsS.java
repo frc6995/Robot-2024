@@ -37,9 +37,9 @@ public class ShooterWheelsS implements Logged {
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {
-    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID,  true, 0.05, (0.071778)/60.0, "Top");// kA 0.016432/60.0
+    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID,  true, 0.05, (0.061854)/60.0 * 5608.0/5909.0, "Top");// kA 0.016432/60.0
     topSysId = m_topRoller.m_idRoutine;
-    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, 0, 0.069472/60.0, "Bottom"); //kA 0.017026/60.0
+    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, 0, 0.069472/60.0 * 6341.0/6548.0 / (5646.0/6000.0), "Bottom"); //kA 0.017026/60.0
     bottomSysId = m_bottomRoller.m_idRoutine;
 
     topAtGoal = m_topRoller.atGoal;
