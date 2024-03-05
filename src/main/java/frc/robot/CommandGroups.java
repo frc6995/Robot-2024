@@ -84,42 +84,37 @@ public class CommandGroups {
   public Command deployRunIntake(Trigger overrideTOF) {
     Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
     return parallel(
-    sequence(
-        parallel(
-            m_intakePivotS.deploy(),
-            waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
-            waitSeconds(0.1).andThen(
-              //m_midtakeS.intakeC()
-              m_midtakeS.runVoltage(()->MidtakeS.Constants.IN_VOLTAGE, ()->MidtakeS.Constants.IN_VOLTAGE)
-            )
-        )
-        .until(hasNote),
+        sequence(
+            parallel(
+                m_intakePivotS.deploy(),
+                waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
+                waitSeconds(0.1).andThen(
+                    // m_midtakeS.intakeC()
+                    m_midtakeS.runVoltage(() -> MidtakeS.Constants.IN_VOLTAGE, () -> MidtakeS.Constants.IN_VOLTAGE)))
+                .until(hasNote),
 
-        parallel(
-            sequence(
-                m_intakePivotS.deploy()),
-            m_intakeRollerS.slowInC(),
-            m_midtakeS.runVoltage(()->1, ()->1),
-            m_shooterFeederS.runVoltageC(()->1)
-        )
-        .withTimeout(1)
-        .until(hasNote.negate())
-        .onlyIf(hasNote),
-        // intentionally interrupt the current command to fragment the group
-        parallel(
-            new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
-            new ScheduleCommand(m_intakePivotS.hold().withTimeout(0.3).andThen(m_intakePivotS.retract())),
-            new ScheduleCommand(
-                parallel(
-                  m_midtakeS.runVoltage(()->0, ()->-1),
-                  m_shooterFeederS.backupC()
-                )
+            parallel(
+                sequence(
+                    m_intakePivotS.deploy()),
+                m_intakeRollerS.slowInC(),
+                m_midtakeS.runVoltage(() -> 1, () -> 1),
+                m_shooterFeederS.runVoltageC(() -> 1))
+                .withTimeout(1)
+                .until(hasNote.negate())
+                .onlyIf(hasNote),
+            // intentionally interrupt the current command to fragment the group
+            parallel(
+                new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
+                new ScheduleCommand(m_intakePivotS.hold().withTimeout(0.3).andThen(m_intakePivotS.retract())),
+                new ScheduleCommand(
+                    parallel(
+                        m_midtakeS.runVoltage(() -> 0, () -> -1),
+                        m_shooterFeederS.backupC())
 
-                    .withTimeout(3)
-                    .until(hasNote)
-                    .andThen(parallel(
-                      m_midtakeS.stopOnceC(), m_shooterFeederS.stopC()))))
-    )
+                        .withTimeout(3)
+                        .until(hasNote)
+                        .andThen(parallel(
+                            m_midtakeS.stopOnceC(), m_shooterFeederS.stopC())))))
 
     )
     // .or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
@@ -169,7 +164,7 @@ public class CommandGroups {
               m_drivebaseS.run(() -> {
                 m_drivebaseS.drive(new ChassisSpeeds(0.5, 0, 0));
               })),
-          deployRunIntake(new Trigger(()->false)));
+          deployRunIntake(new Trigger(() -> false)));
     }, Set.of(m_drivebaseS, m_intakePivotS, m_intakeRollerS));
   }
 
@@ -267,7 +262,37 @@ public class CommandGroups {
 
     );
   }
-    public Command w3w2() {
+  public Command centerFourWingNote() {
+    return parallel(
+        m_intakePivotS.deploy().asProxy(),
+        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
+
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000),
+        sequence(
+
+            m_drivebaseS.choreoCommand("W2.1"),
+            m_drivebaseS.stopOnceC(),
+            feed().asProxy().withTimeout(1),
+            deadline(
+                sequence(
+                  m_drivebaseS.choreoCommand("W2.2"),
+                  m_drivebaseS.stopOnceC(),
+                  waitSeconds(1),
+                  m_drivebaseS.choreoCommand("W2.3"),
+                  m_drivebaseS.stopOnceC(),
+                  waitSeconds(1),
+                  m_drivebaseS.choreoCommand("W2.4"),
+                  m_drivebaseS.stopOnceC(),
+                  waitSeconds(5)
+                ),
+                m_intakeRollerS.intakeC().asProxy(),
+                feed().asProxy()
+            ))
+
+    );
+  }
+
+  public Command w3w2() {
     return parallel(
         m_intakePivotS.deploy().asProxy(),
         m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
@@ -279,60 +304,46 @@ public class CommandGroups {
             feed().asProxy().withTimeout(1),
             deadline(
                 sequence(
-                  m_drivebaseS.pathPlannerCommand(
-                    PathPlannerPath.fromChoreoTrajectory("W3.2")
-                  ),
-                  waitSeconds(1),
-                  m_drivebaseS.pathPlannerCommand(
-                    PathPlannerPath.fromChoreoTrajectory("W3.3")
-                  ),
-                  m_drivebaseS.stopC()
-                ),
+                    m_drivebaseS.pathPlannerCommand(
+                        PathPlannerPath.fromChoreoTrajectory("W3.2")),
+                    waitSeconds(1),
+                    m_drivebaseS.pathPlannerCommand(
+                        PathPlannerPath.fromChoreoTrajectory("W3.3")),
+                    m_drivebaseS.stopC()),
                 m_intakeRollerS.intakeC().asProxy(),
                 feed().asProxy()
 
+            )
 
-              )
-
-            ))
-
-  ;
-  }
-
-      public Command c5() {
-    return parallel(
-        new ScheduleCommand(m_intakePivotS.deploy().asProxy()),
-        m_shooterPivotS.rotateToAngle(() -> pivotAngle()).asProxy(),
-
-        m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy(),
-        sequence(
-            m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("C5.1")),
-            m_drivebaseS.stopOnceC(),
-            feed().asProxy().withTimeout(1),
-            deadline(
-              sequence(
-                m_drivebaseS.pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory("C5.2")),
-                m_drivebaseS.stopOnceC()
-                
-              ),
-              
-              deployRunIntake(new Trigger(()->false)).asProxy()
-            ),
-            feed().asProxy().withTimeout(1),
-            deadline(
-              sequence(
-                m_drivebaseS.pathPlannerCommand(
-                    PathPlannerPath.fromChoreoTrajectory("C5.3")
-                  ),
-                  m_drivebaseS.stopOnceC()
-              ),
-              
-              deployRunIntake(new Trigger(()->false)).asProxy()
-            ),
-            feed().asProxy().withTimeout(0.5)
-            
         ))
 
-  ;
-      }
+    ;
+  }
+
+  public Command autoIntakeCycle(String choreoTrajectory) {
+    return deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(
+                      PathPlannerPath.fromChoreoTrajectory(choreoTrajectory)),
+                    m_drivebaseS.stopOnceC()
+
+                ),
+
+                deployRunIntake(new Trigger(() -> false)).asProxy());
+  }
+  public Command c5() {
+    return parallel(
+        new ScheduleCommand(m_intakePivotS.deploy().asProxy()),
+        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy(),
+        sequence(
+            m_drivebaseS.choreoCommand("C5.1"),
+            m_drivebaseS.stopOnceC(),
+            feed().asProxy().withTimeout(1),
+            autoIntakeCycle("C5.2"),
+            feed().asProxy().withTimeout(1),
+            autoIntakeCycle("C5.3"),
+            feed().asProxy().withTimeout(0.5)
+        ));
+  }
 }

@@ -28,7 +28,7 @@ public class Pathing {
  public static final PPHolonomicDriveController m_holonomicDriveController =
       new PPHolonomicDriveController(
           new PIDConstants(10, 0, 0),
-          new PIDConstants(4, 0, 0),
+          new PIDConstants(3, 0, 0),
           0.02,
           MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm());
@@ -100,7 +100,7 @@ public class Pathing {
       targetTranslation
     ).vxMetersPerSecond;
     }
-
+  
   /**
    * Forward is AWAY from the speaker
    * @param currentPose
@@ -126,4 +126,6 @@ public class Pathing {
       new Rotation2d(robotRelativeSpeeds.omegaRadiansPerSecond * time)
     ));
   }
+  public static final Pose2d BLUE_AMP = new Pose2d(1.818, 7.67, new Rotation2d(-Math.PI/2));
+
 }

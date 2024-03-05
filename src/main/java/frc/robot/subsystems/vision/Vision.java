@@ -81,8 +81,12 @@ public class Vision implements Logged {
                 if (robotPoseOpt.isEmpty()) {
                     continue;
                 }
+
                 
                 var robotPose = robotPoseOpt.get();
+                if (Math.abs(robotPose.estimatedPose.getZ()) > 0.5) {
+                    continue;
+                }
                 double xConfidence;
                 double yConfidence;
                 double angleConfidence;
@@ -105,7 +109,7 @@ public class Vision implements Logged {
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
-    
+                log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
                 m_poseEstimator.addVisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
                         VecBuilder.fill(xConfidence, yConfidence, angleConfidence));

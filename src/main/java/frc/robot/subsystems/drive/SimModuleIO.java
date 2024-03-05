@@ -77,7 +77,7 @@ public class SimModuleIO extends ModuleIO {
       volts = 0;
     }
     m_driveVolts = volts;
-    moduleSim.setWheelVoltage(m_driveVolts);
+    moduleSim.setWheelVoltage(MathUtil.clamp(m_driveVolts, -12, 12));
   }
 
   @Override

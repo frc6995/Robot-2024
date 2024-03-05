@@ -85,13 +85,13 @@ public class PPChasePoseCommand extends Command {
     m_trajectoryGenerator = trajectoryGenerator;
     m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
     m_drive = drive;
-    m_finishTrigger = new Trigger(() -> false);
-    // new
-    // Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation())
-    // < Units.inchesToMeters(1)
-    // && Math.abs(m_pose.get().getRotation().getDegrees() -
-    // m_targetPose.get().getRotation().getDegrees()) < 1)
-    // .debounce(0.05);
+    m_finishTrigger = //new Trigger(() -> false);
+    new
+    Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation())
+    < Units.inchesToMeters(1)
+    && Math.abs(m_pose.get().getRotation().getDegrees() -
+    m_targetPose.get().getRotation().getDegrees()) < 1)
+    .debounce(0.05);
     addRequirements(m_drive);
   }
 
@@ -121,7 +121,7 @@ public class PPChasePoseCommand extends Command {
     ChassisSpeeds targetChassisSpeeds;
     // Make sure the trajectory is not empty
     // Make sure it's still time to be following the trajectory.
-    if (false && m_trajectory.getStates().size() != 0
+    if (m_trajectory.getStates().size() != 0
         && m_timer.get() < m_trajectory.getTotalTimeSeconds()) {
       double curTime = m_timer.get();
       desiredState = (State) m_trajectory.sample(curTime);
@@ -157,7 +157,7 @@ public class PPChasePoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(2);
-    //return m_finishTrigger.getAsBoolean();
+    //return m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(2);
+    return m_finishTrigger.getAsBoolean();
   }
 }

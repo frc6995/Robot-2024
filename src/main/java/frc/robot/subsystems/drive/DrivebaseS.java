@@ -458,6 +458,10 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     return command;
   }
 
+  public Command choreoCommand(String choreoTrajectory) {
+    return pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory(choreoTrajectory));
+  }
+
 
   /**
    * Creates a new pose-chase command. This command generates and follows the target pose supplied

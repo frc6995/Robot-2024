@@ -30,7 +30,7 @@ public class Interpolation {
         entry(1.5, 2.257, 6000, 6000);
         entry(1.75, 2.336, 6000, 6000);
         entry(2, 2.41, 6000, 6000);
-        entry(2.5, 2.45, 6000, 6000);
+        entry(2.5, 2.52, 6000, 6000);
         entry(2.75, 2.6, 5000, 6000);
         entry(3, 2.6, 5000, 6000);
         // PIVOT_MAP.put(1.45, CW_LIMIT);

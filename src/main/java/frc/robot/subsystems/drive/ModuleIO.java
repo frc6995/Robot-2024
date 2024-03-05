@@ -14,6 +14,7 @@ import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import frc.robot.Robot;
 import monologue.Logged;
@@ -111,8 +112,11 @@ public abstract class ModuleIO implements Logged {
         Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
     double prevVelSetpoint = m_driveSetpoint;
     m_driveSetpoint = state.speedMetersPerSecond;
-    double accel = (state.speedMetersPerSecond - prevVelSetpoint) / 0.02;
-    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint,0));
+    double accel = 0;//(state.speedMetersPerSecond - prevVelSetpoint) / 0.02;
+    if (DriverStation.isTeleop()) {
+      //accel = 0;
+    }
+    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint,accel));
 
     m_steerSetpoint = state.angle.getRadians();
     // Get error which is the smallest distance between goal and measurement

@@ -108,7 +108,6 @@ public class RobotContainer implements Logged {
       .withSlewRate(1.33, -6);
   @Log
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
-
   private boolean m_setupDone = false;
 
   @Log.NT
@@ -169,7 +168,7 @@ public class RobotContainer implements Logged {
     configureButtonBindings();
     addAutoRoutines();
 
-    SmartDashboard.putData(m_autoSelector);
+    //SmartDashboard.putData(m_autoSelector);
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
@@ -190,6 +189,22 @@ public class RobotContainer implements Logged {
     PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
   }
 
+  // aiming left of the speaker is positive
+  @Log
+  public double sidewaysErrorToSpeaker() {
+    var error = m_drivebaseS.getPoseHeading()
+                .minus(
+                    Pathing.speakerDirection(
+                        m_drivebaseS.getPose(),
+                        speaker()))
+                .getRadians();
+    var tangent = Math.tan(error);
+    if (tangent == Double.NaN) {
+      return Double.POSITIVE_INFINITY;
+    }
+    var sideways = tangent * distanceToSpeaker();
+    return sideways;
+  }
   public void configureDriverDisplay() {
     m_driverDisplay.setHasNoteSupplier(m_midtakeS.hasNote);
     m_driverDisplay.setInRangeSupplier(() -> {
@@ -197,13 +212,7 @@ public class RobotContainer implements Logged {
       return dist > Interpolation.MIN_DISTANCE && dist < Interpolation.MAX_DISTANCE;
     });
     m_driverDisplay.setInAngleSupplier(
-        () -> Math.abs(
-            m_drivebaseS.getPoseHeading()
-                .minus(
-                    Pathing.speakerDirection(
-                        m_drivebaseS.getPose(),
-                        speaker()))
-                .getRadians()) < Units.degreesToRadians(0.5) // TODO set threshold based on dist from spkr
+        () -> Math.abs(sidewaysErrorToSpeaker()) < Units.inchesToMeters(3)
     );
     m_driverDisplay
         .setInPivotSupplier(() -> Math.abs(m_shooterPivotS.getAngle() - pivotAngle()) < Units.degreesToRadians(0.5));
@@ -272,7 +281,9 @@ public class RobotContainer implements Logged {
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
 
     // face amp
-    m_driverController.leftTrigger().whileTrue(m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
+    m_driverController.leftTrigger().whileTrue(
+      m_drivebaseS.chasePoseC(()->NomadMathUtil.mirrorPose(Pathing.BLUE_AMP, AllianceWrapper.getAlliance())));
+    //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
     // face speaker
     m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
@@ -360,10 +371,11 @@ public class RobotContainer implements Logged {
 
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
-    m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2")));
+    m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
     m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
     m_autoSelector.addOption("W3-W2", m_autos.w3w2());
     m_autoSelector.addOption("C5", m_autos.c5());
+    m_autoSelector.addOption("4Note (Ctr)", m_autos.centerFourWingNote());
   }
 
   public Command getAutonomousCommand() {
@@ -395,6 +407,7 @@ public class RobotContainer implements Logged {
     m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
     m_field.getObject("note").setPoses(m_noteCamera.getTargets(m_drivebaseS::getOldPose));
     m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+
   }
 
   public void onEnabled() {

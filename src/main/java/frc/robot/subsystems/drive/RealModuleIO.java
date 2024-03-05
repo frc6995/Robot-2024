@@ -48,7 +48,9 @@ public class RealModuleIO extends ModuleIO {
         positionConversionFactor(
           Math.PI * (WHEEL_RADIUS_M * 2) / WHEEL_ENC_COUNTS_PER_WHEEL_REV
         ).
-        velocityConversionFactor((WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV);
+        velocityConversionFactor((WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV)
+        .averageDepth(1)
+        .measurementPeriod(1);
       c.pid.
         pidFF(
           0.1,

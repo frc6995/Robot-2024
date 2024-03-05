@@ -93,7 +93,7 @@ public class Constants {
     //code orange kaAng 0.77219 V/(m/s^2) kaLin 0.80454
     //kvLin 2.2538
     //ka
-    public static final double[] DRIVE_FF_CONST = {0.14315, 2, 0.80454};
+    public static final double[] DRIVE_FF_CONST = {0.14315, 2, 0.3};//0.80454};
     public static final double DIAG_TW_HALF = 0.336 / 2.0;
     public static final double ANGULAR_DRIVE_KA = 0.77219;
 
