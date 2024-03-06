@@ -27,11 +27,12 @@ public class RealIntakePivotIO extends IntakePivotIO {
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
-    private DigitalInput m_coastModeInput = new DigitalInput(0);
+    private DigitalInput m_coastModeInput = new DigitalInput(9);
     private Trigger m_coastModeButton = new Trigger(m_coastModeInput::get).negate();
     public RealIntakePivotIO() {
         super();
         m_motor = new SparkBaseConfig(Constants.config).applyMax(
+
             SparkDevice.getSparkMax(IntakePivotS.Constants.CAN_ID)
             , true);
         // m_motor = SparkDevice.getSparkMax(IntakePivotS.Constants.CAN_ID);

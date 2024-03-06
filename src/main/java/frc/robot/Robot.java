@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.FaultLogger;
 import monologue.Monologue;
 
 public class Robot extends TimedRobot {
@@ -36,6 +37,7 @@ public class Robot extends TimedRobot {
           AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
         },
         0.5);
+    //addPeriodic(FaultLogger::update, 1);
     System.gc();
   }
 

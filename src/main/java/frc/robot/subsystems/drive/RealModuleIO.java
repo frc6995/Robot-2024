@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkAbsoluteEncoder;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
@@ -169,16 +170,24 @@ public class RealModuleIO extends ModuleIO {
     m_rotationController = m_steerMotor.getPIDController();
     resetDistance();
     reinitRotationEncoder();
-    addPeriodic.accept(this::updateEncoders);
   }
 
-  public void updateEncoders() {
+  public void updateInputs() {
     m_driveVolts = m_driveMotor.getAppliedOutput() * 12;
     m_steerVolts = m_steerMotor.getAppliedOutput() * 12;
-    m_driveDistance = m_driveEncoder.getPosition();
-    m_driveVelocity = m_driveEncoder.getVelocity();
-    m_steerAngle = MathUtil.angleModulus(m_magEncoder.getPosition());
-    if (DriverStation.isDisabled() && ++absEncResetCtr > 150) {
+    var driveDistance = m_driveEncoder.getPosition();
+    if (m_driveMotor.getLastError() == REVLibError.kOk) {
+      m_driveDistance = driveDistance;
+    }
+    var driveVelocity = m_driveEncoder.getVelocity();
+    if (m_driveMotor.getLastError() == REVLibError.kOk) {
+      m_driveVelocity = driveVelocity;
+    }
+    var steerAngle = MathUtil.angleModulus(m_magEncoder.getPosition());
+    if (m_steerMotor.getLastError() == REVLibError.kOk) {
+      m_steerAngle = steerAngle;
+    }
+    if (DriverStation.isDisabled() && ++absEncResetCtr > 500) {
       reinitRotationEncoder();
       absEncResetCtr = 0;
     }
@@ -255,7 +264,7 @@ public class RealModuleIO extends ModuleIO {
 
   @Override
   public void setDrivePid(double velocity, double ffVolts) {
-    log("driveFF", ffVolts);
+    this.ffVolts = ffVolts;
     //m_driveMotor.setVoltage(ffVolts);
     m_driveController.setReference(velocity, ControlType.kVelocity, 0, ffVolts);
   }

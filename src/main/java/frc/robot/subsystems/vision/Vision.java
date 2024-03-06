@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -28,18 +29,28 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.util.AllianceWrapper;
 import frc.robot.util.AprilTags;
 import monologue.Logged;
+import monologue.Annotations.Log;
 
 public class Vision implements Logged {
     private SwerveDrivePoseEstimator m_poseEstimator;
     private Supplier<Rotation2d> getHeading;
     private Supplier<SwerveModulePosition[]> getModulePositions;
     private List<Pair<String, PhotonPoseEstimator>> m_cameras;
-
+    @Log
+    private double redSpeakerDist;
+    @Log
+    private double blueSpeakerDist;
+    @Log
+    private double redSpeakerDistTime;
+    @Log
+    private double blueSpeakerDistTime;
     public Vision(
             SwerveDriveKinematics kinematics,
             Supplier<Rotation2d> getHeading,
@@ -71,6 +82,22 @@ public class Vision implements Logged {
         return Optional.of(interp.get().poseMeters);
     }
 
+    public boolean seesRedSpeaker() {
+        return Timer.getFPGATimestamp() - redSpeakerDistTime < 0.5;
+    }
+    public boolean seesBlueSpeaker() {
+        return Timer.getFPGATimestamp() - blueSpeakerDistTime < 0.5;
+    }
+    @Log
+    public boolean seesOwnSpeaker() {
+        return AllianceWrapper.isRed() ? seesRedSpeaker() : seesBlueSpeaker();
+    }
+
+    @Log
+    public double ownSpeakerDistance() {
+        return AllianceWrapper.isRed() ? redSpeakerDist : blueSpeakerDist;
+    }
+
     public void periodic() {
         m_poseEstimator.update(getHeading.get(), getModulePositions.get());
         if (RobotBase.isReal()) {
@@ -84,6 +111,37 @@ public class Vision implements Logged {
 
                 
                 var robotPose = robotPoseOpt.get();
+                for (var target : robotPose.targetsUsed) {
+                    if (target.getFiducialId() == 7 || target.getFiducialId() == 4) {
+                        
+                        var transform = estimator.getRobotToCameraTransform();
+                        double tgtPitch = 0;
+                        double camPitch = 0;
+                        // 90* roll cam
+                        if (transform.getRotation().getX() < -1) {
+                            tgtPitch = Units.degreesToRadians(target.getYaw());
+                            camPitch = Units.degreesToRadians(-35);
+                        } else {
+                            tgtPitch = Units.degreesToRadians(target.getPitch());
+                            camPitch = transform.getRotation().getY();
+                            log(pair.getFirst() + "camPitch", camPitch);
+                        }
+                        var distance = PhotonUtils.calculateDistanceToTargetMeters(
+                            estimator.getRobotToCameraTransform().getZ(),
+                            Constants.layout.getTagPose(7).get().getZ(),
+                            -camPitch, tgtPitch);
+
+                        if (target.getFiducialId() ==7 ){
+                            log(pair.getFirst() + "blueSpkrDist", distance);
+                            blueSpeakerDist = distance;
+                            blueSpeakerDistTime = Timer.getFPGATimestamp();
+                        } else if (target.getFiducialId() ==4 ) {
+                            log(pair.getFirst() + "redSpkrDist", distance);
+                            redSpeakerDist = distance;
+                            redSpeakerDistTime = Timer.getFPGATimestamp();
+                        }
+                    }
+                }
                 if (Math.abs(robotPose.estimatedPose.getZ()) > 0.5) {
                     continue;
                 }

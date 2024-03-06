@@ -41,6 +41,7 @@ import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.FaultLogger;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
@@ -82,7 +83,7 @@ public class RobotContainer implements Logged {
   private final ClimberS m_rightClimberS;
   private final BlobDetectionCamera m_noteCamera;
   private final LightStripS m_lightStripS;
-  @Log.NT
+  @Log.NT(level = LogLevel.OVERRIDE_FILE_ONLY)
   private double loopTime = 0;
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
   @Log.NT
@@ -382,7 +383,11 @@ public class RobotContainer implements Logged {
     return m_autoSelector.getSelected();
   }
 
+  /**
+   * runs after subsystem periodics and after commands
+   * */
   public void periodic() {
+    m_drivebaseS.afterCommandsPeriodic();
     if (DriverStation.isDisabled()) {
       if (m_setupDone) {
         LightStripS.getInstance().requestState(States.SetupDone);

@@ -77,7 +77,7 @@ public final class FaultLogger {
   private static final Set<Fault> totalFaults = new HashSet<>();
 
   // NETWORK TABLES
-  private static final NetworkTable base = NetworkTableInstance.getDefault().getTable("Faults");
+  private static final NetworkTable base = NetworkTableInstance.getDefault().getTable("DriverDisplay").getSubTable("Faults");
   private static final Alerts activeAlerts = new Alerts(base, "Active Faults");
   private static final Alerts totalAlerts = new Alerts(base, "Total Faults");
 
@@ -172,18 +172,19 @@ public final class FaultLogger {
                 : Optional.empty());
   }
 
+  private static FaultID[] sparkFaults = FaultID.values();
   /**
    * Registers fault suppliers for a CAN-based Spark motor controller.
    *
    * @param spark The Spark Max or Spark Flex to manage.
    */
   public static void register(CANSparkBase spark) {
-    for (FaultID fault : FaultID.values()) {
-      register(() -> spark.getFault(fault), SparkUtils.name(spark), fault.name(), FaultType.ERROR);
+    for (FaultID fault : sparkFaults) {
+      register(() -> spark.getFault(fault), name(spark), fault.name(), FaultType.ERROR);
     }
     register(
         () -> spark.getMotorTemperature() > 100,
-        SparkUtils.name(spark),
+        name(spark),
         "motor above 100°C",
         FaultType.WARNING);
   }
@@ -254,7 +255,7 @@ public final class FaultLogger {
   public static void check(CANSparkBase spark) {
     REVLibError error = spark.getLastError();
     if (error != REVLibError.kOk) {
-      report(SparkUtils.name(spark), error.name(), FaultType.ERROR);
+      report(name(spark), error.name(), FaultType.ERROR);
     }
   }
 
@@ -269,5 +270,15 @@ public final class FaultLogger {
         .filter(a -> a.type() == type)
         .map(Fault::toString)
         .toArray(String[]::new);
+  }
+
+    /**
+   * Formats the name of a spark with its CAN ID.
+   *
+   * @param spark The spark to find the name of.
+   * @return The name of a spark.
+   */
+  public static String name(CANSparkBase spark) {
+    return "Spark [" + spark.getDeviceId() + "]";
   }
 }

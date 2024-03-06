@@ -36,7 +36,7 @@ public class SimModuleIO extends ModuleIO {
 
   static SwerveModuleSim swerveSimModuleFactory() {
     return new SwerveModuleSim(
-        DCMotor.getNEO(1),
+        DCMotor.getNeoVortex(1),
         DCMotor.getNeoVortex(1),
         WHEEL_RADIUS_M,
         1.0 / AZMTH_REVS_PER_ENC_REV, // steering motor rotations per wheel steer rotation
@@ -55,7 +55,8 @@ public class SimModuleIO extends ModuleIO {
   }
 
   public void setDrivePid(double velocity, double ffVolts) {
-    double pidVolts = m_drivePIDController.calculate(getDriveVelocity(), velocity);
+    this.ffVolts = ffVolts;
+    pidVolts = m_drivePIDController.calculate(getDriveVelocity(), velocity);
     setDriveVoltage(pidVolts + ffVolts);
   }
 
@@ -76,8 +77,8 @@ public class SimModuleIO extends ModuleIO {
     if (DriverStation.isDisabled()) {
       volts = 0;
     }
-    m_driveVolts = volts;
-    moduleSim.setWheelVoltage(MathUtil.clamp(m_driveVolts, -12, 12));
+    m_driveVolts = MathUtil.clamp(volts, -12, 12);
+    moduleSim.setWheelVoltage(m_driveVolts);
   }
 
   @Override

@@ -41,7 +41,6 @@ public abstract class SwerveDriveIO implements Logged {
       };
 
   public SwerveDriveIO(Consumer<Runnable> addPeriodic) {
-    addPeriodic.accept(this::periodic);
     m_navx.reset();
     m_navx.enableLogging(true);
   }
@@ -56,9 +55,13 @@ public abstract class SwerveDriveIO implements Logged {
     return new Rotation2d(Units.degreesToRadians(-m_navx.getAngle()));
   }
 
-  private void periodic() {
+  public void beforeCommands() {
+    m_modules.forEach(ModuleIO::updateInputs);
     updateModulePositions();
     updateModuleStates();
+  }
+  public void afterCommands(){
+    m_modules.forEach(ModuleIO::setState);
   }
 
   public void setModuleStates(SwerveModuleState[] moduleStates, boolean isSysid) {

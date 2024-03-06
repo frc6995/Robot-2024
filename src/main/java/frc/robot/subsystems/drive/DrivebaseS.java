@@ -150,6 +150,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   public void periodic() {
     m_vision.periodic();
     m_vision.updateCameraPoses(getPose());
+    io.beforeCommands();
+  }
+
+  public void afterCommandsPeriodic(){
+    io.afterCommands();
   }
 
   /**

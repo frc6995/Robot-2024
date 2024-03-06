@@ -18,13 +18,8 @@ public class Constants {
     public static final double WHEEL_RADIUS_M =
         Units.inchesToMeters(
             4.0 / 2.0); // 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
-    public static final double ROBOT_MASS_kg = Units.lbsToKilograms(138);
-    public static final double ROBOT_MOI_KGM2 =
-        1.0
-            / 12.0
-            * ROBOT_MASS_kg
-            * Math.pow((WHEEL_BASE_WIDTH_M * 1.1), 2)
-            * 2; // Model moment of intertia as a square slab slightly bigger than wheelbase with
+    public static final double ROBOT_MASS_kg = Units.lbsToKilograms(150);
+    public static final double ROBOT_MOI_KGM2 = 5.77; // Model moment of intertia as a square slab slightly bigger than wheelbase with
     // axis through center
     // Drivetrain Performance Mechanical limits
     public static final double MAX_MODULE_SPEED_MPS = 4.708;
@@ -93,7 +88,7 @@ public class Constants {
     //code orange kaAng 0.77219 V/(m/s^2) kaLin 0.80454
     //kvLin 2.2538
     //ka
-    public static final double[] DRIVE_FF_CONST = {0.14315, 2, 0.3};//0.80454};
+    public static final double[] DRIVE_FF_CONST = {0.14315, 2, 0.2};//0.80454};
     public static final double DIAG_TW_HALF = 0.336 / 2.0;
     public static final double ANGULAR_DRIVE_KA = 0.77219;
 
@@ -104,8 +99,8 @@ public class Constants {
     // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)
     public static final double STEER_KV = 12.0 / (5676 * (2 * Math.PI) / 60 / 12.8);
 
-    public static final double DRIVE_P = 16; // 9;
-    public static final double DRIVE_D = 0;
+    public static final double DRIVE_P = 8; // 9;
+    public static final double DRIVE_D = 0.15;
 
     public static final int ENC_PULSE_PER_REV = 1;
     public static final double WHEEL_ENC_COUNTS_PER_WHEEL_REV =

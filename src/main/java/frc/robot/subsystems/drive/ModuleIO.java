@@ -27,6 +27,12 @@ public abstract class ModuleIO implements Logged {
   // steering trapezoid profile
   protected double m_steerSetpoint = 0;
   protected double m_driveSetpoint = 0;
+  protected SwerveModulePosition m_currentPosition = new SwerveModulePosition();
+  protected SwerveModuleState m_currentState = new SwerveModuleState();
+  @Log
+  protected double ffVolts = 0;
+  @Log
+  protected double pidVolts = 0;
   private final SimpleMotorFeedforward m_driveFeedForward =
       new SimpleMotorFeedforward(Robot.isReal() ? DRIVE_FF_CONST[0] : 0, DRIVE_FF_CONST[1], DRIVE_FF_CONST[2]);
 
@@ -49,7 +55,6 @@ public abstract class ModuleIO implements Logged {
             + ','
             + moduleConstants.rotationMotorID
             + ']';
-    addPeriodic.accept(this::setState);
   }
 
   public String getPath() {
@@ -104,19 +109,22 @@ public abstract class ModuleIO implements Logged {
     m_desiredState = state;
   }
 
-  private void setState() {
+  public void updateInputs() {};
+  public void setState() {
     SwerveModuleState state =
     SwerveModuleState.optimize(m_desiredState, new Rotation2d(getAngle()));
 
-    state.speedMetersPerSecond *=
-        Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
+    state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
     double prevVelSetpoint = m_driveSetpoint;
+    log("prevSetpt", prevVelSetpoint);
     m_driveSetpoint = state.speedMetersPerSecond;
-    double accel = 0;//(state.speedMetersPerSecond - prevVelSetpoint) / 0.02;
+    log("setpt", m_driveSetpoint);
+    double accel = (m_driveSetpoint - prevVelSetpoint) / 0.02;
+    log("accel", accel);
     if (DriverStation.isTeleop()) {
       //accel = 0;
     }
-    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint,accel));
+    setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(m_driveSetpoint, accel));
 
     m_steerSetpoint = state.angle.getRadians();
     // Get error which is the smallest distance between goal and measurement
@@ -135,12 +143,16 @@ public abstract class ModuleIO implements Logged {
 
   @Log.NT
   public SwerveModuleState getCurrentState() {
-    return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getRelativeAngle()));
+    m_currentState.speedMetersPerSecond = getDriveVelocity();
+    m_currentState.angle = new Rotation2d(getRelativeAngle());
+    return m_currentState;
   }
 
   @Log.NT
   public SwerveModulePosition getCurrentPosition() {
-    return new SwerveModulePosition(getDriveDistance(), new Rotation2d(getRelativeAngle()));
+    m_currentPosition.distanceMeters = getDriveDistance();
+    m_currentPosition.angle = new Rotation2d(getRelativeAngle());
+    return m_currentPosition;
   }
 
   public double getPinionSlip() {
