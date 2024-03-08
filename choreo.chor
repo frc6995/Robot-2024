@@ -22,7 +22,7 @@
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 13
+                    "controlIntervalCount": 8
                 },
                 {
                     "x": 1.9398207664489746,
@@ -31,7 +31,7 @@
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 11
+                    "controlIntervalCount": 7
                 },
                 {
                     "x": 2.3834493160247803,
@@ -40,16 +40,16 @@
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 19
+                    "controlIntervalCount": 13
                 },
                 {
-                    "x": 2.056542158126831,
-                    "y": 4.625909805297852,
+                    "x": 2.1391384601593018,
+                    "y": 4.697463035583496,
                     "heading": -0.5585988291725746,
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 10
+                    "controlIntervalCount": 6
                 },
                 {
                     "x": 2.3638858795166016,
@@ -58,7 +58,7 @@
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 29
+                    "controlIntervalCount": 21
                 },
                 {
                     "x": 2.133683919906616,
@@ -67,7 +67,7 @@
                     "isInitialGuess": false,
                     "translationConstrained": true,
                     "headingConstrained": true,
-                    "controlIntervalCount": 11
+                    "controlIntervalCount": 8
                 },
                 {
                     "x": 2.412794828414917,
@@ -1057,7 +1057,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": true
+            "isTrajectoryStale": false
         },
         "W1": {
             "waypoints": [
