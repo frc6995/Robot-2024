@@ -297,17 +297,32 @@ public class RobotContainer implements Logged {
 
     //#region operator controller start
 
+    // RT: shoot
+    // LT: spinup 
+    // A: lock drive rotation for driveby
+    // B: intake spit
+    // X: midtake spit
+    // Y: midtake move in
+    // LB: spin for amp
+    // RB: spin for driveby
+    // sticks: climb
+    // 
+
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
+     //intake spit out
      m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995,()-> -0.6995));
+     // intake move 
      m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995,()-> 0.6995));
 
+     // spinup for amp
      m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->Interpolation.AMP_SPEED, ()->Interpolation.AMP_SPEED),
      m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT)));
+     // spinup for driveby
      m_operatorController.rightBumper().whileTrue(parallel(
-      spinDistance(this::xDistToSpeaker)//,
-      // m_shooterPivotS.rotateWithVelocity(
-      //       ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
-      //       () -> 0)
+      spinDistance(this::xDistToSpeaker),
+      m_shooterPivotS.rotateWithVelocity(
+            ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
+            () -> 0)
 
      ));
 
@@ -361,7 +376,7 @@ public class RobotContainer implements Logged {
   public Command driveIntakeRelativePOV() {
     return m_drivebaseS.run(() -> {
       double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
-      double adjustSpeed = 0.75; // m/s
+      double adjustSpeed = Units.feetToMeters(7); // m/s
       m_drivebaseS.drive(
           new ChassisSpeeds(
               Math.cos(pov) * adjustSpeed,

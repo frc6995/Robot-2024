@@ -112,9 +112,9 @@ public abstract class ModuleIO implements Logged {
   public void updateInputs() {};
   public void setState() {
     SwerveModuleState state =
-    SwerveModuleState.optimize(m_desiredState, new Rotation2d(getAngle()));
+    SwerveModuleState.optimize(m_desiredState, new Rotation2d(getRelativeAngle()));
 
-    state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
+    state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getRelativeAngle())).getRadians());
     double prevVelSetpoint = m_driveSetpoint;
     log("prevSetpt", prevVelSetpoint);
     m_driveSetpoint = state.speedMetersPerSecond;
@@ -130,9 +130,9 @@ public abstract class ModuleIO implements Logged {
     // Get error which is the smallest distance between goal and measurement
     double errorBound = Math.PI;
     double goalMinDistance =
-        MathUtil.inputModulus(m_steerSetpoint - getAngle(), -errorBound, errorBound);
+        MathUtil.inputModulus(m_steerSetpoint - getRelativeAngle(), -errorBound, errorBound);
 
-    m_steerSetpoint = goalMinDistance + getAngle();
+    m_steerSetpoint = goalMinDistance + getRelativeAngle();
 
     setRotationPid(m_steerSetpoint, 0);
   }
@@ -166,8 +166,8 @@ public abstract class ModuleIO implements Logged {
   public abstract void reinitRotationEncoder();
 
   public void resetSteerController() {
-    m_steerSetpoint = getAngle();
-    m_desiredState.angle = new Rotation2d(getAngle());
+    m_steerSetpoint = getRelativeAngle();
+    m_desiredState.angle = new Rotation2d(getRelativeAngle());
   }
 
   @Log.NT

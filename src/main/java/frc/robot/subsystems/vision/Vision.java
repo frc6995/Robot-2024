@@ -151,7 +151,24 @@ public class Vision implements Logged {
                 if(robotPose.targetsUsed.size() == 0) {
                     continue; //should never happen but measurement shouldn't be trusted
                 }
-                double distance = robotPose.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm();
+                double closestDistance = 1000;
+                double avgDistance = 0;
+                double closeEnoughTgts = 0;
+                for (var tgt : robotPose.targetsUsed ) {
+                    double tdist = tgt.getBestCameraToTarget().getTranslation().getNorm();
+                    avgDistance += tdist;
+                    if (tdist < closestDistance) {
+                        closestDistance = tdist;
+                    }
+                    if (tdist <= Units.feetToMeters(15)) {
+                        closeEnoughTgts++;
+                    }
+                }
+                double distance = avgDistance / robotPose.targetsUsed.size();
+                
+                if (closeEnoughTgts ==0) {
+                    continue;
+                }
                 if (robotPose.targetsUsed.size() < 2) {
                     xConfidence = 0.5 * distance;
                     yConfidence = 0.5 * distance;
@@ -178,7 +195,7 @@ public class Vision implements Logged {
     public void resetPose(Pose2d newPose) {
         m_poseEstimator.resetPosition(getHeading.get(), getModulePositions.get(), newPose);
     }
-
+    @Log
     public Pose2d getPose() {
         return m_poseEstimator.getEstimatedPosition();
     }

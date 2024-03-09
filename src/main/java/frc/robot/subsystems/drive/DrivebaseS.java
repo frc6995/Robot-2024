@@ -492,7 +492,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 Pathing.generateTrajectoryToPose(
                     startPose,
                     endPose,
-                    new ChassisSpeeds(), //getFieldRelativeLinearSpeedsMPS(),
+                    getRobotRelativeChassisSpeeds(),
                     new PathConstraints(2, 2, 2 * Math.PI, 2 * Math.PI)),
             this)
         .deadlineWith(LightStripS.getInstance().stateC(() -> States.Climbing));
@@ -569,9 +569,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
       InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
     return runOnce(
             () -> {
-              fwdXAxis.resetSlewRate();
-              fwdYAxis.resetSlewRate();
-              m_profiledThetaController.reset(getPoseHeading().getRadians(), 0);
+              m_profiledThetaController.reset(getPoseHeading().getRadians(), getFieldRelativeLinearSpeedsMPS().omegaRadiansPerSecond);
             })
         .andThen(
             run(

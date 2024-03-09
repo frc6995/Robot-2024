@@ -63,8 +63,8 @@ public class RealModuleIO extends ModuleIO {
 
     public static SparkBaseConfig STEER_CONFIG = new SparkBaseConfig((c)->{
       c.
-        freeLimit(20).
-        stallLimit(40).
+        freeLimit(60).
+        stallLimit(60).
         inverted(true).
         idleMode(IdleMode.kBrake)
         .status6(40)
