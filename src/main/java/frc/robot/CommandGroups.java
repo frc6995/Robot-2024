@@ -241,13 +241,14 @@ public class CommandGroups {
   }
 
   public Command centerWingNote(PathPlannerPath startToPrePickup) {
+    var path = startToPrePickup.getTrajectory(new ChassisSpeeds(), new Rotation2d());
     return parallel(
         m_intakePivotS.deploy().asProxy(),
         m_shooterPivotS.rotateToAngle(() -> 2.367).asProxy(),
 
         m_shooterWheelsS.spinC(() -> 6000, () -> 6000),
         sequence(
-
+            m_drivebaseS.resetPoseToBeginningC(path),
             m_drivebaseS.pathPlannerCommand(startToPrePickup),
             waitSeconds(1),
             feed().asProxy().withTimeout(1),
@@ -263,13 +264,10 @@ public class CommandGroups {
     );
   }
   public Command centerFourWingNote() {
-    return parallel(
-        m_intakePivotS.deploy().asProxy(),
-        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
-
-        m_shooterWheelsS.spinC(() -> 6000, () -> 6000),
-        sequence(
-
+    var path = PathPlannerPath.fromChoreoTrajectory("W2.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    return deadline(
+      sequence(
+            m_drivebaseS.resetPoseToBeginningC(path),
             m_drivebaseS.choreoCommand("W2.1"),
             m_drivebaseS.stopOnceC(),
             feed().asProxy().withTimeout(1),
@@ -283,12 +281,28 @@ public class CommandGroups {
                   waitSeconds(1),
                   m_drivebaseS.choreoCommand("W2.4"),
                   m_drivebaseS.stopOnceC(),
-                  waitSeconds(5)
+                  waitSeconds(2)
                 ),
                 m_intakeRollerS.intakeC().asProxy(),
                 feed().asProxy()
-            ))
+            )),
 
+        m_intakePivotS.deploy().asProxy(),
+        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
+
+        m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy()
+
+
+    );
+  }
+
+  public Command centerFourWingMidline() {
+    return sequence(
+      centerFourWingNote(),
+      m_drivebaseS.choreoCommand("W2.5").alongWith(
+        m_intakePivotS.retract().asProxy()
+      ),
+      m_drivebaseS.stopC()
     );
   }
 
@@ -332,11 +346,13 @@ public class CommandGroups {
                 deployRunIntake(new Trigger(() -> false)).asProxy());
   }
   public Command c5() {
+    var path = PathPlannerPath.fromChoreoTrajectory("C5.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
     return parallel(
         new ScheduleCommand(m_intakePivotS.deploy().asProxy()),
         m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
         m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy(),
         sequence(
+            m_drivebaseS.resetPoseToBeginningC(path),
             m_drivebaseS.choreoCommand("C5.1"),
             m_drivebaseS.stopOnceC(),
             feed().asProxy().withTimeout(1),

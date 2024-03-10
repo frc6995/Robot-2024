@@ -325,25 +325,7 @@ public class RobotContainer implements Logged {
             () -> 0)
 
      ));
-
-     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
-     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker));
-    m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
-        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-8* m_operatorController.getLeftY()));
-        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-8* m_operatorController.getRightY()));
-    //#endregion
-
-
-    //#region keypad
-
-    m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(() -> 0.1));
-    m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(() -> -1));
-    m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(() -> Units.degreesToRadians(180 - 25)));
-    m_keypad.button(6).onTrue(
-            m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0));
-    m_shooterPivotS.setDefaultCommand(
+      m_shooterPivotS.setDefaultCommand(
         m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
             () -> 0
@@ -352,10 +334,33 @@ public class RobotContainer implements Logged {
         // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
         // speaker())
         ));
-    //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
-    //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.runVoltage(()->0));
-    m_keypad.button(2).onTrue(
-        runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
+
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker).alongWith(
+      m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> 0)
+     ));
+    m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
+        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-8* m_operatorController.getLeftY()));
+        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-8* m_operatorController.getRightY()));
+    //#endregion
+
+
+    //#region keypad
+
+    // m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(() -> 0.1));
+    // m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(() -> -1));
+    // m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(() -> Units.degreesToRadians(180 - 25)));
+    // m_keypad.button(6).onTrue(
+    //         m_shooterPivotS.rotateWithVelocity(
+    //         this::pivotAngle,
+    //         () -> 0));
+
+    // //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
+    // //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.runVoltage(()->0));
+    // m_keypad.button(2).onTrue(
+    //     runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
     // m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(() -> 6000, () -> 6000));
     // m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(() -> 5500, () -> 6000));
     // m_keypad.button(12).whileTrue(m_shooterWheelsS.spinC(()-> 5000, ()->6000));
@@ -366,10 +371,10 @@ public class RobotContainer implements Logged {
     // m_keypad.button(10).whileTrue(getAutonomousCommand());
     // m_testingController.back().onTrue(shootVis());
     
-    m_keypad.button(10).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kForward));
-    m_keypad.button(9 ).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kReverse));
-    m_keypad.button(8 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kForward));
-    m_keypad.button(7 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kReverse));
+    // m_keypad.button(10).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kForward));
+    // m_keypad.button(9 ).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kReverse));
+    // m_keypad.button(8 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kForward));
+    // m_keypad.button(7 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kReverse));
     //#endregion
   }
 
@@ -389,9 +394,10 @@ public class RobotContainer implements Logged {
     m_autoSelector.setDefaultOption("Do Nothing", none());
     m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
     m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
-    m_autoSelector.addOption("W3-W2", m_autos.w3w2());
+    // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
     m_autoSelector.addOption("C5", m_autos.c5());
     m_autoSelector.addOption("4Note (Ctr)", m_autos.centerFourWingNote());
+    m_autoSelector.addOption("4Note(Ctr)+Out", m_autos.centerFourWingMidline());
   }
 
   public Command getAutonomousCommand() {

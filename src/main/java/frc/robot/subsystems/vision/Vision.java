@@ -154,6 +154,7 @@ public class Vision implements Logged {
                 double closestDistance = 1000;
                 double avgDistance = 0;
                 double closeEnoughTgts = 0;
+                boolean ignore = false;
                 for (var tgt : robotPose.targetsUsed ) {
                     double tdist = tgt.getBestCameraToTarget().getTranslation().getNorm();
                     avgDistance += tdist;
@@ -163,7 +164,10 @@ public class Vision implements Logged {
                     if (tdist <= Units.feetToMeters(15)) {
                         closeEnoughTgts++;
                     }
+                    ignore |= (tgt.getFiducialId() == 13);
+                    ignore |= (tgt.getFiducialId() == 14);
                 }
+                if (ignore) {continue;}
                 double distance = avgDistance / robotPose.targetsUsed.size();
                 
                 if (closeEnoughTgts ==0) {
@@ -223,7 +227,7 @@ public class Vision implements Logged {
                 Units.inchesToMeters(23.4),
                 new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180+31))
             ),
-            "OV9281-FR (1)", new Transform3d(
+            "OV9281-FR", new Transform3d(
                 Units.inchesToMeters(12.5-13.875),
                 Units.inchesToMeters(-2),
                 Units.inchesToMeters(23.4),
