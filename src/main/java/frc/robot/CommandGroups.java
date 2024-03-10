@@ -299,10 +299,9 @@ public class CommandGroups {
   public Command centerFourWingMidline() {
     return sequence(
       centerFourWingNote(),
-      m_drivebaseS.choreoCommand("W2.5").alongWith(
-        m_intakePivotS.retract().asProxy()
-      ),
-      m_drivebaseS.stopC()
+      autoIntakeCycle("W2.5"),
+      m_drivebaseS.stopOnceC(),
+      feed().asProxy().withTimeout(5)
     );
   }
 

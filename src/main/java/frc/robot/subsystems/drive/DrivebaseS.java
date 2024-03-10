@@ -90,7 +90,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
           ModuleConstants.BL.centerOffset,
           ModuleConstants.BR.centerOffset);
 
-  private final Vision m_vision;
+  public final Vision m_vision;
   private final BiConsumer<String, List<Pose2d>> drawTrajectory;
   
   public SysIdRoutine m_linearIdRoutine;

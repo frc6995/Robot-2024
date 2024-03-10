@@ -342,6 +342,7 @@ public class RobotContainer implements Logged {
             () -> 0)
      ));
     m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
+    m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-8* m_operatorController.getLeftY()));
         m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-8* m_operatorController.getRightY()));
     //#endregion
@@ -437,11 +438,12 @@ public class RobotContainer implements Logged {
   }
 
   public void onEnabled() {
+    m_drivebaseS.m_vision.captureImages();
     m_drivebaseS.resetRelativeRotationEncoders();
   }
 
   public void onDisabled() {
-
+    m_drivebaseS.m_vision.captureImages();
   }
 
   public Command shootVis() {

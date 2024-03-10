@@ -43,6 +43,7 @@ public class Vision implements Logged {
     private Supplier<Rotation2d> getHeading;
     private Supplier<SwerveModulePosition[]> getModulePositions;
     private List<Pair<String, PhotonPoseEstimator>> m_cameras;
+    private List<PhotonCamera> m_actualCameras;
     @Log
     private double redSpeakerDist;
     @Log
@@ -62,13 +63,16 @@ public class Vision implements Logged {
                 getModulePositions.get(),
                 new Pose2d());
         m_cameras = new ArrayList<>();
+        m_actualCameras = new ArrayList<>();
         Constants.cameras.entrySet().iterator().forEachRemaining((entry) -> {
+            var cam = new PhotonCamera(entry.getKey());
             var estimator = 
             new PhotonPoseEstimator(
                             Constants.layout,
-                            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new PhotonCamera(entry.getKey()),
+                            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam,
                             entry.getValue());
                             estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+            m_actualCameras.add(cam);
             m_cameras.add(new Pair<String, PhotonPoseEstimator>(entry.getKey(), estimator));
         });
     }
@@ -169,7 +173,7 @@ public class Vision implements Logged {
                 }
                 if (ignore) {continue;}
                 double distance = avgDistance / robotPose.targetsUsed.size();
-                
+                log("avgDist-"+pair.getFirst(), distance);
                 if (closeEnoughTgts ==0) {
                     continue;
                 }
@@ -195,7 +199,11 @@ public class Vision implements Logged {
             }
         }
     }
-
+    public void captureImages() {
+        for (var cam : m_actualCameras) {
+            cam.takeOutputSnapshot();
+        }
+    }
     public void resetPose(Pose2d newPose) {
         m_poseEstimator.resetPosition(getHeading.get(), getModulePositions.get(), newPose);
     }
@@ -227,18 +235,18 @@ public class Vision implements Logged {
                 Units.inchesToMeters(23.4),
                 new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(180+31))
             ),
-            "OV9281-FR", new Transform3d(
-                Units.inchesToMeters(12.5-13.875),
-                Units.inchesToMeters(-2),
-                Units.inchesToMeters(23.4),
-                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(-31))
-            ),
-            "OV9281-FL", new Transform3d(
-                Units.inchesToMeters(12.5-13.875),
-                Units.inchesToMeters(2),
-                Units.inchesToMeters(23.4),
-                new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(31))
-            ),
+            // "OV9281-FR", new Transform3d(
+            //     Units.inchesToMeters(12.5-13.875),
+            //     Units.inchesToMeters(-2),
+            //     Units.inchesToMeters(23.4),
+            //     new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(-31))
+            // ),
+            // "OV9281-FL", new Transform3d(
+            //     Units.inchesToMeters(12.5-13.875),
+            //     Units.inchesToMeters(2),
+            //     Units.inchesToMeters(23.4),
+            //     new Rotation3d(0, Units.degreesToRadians(-19), Units.degreesToRadians(31))
+            // ),
             "OV9281-BL", new Transform3d(
                 Units.inchesToMeters(-12.5+9.2+2.375),
                 Units.inchesToMeters(2),

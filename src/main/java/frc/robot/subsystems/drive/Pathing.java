@@ -127,6 +127,6 @@ public class Pathing {
       new Rotation2d(robotRelativeSpeeds.omegaRadiansPerSecond * time)
     ));
   }
-  public static final Pose2d BLUE_AMP = new Pose2d(1.818, 7.67, new Rotation2d(-Math.PI/2));
+  public static final Pose2d BLUE_AMP = new Pose2d(1.818, 7.67+Units.inchesToMeters(3), new Rotation2d(-Math.PI/2));
 
 }

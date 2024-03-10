@@ -106,7 +106,7 @@ public abstract class ModuleIO implements Logged {
   }
 
   public void setDesiredState(SwerveModuleState state) {
-    m_desiredState = state;
+    m_desiredState = new SwerveModuleState(state.speedMetersPerSecond, state.angle);
   }
 
   public void updateInputs() {};
