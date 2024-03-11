@@ -361,4 +361,13 @@ public class CommandGroups {
             feed().asProxy().withTimeout(0.5)
         ));
   }
+  public Command disruptor(){
+    var path = PathPlannerPath.fromChoreoTrajectory("disruptor").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    return 
+    sequence(
+            m_drivebaseS.resetPoseToBeginningC(path),
+            m_drivebaseS.choreoCommand("disruptor"),
+            m_drivebaseS.stopOnceC()
+    ).alongWith(m_midtakeS.runVoltage(()->-2, ()->-2).asProxy());
+  }
 }

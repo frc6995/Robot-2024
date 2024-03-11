@@ -28,12 +28,12 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
   public class Constants {
     public static final int LEADER_CAN_ID = 20;
     public static final int FOLLOWER_CAN_ID = 21;
-    public static final int CURRENT_LIMIT = 80;
+    public static final int CURRENT_LIMIT = 100;
     public static final double OUT_VOLTAGE = 12;
     public static final double IN_VOLTAGE = -10.5;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
-        freeLimit(80)
+        freeLimit(100)
         .stallLimit(CURRENT_LIMIT)
         .idleMode(IdleMode.kBrake)
         .inverted(false)

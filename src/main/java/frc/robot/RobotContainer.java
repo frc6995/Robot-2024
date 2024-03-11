@@ -396,9 +396,10 @@ public class RobotContainer implements Logged {
     m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
     m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
     // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
-    m_autoSelector.addOption("C5", m_autos.c5());
+    m_autoSelector.addOption("C5", waitSeconds(1).andThen(m_autos.c5()));
     m_autoSelector.addOption("4Note (Ctr)", m_autos.centerFourWingNote());
     m_autoSelector.addOption("4Note(Ctr)+Out", m_autos.centerFourWingMidline());
+    m_autoSelector.addOption("Disrupt", m_autos.disruptor());
   }
 
   public Command getAutonomousCommand() {
