@@ -6,7 +6,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
 public class Interpolation {
-    public static final double AMP_SPEED = 2000.0;
+    public static final double AMP_SPEED = 4000.0;
     public static final double AMP_PIVOT = CW_LIMIT;
     public static final double MAX_DISTANCE = 3;
     public static final double MIN_DISTANCE = 1;
@@ -19,6 +19,7 @@ public class Interpolation {
         BOTTOM_MAP.put(distance, bottom);
     }
     static {
+        var five = Units.degreesToRadians(5);
         entry(1.45, CW_LIMIT, 6000,6000);
         // entry(2.100, 2.333, 5700, 6000);
         // entry(2.652, 2.434, 5600, 6400);
@@ -29,10 +30,12 @@ public class Interpolation {
         
         entry(1.5, 2.257, 6000, 6000);
         entry(1.75, 2.336, 6000, 6000);
-        entry(2, 2.41, 6000, 6000);
-        entry(2.5, 2.52, 6000, 6000);
-        entry(2.75, 2.6, 5000, 6000);
-        entry(3, 2.6, 5000, 6000);
+        entry(2, 2.41-five, 6000, 6000);
+        entry(2.5, 2.52-five, 6000, 6000);
+        entry(2.75, 2.6-five, 7000, 7000);
+        entry(3.1, 2.63-five, 7000, 7000);
+        entry(3.5, 2.66-five, 7000, 7000);
+        entry(4, 2.7-five, 7000, 7000);
         // PIVOT_MAP.put(1.45, CW_LIMIT);
         // TOP_MAP.put(1.45, 6000);
         // final var deg = Units.degreesToRadians(1);

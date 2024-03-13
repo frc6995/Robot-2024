@@ -315,7 +315,7 @@ public class RobotContainer implements Logged {
      m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995,()-> 0.6995));
 
      // spinup for amp
-     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->Interpolation.AMP_SPEED, ()->Interpolation.AMP_SPEED),
+     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->3000, ()->4000),
      m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT)));
      // spinup for driveby
      m_operatorController.rightBumper().whileTrue(parallel(
@@ -335,7 +335,7 @@ public class RobotContainer implements Logged {
         // speaker())
         ));
 
-     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->5)));
      m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
@@ -343,8 +343,8 @@ public class RobotContainer implements Logged {
      ));
     m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
     m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
-        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-8* m_operatorController.getLeftY()));
-        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-8* m_operatorController.getRightY()));
+        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* m_operatorController.getLeftY()));
+        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* m_operatorController.getRightY()));
     //#endregion
 
 
