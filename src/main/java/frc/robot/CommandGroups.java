@@ -11,10 +11,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.climber.ClimberS;
@@ -51,6 +53,7 @@ public class CommandGroups {
   // private ClimberS m_climberS;
   private BlobDetectionCamera m_noteCamera;
   private LightStripS m_lightStripS;
+  private CommandXboxController m_driverController;
 
   public CommandGroups(
       DrivebaseS drivebaseS,
@@ -62,7 +65,8 @@ public class CommandGroups {
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
       // ClimberS climberS,
-      LightStripS lightStripS) {
+      LightStripS lightStripS,
+      CommandXboxController driverController) {
     m_drivebaseS = drivebaseS;
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
@@ -73,6 +77,8 @@ public class CommandGroups {
     // m_climberS = climberS;
     m_lightStripS = lightStripS;
     m_noteCamera = noteCamera;
+    m_driverController = driverController;
+
   }
 
   /**
@@ -95,10 +101,12 @@ public class CommandGroups {
                 .until(hasNote),
 
             parallel(
+              new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
+              new ScheduleCommand(m_lightStripS.requestState(null)),
                 sequence(
                     m_intakePivotS.deploy()),
                 m_intakeRollerS.slowInC(),
-                m_midtakeS.runVoltage(() -> 1, () -> 1),
+                m_midtakeS.runVoltage(() -> 6, () -> 6),
                 m_shooterFeederS.runVoltageC(() -> 1))
                 .withTimeout(1)
                 .until(hasNote.negate())
@@ -106,10 +114,10 @@ public class CommandGroups {
             // intentionally interrupt the current command to fragment the group
             parallel(
                 new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
-                new ScheduleCommand(m_intakePivotS.hold().withTimeout(0.3).andThen(m_intakePivotS.retract())),
+                new ScheduleCommand(m_intakePivotS.retract()),
                 new ScheduleCommand(
                     parallel(
-                        m_midtakeS.runVoltage(() -> 0, () -> -1),
+                        m_midtakeS.runVoltage(() -> -1, () -> -1),
                         m_shooterFeederS.backupC())
 
                         .withTimeout(3)
@@ -169,6 +177,12 @@ public class CommandGroups {
     }, Set.of(m_drivebaseS, m_intakePivotS, m_intakeRollerS));
   }
 
+  public Command rumbleDriver(double speed) {
+    return run(
+      () -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, speed)
+      )
+      .finallyDo(() -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, 0));
+  }
   public Command faceNoteC(InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleConsumer rumble) {
     return sequence(
         run(() -> rumble.accept(0.3))
@@ -222,7 +236,7 @@ public class CommandGroups {
   public double directionToSpeaker() {
     return Pathing.speakerDirection(
         m_drivebaseS.getPose(),
-        speaker()).getRadians();
+        speaker()).getRadians() + Units.degreesToRadians(4);
   }
 
   public double distanceToSpeaker() {

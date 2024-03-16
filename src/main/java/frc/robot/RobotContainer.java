@@ -106,7 +106,7 @@ public class RobotContainer implements Logged {
   private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
       .withDeadband(0.2)
       .withInvert(true)
-      .withSlewRate(1.33, -6);
+      .withSlewRate(6);
   @Log
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
   private boolean m_setupDone = false;
@@ -164,7 +164,8 @@ public class RobotContainer implements Logged {
         m_shooterPivotS,
         m_shooterWheelsS,
         // m_climberS,
-        m_lightStripS);
+        m_lightStripS,
+        m_driverController);
     configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
@@ -310,9 +311,9 @@ public class RobotContainer implements Logged {
 
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
-     m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995,()-> -0.6995));
+     m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995 * 2,()-> -0.6995 * 2));
      // intake move 
-     m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995,()-> 0.6995));
+     m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2));
 
      // spinup for amp
      m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->3000, ()->4000),

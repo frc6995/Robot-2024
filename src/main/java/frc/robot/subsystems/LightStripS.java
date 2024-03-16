@@ -18,8 +18,8 @@ public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
 
-  private AddressableLED led = new AddressableLED(0);
-  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(268);
+  private AddressableLED led = new AddressableLED(9);
+  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(39);
   private final PersistentLedState persistentLedState = new PersistentLedState();
   private States previousState = States.Default;
 

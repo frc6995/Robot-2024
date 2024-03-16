@@ -29,16 +29,16 @@ import monologue.Annotations.Log;
 public class MidtakeS extends SubsystemBase implements Logged {
   public class Constants {
     public static final double TOF_NO_NOTE = 350;
-    public static final int FRONT_CAN_ID = 31;
+    public static final int FRONT_CAN_ID = 32;
     public static final int BACK_CAN_ID = 30;
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 2;
-    public static final double IN_VOLTAGE = 8;
+    public static final double IN_VOLTAGE = 6;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.
-        freeLimit(40)
-        .stallLimit(40)
-        .idleMode(IdleMode.kBrake)
+        freeLimit(60)
+        .stallLimit(60)
+        .idleMode(IdleMode.kCoast)
         .inverted(false)
         .status6(32767)
         .status5(32767)
@@ -64,7 +64,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 .applyMax(
                   SparkDevice.getSparkMax(Constants.FRONT_CAN_ID), true
                 );
-    m_front.setOpenLoopRampRate(0.25);
+    //m_front.setOpenLoopRampRate(0.25);
     m_back = new SparkBaseConfig(Constants.config)
                 .status1(40)
                 .status2(32767)

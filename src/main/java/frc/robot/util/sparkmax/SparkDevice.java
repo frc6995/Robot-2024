@@ -76,7 +76,7 @@ public class SparkDevice {
     // DriverStation.reportWarning(
     // 		String.format("Burning Flash Count: {}", ++m_burnFlashCnt), false);
     // Logger.tag("SparkMax").debug("Burning Flash Count: {}", ++m_burnFlashCnt);
-    Timer.delay(0.25);
+    Timer.delay(0.1);
     for (CANSparkBase max : m_sparkMaxes) {
       // DriverStation.reportWarning(
       // 		String.format("Burning Flash Count for Can ID {}", max.getDeviceId()), false);
@@ -86,7 +86,7 @@ public class SparkDevice {
       // Enough time to not spam the bus too bad
       Timer.delay(0.005);
     }
-    Timer.delay(0.25);
+    Timer.delay(0.1);
     DriverStation.reportWarning("Burn Flash Complete", false);
     // Logger.tag("SparkMax").debug("Burn Flash Complete.");
   }
