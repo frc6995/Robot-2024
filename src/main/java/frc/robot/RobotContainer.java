@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
@@ -79,6 +80,7 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
+  private final BounceBarS m_BounceBarS;
   private final ClimberS m_leftClimberS;
   private final ClimberS m_rightClimberS;
   private final BlobDetectionCamera m_noteCamera;
@@ -134,6 +136,7 @@ public class RobotContainer implements Logged {
     m_shooterPivotS = new ShooterPivotS();
     m_shooterWheelsS = new ShooterWheelsS();
     m_midtakeS = new MidtakeS();
+    m_BounceBarS = new BounceBarS();
     m_intakePivotS = new IntakePivotS();
     m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
@@ -144,6 +147,7 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
+    RobotVisualizer.addBounceBar(m_BounceBarS.BOUNCE_BAR);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
@@ -160,6 +164,7 @@ public class RobotContainer implements Logged {
         m_intakePivotS,
         m_intakeRollerS,
         m_midtakeS,
+        m_BounceBarS,
         m_shooterFeederS,
         m_shooterPivotS,
         m_shooterWheelsS,

@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
@@ -45,6 +46,7 @@ public class CommandGroups {
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
+  private BounceBarS m_bounceBarS;
   private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
   private ShooterWheelsS m_shooterWheelsS;
@@ -58,6 +60,7 @@ public class CommandGroups {
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
       MidtakeS midtakeS,
+      BounceBarS bounceBarS,
       ShooterFeederS shooterFeederS,
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
