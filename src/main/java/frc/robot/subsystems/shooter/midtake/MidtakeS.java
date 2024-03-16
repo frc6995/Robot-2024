@@ -36,8 +36,8 @@ public class MidtakeS extends SubsystemBase implements Logged {
     public static final double IN_VOLTAGE = 8;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.
-        freeLimit(20)
-        .stallLimit(20)
+        freeLimit(40)
+        .stallLimit(40)
         .idleMode(IdleMode.kBrake)
         .inverted(false)
         .status6(32767)

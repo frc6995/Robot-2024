@@ -101,10 +101,10 @@ public class RealShooterPivotIO extends ShooterPivotIO {
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(ShooterPivotS.Constants.CW_LIMIT)
                 .reverseSoftLimitEnabled(true)
-                .status6(65535)
-                .status5(65535)
+                .status6(32767)
+                .status5(32767)
                 .status4(20)
-                .status3(65535);
+                .status3(32767);
             c.altEncoder
                 .countsPerRev(8192)
                 .positionConversionFactor(2 * Math.PI / 6.0)

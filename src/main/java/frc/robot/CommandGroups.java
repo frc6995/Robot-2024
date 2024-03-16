@@ -37,6 +37,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.DoubleConsumer;
 
 public class CommandGroups {
@@ -270,15 +271,15 @@ public class CommandGroups {
             m_drivebaseS.resetPoseToBeginningC(path),
             m_drivebaseS.choreoCommand("W2.1"),
             m_drivebaseS.stopOnceC(),
-            feed().asProxy().withTimeout(1),
+            feed().asProxy().withTimeout(0.75),
             deadline(
                 sequence(
                   m_drivebaseS.choreoCommand("W2.2"),
                   m_drivebaseS.stopOnceC(),
-                  waitSeconds(1),
+                  waitSeconds(0.75),
                   m_drivebaseS.choreoCommand("W2.3"),
                   m_drivebaseS.stopOnceC(),
-                  waitSeconds(1),
+                  waitSeconds(0.25),
                   m_drivebaseS.choreoCommand("W2.4"),
                   m_drivebaseS.stopOnceC(),
                   waitSeconds(2)
@@ -288,14 +289,24 @@ public class CommandGroups {
             )),
 
         m_intakePivotS.deploy().asProxy(),
-        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
+        m_shooterPivotS.rotateWithVelocity(
+          this::pivotAngle,
+          ()-> Interpolation.dThetadX(distanceToSpeaker()) *
+          -Pathing.velocityTorwardsSpeaker(
+          m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+          speaker())
+        ).asProxy(),
 
-        m_shooterWheelsS.spinC(() -> 6000, () -> 6000).asProxy()
+        spinDistance(this::distanceToSpeaker).asProxy()
 
 
     );
   }
 
+  public Command spinDistance(DoubleSupplier distance) {
+    return m_shooterWheelsS.spinC(()->Interpolation.TOP_MAP.get(distance.getAsDouble()),
+      ()->Interpolation.BOTTOM_MAP.get(distance.getAsDouble()) );
+  }
   public Command centerFourWingMidline() {
     return sequence(
       centerFourWingNote(),

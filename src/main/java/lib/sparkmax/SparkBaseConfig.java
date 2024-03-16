@@ -62,7 +62,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
     /**
      * Actual rev default is 250ms but we want this off all the time
      */
-    public int status7 = 65535;
+    public int status7 = 32767;
 
     public SparkRelativeEncoder.Type encoderPortType = SparkRelativeEncoder.Type.kHallSensor;
     /**

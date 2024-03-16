@@ -20,7 +20,7 @@ public class Interpolation {
     }
     static {
         var five = Units.degreesToRadians(5);
-        entry(1.45, CW_LIMIT, 6000,6000);
+        entry(1.45, CW_LIMIT, 7000,7000);
         // entry(2.100, 2.333, 5700, 6000);
         // entry(2.652, 2.434, 5600, 6400);
         // entry(3.100, 2.496, 5600, 6400);
@@ -28,13 +28,14 @@ public class Interpolation {
         // entry(4.200, 2.655, 5500, 6500);
         // entry(4.640, 2.665, 5500, 6500);
         
-        entry(1.5, 2.257, 6000, 6000);
-        entry(1.75, 2.336, 6000, 6000);
-        entry(2, 2.41-five, 6000, 6000);
-        entry(2.5, 2.52-five, 6000, 6000);
+        entry(1.5, 2.257, 7000, 7000);
+        entry(1.75, 2.336, 7000, 7000);
+        entry(2, 2.43, 7000, 7000);
+        entry(2.5, 2.44, 7000, 7000);
+        entry(2.58, 2.46, 7000, 7000);
         entry(2.75, 2.6-five, 7000, 7000);
         entry(3.1, 2.63-five, 7000, 7000);
-        entry(3.5, 2.66-five, 7000, 7000);
+        entry(3.5, 2.59, 7000, 7000);
         entry(4, 2.7-five, 7000, 7000);
         // PIVOT_MAP.put(1.45, CW_LIMIT);
         // TOP_MAP.put(1.45, 6000);

@@ -74,7 +74,6 @@ public class RealModuleIO extends ModuleIO {
         .status0(15)
         .enableVoltageCompensation(10)
         ;
-        //.statusFrames(40, 65535, 65535, 65535, 65535, 40, 65535);
       c.absEncoder.
         positionConversionFactor(Math.PI * 2).
         velocityConversionFactor(Math.PI * 2.0 / 60.0).
