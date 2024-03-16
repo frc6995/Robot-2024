@@ -239,7 +239,7 @@ public class BounceBarS extends SubsystemBase implements Logged {
   public class Constants {
     public static final double CCW_LIMIT = Units.degreesToRadians(90 + 28);
     public static final double CW_LIMIT = -0.3972;
-    public static final int CAN_ID = 22;
+    public static final int CAN_ID = 41;
     public static final double BOUNCE_BAR_MASS_KG = Units.lbsToKilograms(7.445);
     /**
      * Also equivalent to motor radians per pivot radian
