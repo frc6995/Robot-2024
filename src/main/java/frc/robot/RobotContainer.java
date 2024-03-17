@@ -266,6 +266,7 @@ public class RobotContainer implements Logged {
   }
   public void configureButtonBindings() {
 
+    m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     
     //#region driver controller
@@ -316,7 +317,7 @@ public class RobotContainer implements Logged {
      m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2));
 
      // spinup for amp
-     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->3000, ()->4000),
+     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->4000, ()->3000),
      m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT)));
      // spinup for driveby
      m_operatorController.rightBumper().whileTrue(parallel(

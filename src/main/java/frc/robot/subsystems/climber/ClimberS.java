@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
@@ -35,6 +36,7 @@ import monologue.Annotations.Log;
  * 
  */
 public class ClimberS extends SubsystemBase implements Logged {
+  public final Trigger isRaised;
   /**
    * IO class for interacting with motor.
    */
@@ -81,6 +83,7 @@ public class ClimberS extends SubsystemBase implements Logged {
             ELEVATOR= new MechanismLigament2d(
       "rightClimber", LOWER_LIMIT, 90, 6, new Color8Bit(235, 0, 0));
     }
+    isRaised = new Trigger(()-> getLength() > LOWER_LIMIT + 0.01);
     setDefaultCommand(runVoltage(()->0));
     //ELEVATOR.append(TRAP_PIVOT_BASE);
     

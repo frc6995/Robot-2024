@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
@@ -102,7 +103,7 @@ public class CommandGroups {
 
             parallel(
               new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
-              new ScheduleCommand(m_lightStripS.requestState(null)),
+              new ScheduleCommand(m_lightStripS.stateC(()-> States.IntakedNote).withTimeout(0.75)),
                 sequence(
                     m_intakePivotS.deploy()),
                 m_intakeRollerS.slowInC(),

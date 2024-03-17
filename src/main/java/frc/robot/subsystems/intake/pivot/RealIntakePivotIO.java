@@ -18,6 +18,8 @@ import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkBase.SoftLimitDirection;
 
+import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.LightStripS.States;
 import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
 import lib.sparkmax.PIDControllerConfig.FeedbackDevice;
@@ -54,7 +56,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
         // m_controller.setI(kI);
         // m_controller.setD(kD);
         // m_controller.setFF(0);
-        m_coastModeButton.and(DriverStation::isDisabled)
+        m_coastModeButton.and(DriverStation::isDisabled).whileTrue(LightStripS.getInstance().stateC(()->States.CoastMode))
             .onTrue(
             Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kCoast);}).ignoringDisable(true))
             .onFalse(Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kBrake);}).ignoringDisable(true));
