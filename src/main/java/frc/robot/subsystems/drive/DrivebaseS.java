@@ -81,7 +81,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   // constraints determined from OperatorControlC slew settings.
   // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
   public final ProfiledPIDController m_profiledThetaController =
-      new ProfiledPIDController(4, 0, 0, new Constraints(4, 8));
+      new ProfiledPIDController(7, 0, 0, new Constraints(10, 20));
 
   private final SwerveDriveKinematics m_kinematics =
       new SwerveDriveKinematics(

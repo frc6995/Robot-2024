@@ -208,7 +208,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      2, 2);
+      3, 5);
   }
 
 }

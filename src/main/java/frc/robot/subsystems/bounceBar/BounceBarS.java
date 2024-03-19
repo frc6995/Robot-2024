@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.bounceBar;
 
 import com.revrobotics.CANSparkMax;
 
@@ -24,18 +24,17 @@ import lib.sparkmax.SparkBaseConfig;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
-public class IntakeRollerS extends SubsystemBase implements Logged {
+public class BounceBarS extends SubsystemBase implements Logged {
   public class Constants {
-    public static final int LEADER_CAN_ID = 20;
-    public static final int FOLLOWER_CAN_ID = 21;
+    public static final int LEADER_CAN_ID = 41;
     public static final int CURRENT_LIMIT = 100;
-    public static final double OUT_VOLTAGE = 12;
-    public static final double IN_VOLTAGE = -12;
+    public static final double DOWN_VOLTAGE = -1;
+    public static final double UP_VOLTAGE = 10;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
-        freeLimit(100)
-        .stallLimit(CURRENT_LIMIT)
-        .idleMode(IdleMode.kBrake)
+        freeLimit(40)
+        .stallLimit(40)
+        .idleMode(IdleMode.kCoast)
         .inverted(false)
         .status6(32767)
         .status5(32767)
@@ -51,7 +50,7 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     "intake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
 
   /** Creates a new IntakeRollerS. */
-  public IntakeRollerS() {
+  public BounceBarS() {
     m_leader = new SparkBaseConfig(Constants.config)
     .applyMax(
       SparkDevice.getSparkMax(Constants.LEADER_CAN_ID), true
@@ -70,37 +69,34 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
 
   @Override
   public void periodic() {
-      INTAKE_ROLLER.setAngle(INTAKE_ROLLER.getAngle() + m_leader.getAppliedOutput());
+      //INTAKE_ROLLER.setAngle(INTAKE_ROLLER.getAngle() + m_leader.getAppliedOutput());
   }
 
   /**sets motor to outtake */
-  public void outtake () {
-    m_leader.setVoltage(Constants.OUT_VOLTAGE);
+  public void down () {
+    m_leader.setVoltage(Constants.DOWN_VOLTAGE);
   }
   /**sets motor to intake */
-  public void intake () {
-    m_leader.setVoltage(Constants.IN_VOLTAGE);
+  public void up () {
+    m_leader.setVoltage(Constants.UP_VOLTAGE);
   }
   /**stops the intake motor */
   public void stop() {
     m_leader.setVoltage(0);
   }
   /**returns the command of the outtake */
-  public Command outtakeC() {
-    return run(this::outtake);
+  public Command downC() {
+    return run(this::down);
   }
   /**returns the command of the intake */
-  public Command intakeC() {
-    return run(this::intake);
+  public Command upC() {
+    return run(this::up);
   }
   /**returns the command to stop the intake */
   public Command stopC(){
     return run(this::stop);
   }
 
-  public Command slowInC() {
-    return run(()->m_leader.setVoltage(-2));
-  }
   @Log public double getCurrent() {
     return m_leader.getOutputCurrent();
   }

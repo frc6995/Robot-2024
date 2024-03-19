@@ -38,7 +38,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
       c.
         freeLimit(60)
         .stallLimit(60)
-        .idleMode(IdleMode.kCoast)
+        .idleMode(IdleMode.kBrake)
         .inverted(false)
         .status6(32767)
         .status5(32767)

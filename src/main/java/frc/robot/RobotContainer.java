@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
@@ -79,6 +80,7 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
+  private final BounceBarS m_bounceBarS;
   private final ClimberS m_leftClimberS;
   private final ClimberS m_rightClimberS;
   private final BlobDetectionCamera m_noteCamera;
@@ -134,6 +136,7 @@ public class RobotContainer implements Logged {
     m_shooterPivotS = new ShooterPivotS();
     m_shooterWheelsS = new ShooterWheelsS();
     m_midtakeS = new MidtakeS();
+    m_bounceBarS = new BounceBarS();
     m_intakePivotS = new IntakePivotS();
     m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
@@ -144,6 +147,7 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
+    RobotVisualizer.addBounceBar(m_bounceBarS.INTAKE_ROLLER);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
@@ -160,6 +164,7 @@ public class RobotContainer implements Logged {
         m_intakePivotS,
         m_intakeRollerS,
         m_midtakeS,
+        m_bounceBarS,
         m_shooterFeederS,
         m_shooterPivotS,
         m_shooterWheelsS,
@@ -219,7 +224,7 @@ public class RobotContainer implements Logged {
     m_driverDisplay
         .setInPivotSupplier(() -> Math.abs(m_shooterPivotS.getAngle() - pivotAngle()) < Units.degreesToRadians(0.5));
     m_driverDisplay.setInSpeedSupplier(m_shooterWheelsS.atGoal);
-    m_driverDisplay.setSeeNoteSupplier(m_noteCamera.hasTarget);
+    m_driverDisplay.setSeeNoteSupplier(m_drivebaseS.m_vision::hasTarget);
     m_driverDisplay.setIntakeHomedSupplier(m_intakePivotS::hasHomed);
   }
 
@@ -317,8 +322,12 @@ public class RobotContainer implements Logged {
      m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2));
 
      // spinup for amp
-     m_operatorController.leftBumper().whileTrue(parallel(m_shooterWheelsS.spinC(()->4000, ()->3000),
-     m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT)));
+     m_operatorController.leftBumper().whileTrue(
+      parallel(m_shooterWheelsS.spinC(()->4000, ()->3000),
+      m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
+      m_bounceBarS.upC()
+      )
+    );
      // spinup for driveby
      m_operatorController.rightBumper().whileTrue(parallel(
       spinDistance(this::xDistToSpeaker),
@@ -398,9 +407,10 @@ public class RobotContainer implements Logged {
     m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
     m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
     // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
-    m_autoSelector.addOption("C5", waitSeconds(1).andThen(m_autos.c5()));
-    m_autoSelector.addOption("4Note (Ctr)", m_autos.centerFourWingNote());
-    m_autoSelector.addOption("4Note(Ctr)+Out", m_autos.centerFourWingMidline());
+    m_autoSelector.addOption("C5", m_autos.c5());
+    m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c5ThruStage());
+    m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote());
+    m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
     m_autoSelector.addOption("Disrupt", m_autos.disruptor());
   }
 

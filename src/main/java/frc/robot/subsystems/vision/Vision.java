@@ -102,6 +102,16 @@ public class Vision implements Logged {
         return AllianceWrapper.isRed() ? redSpeakerDist : blueSpeakerDist;
     }
 
+    @Log
+    public boolean hasTarget() {
+        for (var cam : m_actualCameras) {
+            if (cam.getLatestResult().hasTargets()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void periodic() {
         m_poseEstimator.update(getHeading.get(), getModulePositions.get());
         if (RobotBase.isReal()) {

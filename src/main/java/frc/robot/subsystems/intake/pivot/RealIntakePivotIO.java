@@ -29,8 +29,6 @@ public class RealIntakePivotIO extends IntakePivotIO {
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
-    private DigitalInput m_coastModeInput = new DigitalInput(9);
-    private Trigger m_coastModeButton = new Trigger(m_coastModeInput::get).negate();
     public RealIntakePivotIO() {
         super();
         m_motor = new SparkBaseConfig(Constants.config).applyMax(
@@ -56,10 +54,6 @@ public class RealIntakePivotIO extends IntakePivotIO {
         // m_controller.setI(kI);
         // m_controller.setD(kD);
         // m_controller.setFF(0);
-        m_coastModeButton.and(DriverStation::isDisabled).whileTrue(LightStripS.getInstance().stateC(()->States.CoastMode))
-            .onTrue(
-            Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kCoast);}).ignoringDisable(true))
-            .onFalse(Commands.runOnce(()->{m_motor.setIdleMode(IdleMode.kBrake);}).ignoringDisable(true));
     }
 
     @Override
