@@ -126,8 +126,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     }
   public void setAngle(double angle, double velocity) {
     m_desiredState.position = angle;
-
+    var nextSetpoint = m_profile.calculate(0.04, m_setpoint, m_desiredState);
     m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
+    
     // log that information
     log("setpointVelocity", m_setpoint.velocity);
     log("setpointPosition", m_setpoint.position);
@@ -135,7 +136,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     log("totalSetptVel", m_setpoint.velocity + velocity);
     var totalVelocity = m_setpoint.velocity + velocity;
     // Calculate the feedforward. This is partly to counter gravity
-    double ffVolts = getGravityFF()+ m_feedforward.calculate(totalVelocity, totalVelocity, 0.02);
+    double ffVolts = getGravityFF()+ m_feedforward.calculate(totalVelocity, nextSetpoint.velocity + velocity, 0.02);
     m_io.setPIDFF(m_setpoint.position, ffVolts);
   }
 
@@ -200,13 +201,13 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
      */
     public static final double K_V = 
       MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.2;
+    public static final double K_A = 0.03;
     public static final double CG_DIST = Units.inchesToMeters(6);
     /**
      * radians per second, rad/s^2
      */
     public static final Constraints CONSTRAINTS = new Constraints(
-      3, 5);
+      6, 10);
   }
 
 }

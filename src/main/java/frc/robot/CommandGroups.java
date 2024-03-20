@@ -303,10 +303,10 @@ public class CommandGroups {
                 sequence(
                     m_drivebaseS.choreoCommand("W2.2"),
                     m_drivebaseS.stopOnceC(),
-                    waitSeconds(0.75),
+                    waitSeconds(0),
                     m_drivebaseS.choreoCommand("W2.3"),
                     m_drivebaseS.stopOnceC(),
-                    waitSeconds(0.25),
+                    waitSeconds(0),
                     m_drivebaseS.choreoCommand("W2.4"),
                     m_drivebaseS.stopOnceC(),
                     Pathing.clearRotationOverride(),

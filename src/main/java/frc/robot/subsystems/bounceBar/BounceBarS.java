@@ -28,12 +28,12 @@ public class BounceBarS extends SubsystemBase implements Logged {
   public class Constants {
     public static final int LEADER_CAN_ID = 41;
     public static final int CURRENT_LIMIT = 100;
-    public static final double DOWN_VOLTAGE = -1;
-    public static final double UP_VOLTAGE = 10;
+    public static final double DOWN_VOLTAGE = -0.1;
+    public static final double UP_VOLTAGE = 12;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
         freeLimit(40)
-        .stallLimit(40)
+        .stallLimit(30)
         .idleMode(IdleMode.kCoast)
         .inverted(false)
         .status6(32767)
@@ -55,6 +55,7 @@ public class BounceBarS extends SubsystemBase implements Logged {
     .applyMax(
       SparkDevice.getSparkMax(Constants.LEADER_CAN_ID), true
     );
+    m_leader.setIdleMode(IdleMode.kCoast);
     // m_leader = SparkDevice.getSparkMax(Constants.LEADER_CAN_ID);
     // m_follower = SparkDevice.getSparkMax(Constants.FOLLOWER_CAN_ID);
     // m_leader.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
@@ -64,7 +65,7 @@ public class BounceBarS extends SubsystemBase implements Logged {
     // m_leader.setIdleMode(IdleMode.kCoast);
     // m_follower.setIdleMode(IdleMode.kCoast);
 
-    setDefaultCommand(stopC());
+    setDefaultCommand(downC());
   }
 
   @Override

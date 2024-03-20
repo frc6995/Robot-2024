@@ -321,7 +321,7 @@ public class RobotContainer implements Logged {
 
      // spinup for amp
      m_operatorController.leftBumper().whileTrue(
-      parallel(m_shooterWheelsS.spinC(()->4000, ()->3000),
+      parallel(m_shooterWheelsS.spinC(()->3000, ()->3000),
       m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
       m_bounceBarS.upC()
       )
