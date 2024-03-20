@@ -21,10 +21,12 @@ import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
-
+  private static final int STRIP_LENGTH = 39;
   private AddressableLED led = new AddressableLED(9);
-  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(39);
+  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(STRIP_LENGTH);
   private final PersistentLedState persistentLedState = new PersistentLedState();
+  private static final double[][] defaultNoteAngles = new double[3][2];
+  private Supplier<double[][]> getNoteAngles = ()->defaultNoteAngles;
   private States previousState = States.Default;
 
   private static class PersistentLedState {
@@ -39,6 +41,9 @@ public class LightStripS {
     States.Disabled.setter.accept(buffer, persistentLedState);
     led.setData(buffer);
     led.start();
+  }
+  public static void setNoteAngles(Supplier<double[][]> sup) {
+    m_instance.getNoteAngles = sup;
   }
 
   public static LightStripS getInstance() {
@@ -143,6 +148,24 @@ public class LightStripS {
     state.setter.accept(buffer, persistentLedState);
     previousState = state;
     // Do other things with the buffer
+
+    var noteAngles = getNoteAngles.get();
+    // angles 
+    for (int i = noteAngles.length - 1; i >= 0; i--) {
+      if (i < 0) continue;
+      var angle = noteAngles[i][0];
+      // 
+      var width = noteAngles[i][1];
+      if (angle < -90) {
+        continue;
+      }
+      double proportion = angle / 35.0;
+      int ctrLED = (int) ((STRIP_LENGTH / 2) - (proportion * STRIP_LENGTH / 2));
+      int halfWidth = Math.max(2, (int) (width * STRIP_LENGTH / 200));
+      for (int j = Math.max(0, ctrLED - halfWidth); j < Math.min(STRIP_LENGTH, ctrLED + halfWidth); j++){
+        buffer.setRGB(j, 255, 50, 0);
+      }
+    }
     led.setData(buffer);
     m_states.removeAll(Set.of(States.values()));
   }

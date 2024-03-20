@@ -17,11 +17,15 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Pathing {
@@ -40,7 +44,18 @@ public class Pathing {
           MAX_MODULE_SPEED_MPS,
           ModuleConstants.FL.centerOffset.getNorm(),
           new ReplanningConfig(false, false, 0.1, 0.1));
-    /**
+  public static Command setRotationOverride(Supplier<Optional<Rotation2d>> override) {
+    return Commands.runOnce(()->
+    PPHolonomicDriveController.setRotationTargetOverride(override))
+    .ignoringDisable(true);
+  }
+  public static Command clearRotationOverride() {
+        return Commands.runOnce(()->
+    PPHolonomicDriveController.setRotationTargetOverride(()->Optional.empty()))
+    .ignoringDisable(true);
+  }
+
+  /**
    * For use with PPChasePoseCommand Generates a PathPlannerTrajectory on the fly to drive to the
    * target pose. Takes into account the current speed of the robot for the start point. The
    * returned PathPlannerTrajectory will go straight towards the target from the robot pose. The

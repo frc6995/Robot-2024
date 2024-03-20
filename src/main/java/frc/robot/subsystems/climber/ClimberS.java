@@ -88,10 +88,10 @@ public class ClimberS extends SubsystemBase implements Logged {
     //ELEVATOR.append(TRAP_PIVOT_BASE);
     
   }
-  @Log.NT public double getGoal() {return m_desiredState.position;}
-  @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
+  public double getGoal() {return m_desiredState.position;}
+  public double getGoalVelocity() {return m_desiredState.velocity;}
   @Log.NT public double getLength() {return m_io.getLength();}
-  @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
+  public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}
   public void periodic() {
     // Update our visualization
@@ -137,7 +137,6 @@ public class ClimberS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getGravityFF() {
     return Constants.K_G;
   }
@@ -146,7 +145,6 @@ public class ClimberS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getVelocityFF() {
     return m_feedforward.calculate(m_setpoint.velocity);
   }

@@ -368,8 +368,15 @@ public class DrivebaseS extends SubsystemBase implements Logged {
    *
    * @param field
    */
+  private Transform2d shotTransform = 
+  new Transform2d(
+    -10 * Math.cos(Units.degreesToRadians(-6)), 
+    -10* Math.sin(Units.degreesToRadians(-6)), new Rotation2d());
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
+    field.getObject("shot").setPoses(getPose(), getPose().transformBy(
+      shotTransform)
+      );
     // Draw a pose that is based on the robot pose, but shifted by the translation
     // of the module relative to robot center,
     // then rotated around its own center by the angle of the module.

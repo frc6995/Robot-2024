@@ -44,13 +44,9 @@ public class Vision implements Logged {
     private Supplier<SwerveModulePosition[]> getModulePositions;
     private List<Pair<String, PhotonPoseEstimator>> m_cameras;
     private List<PhotonCamera> m_actualCameras;
-    @Log
     private double redSpeakerDist;
-    @Log
     private double blueSpeakerDist;
-    @Log
     private double redSpeakerDistTime;
-    @Log
     private double blueSpeakerDistTime;
     public Vision(
             SwerveDriveKinematics kinematics,
@@ -92,17 +88,13 @@ public class Vision implements Logged {
     public boolean seesBlueSpeaker() {
         return Timer.getFPGATimestamp() - blueSpeakerDistTime < 0.5;
     }
-    @Log
     public boolean seesOwnSpeaker() {
         return AllianceWrapper.isRed() ? seesRedSpeaker() : seesBlueSpeaker();
     }
 
-    @Log
     public double ownSpeakerDistance() {
         return AllianceWrapper.isRed() ? redSpeakerDist : blueSpeakerDist;
     }
-
-    @Log
     public boolean hasTarget() {
         for (var cam : m_actualCameras) {
             if (cam.getLatestResult().hasTargets()) {

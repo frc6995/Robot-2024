@@ -48,7 +48,6 @@ import static edu.wpi.first.units.Units.*;
  */
 public class IntakePivotS extends SubsystemBase implements Logged {
   private Trigger isHomed;
-  @Log
   private boolean hasHomed = false; 
   /**
    * IO class for interacting with motor.
@@ -100,15 +99,15 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
-  @Log.NT public double getGoal() {return m_desiredState.position;}
-  @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
-  @Log.NT public double getAngle() {return m_io.getAngle();}
-  @Log.NT public double getVelocity() {return m_io.getVelocity();}
-  @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
-  @Log.NT public double getVolts() {return m_io.getVolts();}
-  @Log.NT public double getCurrent() {return m_io.getCurrent();}
-  @Log public boolean isHomed() {return isHomed.getAsBoolean();}
-  @Log public boolean hasHomed() {return hasHomed;};
+  /*@Log.NT*/ public double getGoal() {return m_desiredState.position;}
+  /*@Log.NT*/ public double getGoalVelocity() {return m_desiredState.velocity;}
+  /*@Log.NT*/ public double getAngle() {return m_io.getAngle();}
+  /*@Log.NT*/ public double getVelocity() {return m_io.getVelocity();}
+  /*@Log.NT*/ public double getPidVolts() {return m_io.getPidVolts();}
+  /*@Log.NT*/ public double getVolts() {return m_io.getVolts();}
+  /*@Log.NT*/ public double getCurrent() {return m_io.getCurrent();}
+  public boolean isHomed() {return isHomed.getAsBoolean();}
+  public boolean hasHomed() {return hasHomed;};
   public void periodic() {
     // Update our visualization
     INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle() + Units.degreesToRadians(55-14) ));
@@ -171,7 +170,6 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getGravityFF() {
     return Constants.K_G * Math.cos(m_io.getAngle());
   }
@@ -180,7 +178,6 @@ public class IntakePivotS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getVelocityFF() {
     return m_feedforward.calculate(m_setpoint.velocity, m_nextSetpoint.velocity, 0.01);
   }

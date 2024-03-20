@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -90,7 +91,6 @@ public class RobotContainer implements Logged {
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
   @Log.NT
   private final Field2d m_field = new Field2d();
-  @Log.NT(level = LogLevel.OVERRIDE_FILE_ONLY)
   private final Field2d m_driverField = new Field2d();
 
   private final CommandGroups m_autos;
@@ -157,7 +157,7 @@ public class RobotContainer implements Logged {
         addPeriodic,
         (name, poses) -> m_field.getObject(name).setPoses(poses));
     m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
-
+    LightStripS.setNoteAngles(m_noteCamera::getThreeTargetAngles);
     m_autos = new CommandGroups(
         m_drivebaseS,
         m_noteCamera,
@@ -197,7 +197,6 @@ public class RobotContainer implements Logged {
   }
 
   // aiming left of the speaker is positive
-  @Log
   public double sidewaysErrorToSpeaker() {
     var error = m_drivebaseS.getPoseHeading()
                 .minus(
@@ -270,7 +269,6 @@ public class RobotContainer implements Logged {
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
   }
   public void configureButtonBindings() {
-
     m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     
@@ -409,7 +407,7 @@ public class RobotContainer implements Logged {
     // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
     m_autoSelector.addOption("C5", m_autos.c5());
     m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c5ThruStage());
-    m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote());
+    m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote(2));
     m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
     m_autoSelector.addOption("Disrupt", m_autos.disruptor());
   }

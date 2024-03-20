@@ -23,7 +23,6 @@ public abstract class SwerveDriveIO implements Logged {
   protected List<ModuleIO> m_modules;
   public boolean isSysid = false;
 
-  @Log.NT
   private SwerveModuleState[] currentStates =
       new SwerveModuleState[] {
         new SwerveModuleState(),
@@ -31,7 +30,6 @@ public abstract class SwerveDriveIO implements Logged {
         new SwerveModuleState(),
         new SwerveModuleState()
       };
-  @Log.NT
   private SwerveModulePosition[] currentPositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -50,7 +48,6 @@ public abstract class SwerveDriveIO implements Logged {
     return "io";
   }
 
-  @Log.NT
   public Rotation2d getGyroHeading() {
     return new Rotation2d(Units.degreesToRadians(-m_navx.getAngle()));
   }
@@ -91,11 +88,9 @@ public abstract class SwerveDriveIO implements Logged {
     }
   }
 
-  @Log.NT
   public SwerveModuleState[] getModuleStates() {
     return currentStates;
   }
-  @Log.NT
   public SwerveModulePosition[] getCurrentPositions() {
     return currentPositions;
   }

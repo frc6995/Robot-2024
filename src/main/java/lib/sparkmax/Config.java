@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
 public abstract class Config <P, E extends Config<P,E>> implements Cloneable{
     public record Call<P, T, E>(BiFunction<P, T, REVLibError> setter, Function<E, T> getChangedValue) {}
     public static Consumer<String> configErrorFeedback= (s)->DriverStation.reportWarning(s, false);
-    public static Consumer<String> configProgressFeedback= (s)->DriverStation.reportError(s, false);
+    public static Consumer<String> configProgressFeedback= System.out::println;
     public <T> void applyConfig(P e, E config, E defaults, Call<P, T, E> call, boolean restoreFactoryDefaults) {
         T desiredResult = call.getChangedValue().apply(config);
         T defaultVal = call.getChangedValue().apply(defaults);

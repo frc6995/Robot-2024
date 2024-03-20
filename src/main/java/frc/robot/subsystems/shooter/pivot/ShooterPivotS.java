@@ -84,12 +84,12 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     setDefaultCommand(hold());
   }
   @Log.NT public double getGoal() {return m_desiredState.position;}
-  @Log.NT public double getGoalVelocity() {return m_desiredState.velocity;}
+  public double getGoalVelocity() {return m_desiredState.velocity;}
   @Log.NT public double getSetpoint() {return m_setpoint.position;}
-  @Log.NT public double getSetpointVelocity() {return m_setpoint.velocity;}
+  public double getSetpointVelocity() {return m_setpoint.velocity;}
   @Log.NT public double getAngle() {return m_io.getAngle();}
-  @Log.NT public double getVelocity() {return m_io.getVelocity();}
-  @Log.NT public double getPidVolts() {return m_io.getPidVolts();}
+  public double getVelocity() {return m_io.getVelocity();}
+  public double getPidVolts() {return m_io.getPidVolts();}
   @Log.NT public double getVolts() {return m_io.getVolts();}
   public void resetProfile() {
     m_setpoint.position = getAngle();
@@ -168,7 +168,6 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getGravityFF() {
     return Constants.K_G * Math.cos(m_io.getAngle());
   }
@@ -177,7 +176,6 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
    * Calculates the voltage required to hold the pivot in its current position,
    * countering gravity.
    */
-  @Log.NT
   public double getVelocityFF() {
     return m_feedforward.calculate(m_setpoint.velocity);
   }

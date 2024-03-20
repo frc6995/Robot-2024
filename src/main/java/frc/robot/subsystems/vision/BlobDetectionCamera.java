@@ -26,6 +26,7 @@ public class BlobDetectionCamera implements Logged {
     private PhotonPipelineResult result;
     private FieldObject2d simNotes;
     public final Trigger hasTarget;
+    private double[][] threeTargetAngles = new double[3][2];
     public BlobDetectionCamera(Consumer<Runnable> addPeriodic, FieldObject2d simNotes) {
         camera = new PhotonCamera(Constants.CAMERA_NAME);
         addPeriodic.accept(this::update);
@@ -43,7 +44,6 @@ public class BlobDetectionCamera implements Logged {
      * The yaw of the best target, CCW (left half of frame) positive
      * @return
      */
-    @Log.NT
     public double getYaw() {
         if (!hasTarget()) return 0;
         return -Units.degreesToRadians(result.getBestTarget().getYaw());
@@ -53,24 +53,36 @@ public class BlobDetectionCamera implements Logged {
      * The pitch of the best target, (bottom half of frame positive)
      * @return
      */
-    @Log.NT
     public double getPitch() {
         if (!hasTarget()) return 0;
         return -Units.degreesToRadians(result.getBestTarget().getPitch());
     }
-    @Log.NT
     public boolean hasTarget() {
         if (result == null) return false;
         if (!result.hasTargets()) return false;
         if (result.getBestTarget().getPitch() > 9) return false;
         return true;
     }
-    @Log.NT
     public double getDistance() {
         if (!hasTarget()) return 0;
         return getDistance(result.getBestTarget());
     }
 
+    public double[][] getThreeTargetAngles() {
+            threeTargetAngles[0][0] = -1000;
+            threeTargetAngles[1][0] = -1000;
+            threeTargetAngles[2][0] = -1000;
+        if (!hasTarget()) {
+
+            return threeTargetAngles;
+        }
+        for (int i = 0; i < Math.min(3, result.targets.size()); i++) {
+            threeTargetAngles[i][0] = result.targets.get(i).getYaw();
+            threeTargetAngles[i][1] = result.targets.get(i).getArea() * 5;
+        }
+        return threeTargetAngles;
+
+    }
     public double getDistance(PhotonTrackedTarget target) {
         return PhotonUtils.calculateDistanceToTargetMeters(
             Constants.cameraHeight,

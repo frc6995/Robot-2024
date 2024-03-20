@@ -105,7 +105,6 @@ public class RealModuleIO extends ModuleIO {
   protected double m_driveVolts = 0;
   protected RelativeEncoder m_driveEncoder;
   protected RelativeEncoder m_steerEncoder;
-  @Log
   private int absEncResetCtr = 0;
 
   public RealModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {

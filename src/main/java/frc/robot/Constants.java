@@ -124,6 +124,6 @@ public class Constants {
   }
 
   public class Poses {
-    public static final Translation2d SPEAKER = new Translation2d(0.334, 5.547);
+    public static final Translation2d SPEAKER = new Translation2d(0/*0.334*/, 5.547);
   }
 }

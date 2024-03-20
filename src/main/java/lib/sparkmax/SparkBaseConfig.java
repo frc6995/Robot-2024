@@ -239,7 +239,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
      * @return
      */
     public <S extends CANSparkBase> S apply(S s, boolean restoreFactoryDefaults) {
-        DriverStation.reportError("Config "+s.getDeviceId(), false);
+        System.out.println("Config "+s.getDeviceId());
         if (restoreFactoryDefaults)
             config(s::restoreFactoryDefaults);
         config(()->s.setCANTimeout(50));

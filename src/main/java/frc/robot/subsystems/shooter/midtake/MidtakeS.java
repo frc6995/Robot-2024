@@ -151,11 +151,9 @@ public class MidtakeS extends SubsystemBase implements Logged {
   public boolean hasNote() {
     return hasNote.getAsBoolean();
   }
-  @Log
   public boolean recvNote() {
     return recvNote.getAsBoolean();
   }
-    @Log
   public boolean isRunning() {
     return isRunning.getAsBoolean();
   }

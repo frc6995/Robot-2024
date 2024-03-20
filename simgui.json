@@ -58,6 +58,10 @@
           "style": "Line"
         },
         "right": 2961,
+        "shot": {
+          "arrows": false,
+          "style": "Line"
+        },
         "top": 79,
         "width": 16.541748046875,
         "window": {
@@ -105,9 +109,13 @@
         "m_drivebaseS": {
           "io": {
             "Pose2d##v_/Robot/m_drivebaseS/io/getSimPose": {
+              "Rotation2d##v_rotation": {
+                "open": true
+              },
               "Translation2d##v_translation": {
                 "open": true
-              }
+              },
+              "open": true
             },
             "SwerveModulePosition[]##v_//Robot/m_drivebaseS/io/currentPositions": {
               "SwerveModulePosition##v_[0]": {
@@ -182,7 +190,8 @@
               "open": true
             },
             "open": true
-          }
+          },
+          "open": true
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
@@ -198,6 +207,12 @@
           "m_io": {
             "open": true
           }
+        },
+        "m_shooterWheelsS": {
+          "Top": {
+            "open": true
+          },
+          "open": true
         },
         "open": true,
         "tree": {
@@ -621,6 +636,24 @@
                 1.0
               ],
               "id": "NT:/Robot/m_drivebaseS/io/m_modules/BL-[16,15][2]/setpt"
+            },
+            {
+              "color": [
+                0.8000000715255737,
+                0.7254902124404907,
+                0.4549019932746887,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterWheelsS/Top/getVolts"
+            },
+            {
+              "color": [
+                0.3921568989753723,
+                0.7098039388656616,
+                0.803921639919281,
+                1.0
+              ],
+              "id": "NT:/DriverDisplay/matchTime"
             }
           ]
         }
