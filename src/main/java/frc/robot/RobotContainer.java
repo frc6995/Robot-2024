@@ -43,7 +43,6 @@ import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
 import frc.robot.subsystems.vision.BlobDetectionCamera;
 import frc.robot.util.AllianceWrapper;
-import frc.robot.util.FaultLogger;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
@@ -53,8 +52,6 @@ import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.Log;
 
-import java.lang.reflect.Field;
-import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
@@ -174,8 +171,6 @@ public class RobotContainer implements Logged {
     configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
-
-    //SmartDashboard.putData(m_autoSelector);
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
@@ -184,14 +179,6 @@ public class RobotContainer implements Logged {
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
-    // m_shooterPivotS.setDefaultCommand(m_shooterPivotS.rotateWithVelocity(
-    // this::pivotAngle,
-    // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
-    // -Pathing.velocityTorwardsSpeaker(
-    // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
-    // speaker())
-    // )
-    // );
     PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
     PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
   }
@@ -271,7 +258,15 @@ public class RobotContainer implements Logged {
   public void configureButtonBindings() {
     m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
-    
+    m_shooterPivotS.setDefaultCommand(
+        m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> 0
+        // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
+        // -Pathing.velocityTorwardsSpeaker(
+        // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+        // speaker())
+        ));
     //#region driver controller
 
     // button bindings for stage orientation
@@ -326,6 +321,7 @@ public class RobotContainer implements Logged {
       m_bounceBarS.upC()
       )
     );
+    m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
      // spinup for driveby
      m_operatorController.rightBumper().whileTrue(parallel(
       spinDistance(this::xDistToSpeaker),
@@ -334,15 +330,7 @@ public class RobotContainer implements Logged {
             () -> 0)
 
      ));
-      m_shooterPivotS.setDefaultCommand(
-        m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0
-        // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
-        // -Pathing.velocityTorwardsSpeaker(
-        // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
-        // speaker())
-        ));
+
 
      m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
      m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker).alongWith(
@@ -354,37 +342,6 @@ public class RobotContainer implements Logged {
     m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* m_operatorController.getLeftY()));
         m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* m_operatorController.getRightY()));
-    //#endregion
-
-
-    //#region keypad
-
-    // m_keypad.button(1).whileTrue(m_shooterPivotS.runVoltage(() -> 0.1));
-    // m_keypad.button(4).whileTrue(m_shooterPivotS.runVoltage(() -> -1));
-    // m_keypad.button(5).whileTrue(m_shooterPivotS.rotateToAngle(() -> Units.degreesToRadians(180 - 25)));
-    // m_keypad.button(6).onTrue(
-    //         m_shooterPivotS.rotateWithVelocity(
-    //         this::pivotAngle,
-    //         () -> 0));
-
-    // //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.hold());
-    // //m_shooterPivotS.setDefaultCommand(m_shooterPivotS.runVoltage(()->0));
-    // m_keypad.button(2).onTrue(
-    //     runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
-    // m_keypad.button(14).whileTrue(m_shooterWheelsS.spinC(() -> 6000, () -> 6000));
-    // m_keypad.button(13).whileTrue(m_shooterWheelsS.spinC(() -> 5500, () -> 6000));
-    // m_keypad.button(12).whileTrue(m_shooterWheelsS.spinC(()-> 5000, ()->6000));
-    // m_keypad.button(11).whileTrue(m_shooterWheelsS.spinC(()->4000, ()->6000));
-    // m_keypad.button(10).whileTrue(m_shooterWheelsS.spinC(()->6000, ()->5500));
-    // m_keypad.button(9).whileTrue(m_shooterWheelsS.spinC(()->6000, ()->5000));
-    // m_keypad.button(8).whileTrue(m_shooterWheelsS.spinC(()->7000, ()->2000));
-    // m_keypad.button(10).whileTrue(getAutonomousCommand());
-    // m_testingController.back().onTrue(shootVis());
-    
-    // m_keypad.button(10).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kForward));
-    // m_keypad.button(9 ).whileTrue(m_drivebaseS.m_linearIdRoutine.dynamic(Direction.kReverse));
-    // m_keypad.button(8 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kForward));
-    // m_keypad.button(7 ).whileTrue(m_drivebaseS.m_linearIdRoutine.quasistatic(Direction.kReverse));
     //#endregion
   }
 

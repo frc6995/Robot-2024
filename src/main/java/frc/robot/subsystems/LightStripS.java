@@ -56,9 +56,9 @@ public class LightStripS {
    * Different states of the robot, states placed higher in the list have higher priority
    */
   public static enum States {
-    CoastMode(setColor(0, 0, 255)),
-    SetupDone(setColor(0, 128, 0)), // set in robotPeriodic
-    Disabled(setColor(255, 0, 0)), // set in robotPeriodic
+    CoastMode(setColor(0, 0, 64)),
+    SetupDone(setColor(0, 64, 0)), // set in robotPeriodic
+    Disabled(setColor(64, 0, 0)), // set in robotPeriodic
     Error(pulse(0.25, setColor(255, 0, 0))),
     Climbing(
         (ledBuffer, persistentState) -> {
@@ -86,23 +86,12 @@ public class LightStripS {
         (ledBuffer, persistentState) -> {
           for (int i = 0; i < ledBuffer.getLength(); i++) {
             if (i % 2 == 0) {
-              ledBuffer.setRGB(i, 0, 255, 0);
-            }
-            else {
-              // double period = 0.5;
-              // if (Timer.getFPGATimestamp() % period < 0.5 * period) {
-              //   ledBuffer.setRGB(i, 247, 104, 9);
-              // } else {
-              //   ledBuffer.setRGB(i, 0, 0, 0);
-              // }
-              // 
-              if (RobotController.getInputCurrent() < 0.2) {
-                ledBuffer.setRGB(i, 247, 104, 9);
+              ledBuffer.setRGB(i, 0, 64, 0);
+            
               } else {
-                            ledBuffer.setRGB(i, 0, 0, 0);    
-              }
+                ledBuffer.setRGB(i, 0, 0, 0);        
+            }
           }
-        }
         }
       );
     //Default(setColor(0, 255, 0));
