@@ -97,6 +97,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   public void resetAngleDown() {
     m_io.resetAngle(CCW_LIMIT);
   }
+  public void resetAngleUp() {
+    m_io.resetAngle(CW_LIMIT);
+  }
   public void periodic() {
     // Update our visualization
     SHOOTER_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle()));
@@ -182,7 +185,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CCW_LIMIT = Units.degreesToRadians(180-19+0.75+0.4);
+    public static final double CCW_LIMIT = Units.degreesToRadians(161.38);//Units.degreesToRadians(180-19+0.75+0.4);
     public static final double CW_LIMIT = Units.degreesToRadians(180-53);
     public static final int CAN_ID = 40;
     /**

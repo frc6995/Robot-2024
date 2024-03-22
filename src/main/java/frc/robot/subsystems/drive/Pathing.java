@@ -20,6 +20,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.util.AllianceWrapper;
+
 import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.List;
@@ -142,6 +144,14 @@ public class Pathing {
       new Rotation2d(robotRelativeSpeeds.omegaRadiansPerSecond * time)
     ));
   }
-  public static final Pose2d BLUE_AMP = new Pose2d(1.818, 7.67+Units.inchesToMeters(3), new Rotation2d(-Math.PI/2));
+  public static final Pose2d BLUE_AMP = new Pose2d(1.759, 7.786, new Rotation2d(-Math.PI/2));
+  public static final Pose2d RED_AMP = new Pose2d(14.665, 7.786, new Rotation2d(-Math.PI/2));
+  public static Pose2d getOwnAmp() {
+    if (AllianceWrapper.isRed()) {
+      return RED_AMP;
+    } else {
+      return BLUE_AMP;
+    }
+  }
 
 }

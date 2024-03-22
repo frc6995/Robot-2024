@@ -283,8 +283,8 @@ public class RobotContainer implements Logged {
 
     // face amp
     m_driverController.leftTrigger().whileTrue(
-      m_drivebaseS.chasePoseC(()->NomadMathUtil.mirrorPose(Pathing.BLUE_AMP, AllianceWrapper.getAlliance())));
-    //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
+      m_drivebaseS.chasePoseC(Pathing::getOwnAmp));
+      //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
     // face speaker
     m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
@@ -342,6 +342,7 @@ public class RobotContainer implements Logged {
     m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* m_operatorController.getLeftY()));
         m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* m_operatorController.getRightY()));
+    m_operatorController.back().onTrue(runOnce(m_shooterPivotS::resetAngleUp));
     //#endregion
   }
 
