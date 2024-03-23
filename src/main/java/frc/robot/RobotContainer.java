@@ -371,7 +371,10 @@ public class RobotContainer implements Logged {
   }
 
   public Command getAutonomousCommand() {
-    return m_autoSelector.getSelected();
+    return m_autoSelector.getSelected().deadlineWith(parallel(
+      m_rightClimberS.runVoltage(()->0),
+      m_leftClimberS.runVoltage(()->0)
+    ));
   }
 
   /**
