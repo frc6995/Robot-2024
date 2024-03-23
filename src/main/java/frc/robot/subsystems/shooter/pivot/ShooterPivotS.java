@@ -185,7 +185,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   }
 
   public class Constants {
-    public static final double CCW_LIMIT = Units.degreesToRadians(161.38);//Units.degreesToRadians(180-19+0.75+0.4);
+    private static final double OLD_LOWER_STOP = Units.degreesToRadians(180-19+0.75+0.4);
+    private static final double NEW_LOWER_STOP = Units.degreesToRadians(161.38);
+    public static final double CCW_LIMIT = OLD_LOWER_STOP;
     public static final double CW_LIMIT = Units.degreesToRadians(180-53);
     public static final int CAN_ID = 40;
     /**
