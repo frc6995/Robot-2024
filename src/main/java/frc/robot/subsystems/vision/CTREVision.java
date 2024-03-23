@@ -18,6 +18,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import frc.robot.subsystems.vision.PoseEstimator;
 import frc.robot.subsystems.vision.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,6 +29,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,27 +39,23 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.AprilTags;
 import monologue.Logged;
 import monologue.Annotations.Log;
+import java.util.function.Consumer;
 
-public class Vision implements Logged {
-    private SwerveDrivePoseEstimator m_poseEstimator;
-    private Supplier<Rotation2d> getHeading;
-    private Supplier<SwerveModulePosition[]> getModulePositions;
+public class CTREVision implements Logged {
+    public record VisionMeasurement (Pose2d pose, double timestamp, Vector<N3> stddevs){};
+
     private List<Pair<String, PhotonPoseEstimator>> m_cameras;
     private List<PhotonCamera> m_actualCameras;
     private double redSpeakerDist;
     private double blueSpeakerDist;
     private double redSpeakerDistTime;
     private double blueSpeakerDistTime;
-    public Vision(
-            SwerveDriveKinematics kinematics,
-            Supplier<Rotation2d> getHeading,
-            Supplier<SwerveModulePosition[]> getModulePositions) {
-        this.getHeading = getHeading;
-        this.getModulePositions = getModulePositions;
-        m_poseEstimator = new SwerveDrivePoseEstimator(kinematics,
-                getHeading.get(),
-                getModulePositions.get(),
-                new Pose2d());
+    private Consumer<VisionMeasurement> addVisionMeasurement;
+    private Supplier<Pose2d> getPose;
+    public CTREVision(
+            Consumer<VisionMeasurement> addVisionMeasurement, Supplier<Pose2d> getPose) {
+        this.addVisionMeasurement = addVisionMeasurement;
+        this.getPose = getPose;
         m_cameras = new ArrayList<>();
         m_actualCameras = new ArrayList<>();
         Constants.cameras.entrySet().iterator().forEachRemaining((entry) -> {
@@ -71,15 +69,6 @@ public class Vision implements Logged {
             m_actualCameras.add(cam);
             m_cameras.add(new Pair<String, PhotonPoseEstimator>(entry.getKey(), estimator));
         });
-    }
-
-    public Optional<Pose2d> getOldPose(double timestamp) {
-        if (Timer.getFPGATimestamp() - timestamp > 1.5) {
-            return Optional.empty();
-        }
-        var interp = m_poseEstimator.m_poseBuffer.getSample(timestamp);
-        if (interp.isEmpty()) {return Optional.empty();}
-        return Optional.of(interp.get().poseMeters);
     }
 
     public boolean seesRedSpeaker() {
@@ -108,7 +97,7 @@ public class Vision implements Logged {
         if (RobotBase.isReal()) {
             for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
                 var estimator = pair.getSecond();
-                estimator.setReferencePose(getPose());
+                estimator.setReferencePose(getPose.get());
                 var robotPoseOpt = estimator.update();
                 if (robotPoseOpt.isEmpty()) {
                     continue;
@@ -194,9 +183,9 @@ public class Vision implements Logged {
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
                 log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
-                m_poseEstimator.addVisionMeasurement(
+                addVisionMeasurement.accept( new VisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
-                        VecBuilder.fill(xConfidence, yConfidence, angleConfidence));
+                        VecBuilder.fill(xConfidence, yConfidence, angleConfidence)));
             }
         }
     }
@@ -205,13 +194,7 @@ public class Vision implements Logged {
             cam.takeOutputSnapshot();
         }
     }
-    public void resetPose(Pose2d newPose) {
-        m_poseEstimator.resetPosition(getHeading.get(), getModulePositions.get(), newPose);
-    }
-    @Log
-    public Pose2d getPose() {
-        return m_poseEstimator.getEstimatedPosition();
-    }
+
     public void updateCameraPoses(Pose2d drivebasePose) {
         for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
             log("cam-"+pair.getFirst(), 

@@ -28,12 +28,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
+import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.Interpolation;
@@ -57,6 +59,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
 import org.photonvision.PhotonCamera;
+import java.util.Optional;
 
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -68,7 +71,7 @@ public class RobotContainer implements Logged {
   private final CommandXboxController m_operatorController = new CommandXboxController(1);
   private final CommandXboxController m_keypad = new CommandXboxController(2);
   private final DriverDisplay m_driverDisplay = new DriverDisplay();
-  private final DrivebaseS m_drivebaseS;
+  private final Swerve m_drivebaseS;
 
   @Log.NT
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
@@ -150,9 +153,10 @@ public class RobotContainer implements Logged {
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
     RobotVisualizer.addClimber(m_leftClimberS.ELEVATOR);
     RobotVisualizer.addClimber(m_rightClimberS.ELEVATOR);
-    m_drivebaseS = new DrivebaseS(
-        addPeriodic,
-        (name, poses) -> m_field.getObject(name).setPoses(poses));
+    m_drivebaseS = TunerConstants.drivetrain;
+    // m_drivebaseS = new DrivebaseS(
+    //     addPeriodic,
+    //     (name, poses) -> m_field.getObject(name).setPoses(poses));
     m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
     LightStripS.setNoteAngles(m_noteCamera::getThreeTargetAngles);
     m_autos = new CommandGroups(
@@ -381,7 +385,6 @@ public class RobotContainer implements Logged {
    * runs after subsystem periodics and after commands
    * */
   public void periodic() {
-    m_drivebaseS.afterCommandsPeriodic();
     if (DriverStation.isDisabled()) {
       if (m_setupDone) {
         LightStripS.getInstance().requestState(States.SetupDone);
@@ -404,14 +407,13 @@ public class RobotContainer implements Logged {
   public void updateFields() {
     m_drivebaseS.drawRobotOnField(m_field);
     m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
-    m_field.getObject("note").setPoses(m_noteCamera.getTargets(m_drivebaseS::getOldPose));
-    m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+    m_field.getObject("note").setPoses(m_noteCamera.getTargets((time)->Optional.of(m_drivebaseS.getPose())));
+    //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
 
   }
 
   public void onEnabled() {
     m_drivebaseS.m_vision.captureImages();
-    m_drivebaseS.resetRelativeRotationEncoders();
   }
 
   public void onDisabled() {

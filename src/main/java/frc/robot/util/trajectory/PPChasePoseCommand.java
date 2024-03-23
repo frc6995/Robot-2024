@@ -11,8 +11,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.drive.DrivebaseS;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -46,7 +46,7 @@ public class PPChasePoseCommand extends Command {
   private final Consumer<PathPlannerTrajectory> m_outputTrajectory;
   private final BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> m_trajectoryGenerator;
   private Pose2d m_lastRegenTarget;
-  private DrivebaseS m_drive;
+  private Subsystem m_drive;
   private Trigger m_finishTrigger;
 
   /**
@@ -71,7 +71,7 @@ public class PPChasePoseCommand extends Command {
       Consumer<ChassisSpeeds> outputChassisSpeedsFieldRelative,
       Consumer<PathPlannerTrajectory> trajectoryDebugOutput,
       BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> trajectoryGenerator,
-      DrivebaseS drive) {
+      Subsystem drive) {
 
     m_targetPose = targetPose;
     m_pose = pose;

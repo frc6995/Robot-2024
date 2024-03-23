@@ -25,6 +25,7 @@ import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
+import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.Interpolation;
@@ -50,7 +51,7 @@ import javax.swing.text.html.Option;
 import java.util.function.DoubleConsumer;
 
 public class CommandGroups {
-  private DrivebaseS m_drivebaseS;
+  private Swerve m_drivebaseS;
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
@@ -64,7 +65,7 @@ public class CommandGroups {
   private CommandXboxController m_driverController;
 
   public CommandGroups(
-      DrivebaseS drivebaseS,
+      Swerve drivebaseS,
       BlobDetectionCamera noteCamera,
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
@@ -289,7 +290,6 @@ public class CommandGroups {
 
     );
   }
-
   public Command centerFourWingNote(double endWait) {
     var path = PathPlannerPath.fromChoreoTrajectory("W2.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
     return deadline(
