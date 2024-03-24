@@ -7,7 +7,7 @@ import edu.wpi.first.math.util.Units;
 
 public class Interpolation {
     public static final double AMP_SPEED = 4000.0;
-    public static final double AMP_PIVOT = CW_LIMIT+ Units.degreesToRadians(1);
+    public static final double AMP_PIVOT = CW_LIMIT+ Units.degreesToRadians(4);
     public static final double MAX_DISTANCE = 4;
     public static final double MIN_DISTANCE = 1;
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();

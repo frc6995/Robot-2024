@@ -256,6 +256,8 @@ public class RobotContainer implements Logged {
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
   }
   public void configureButtonBindings() {
+    InputAxis leftClimberStick = new InputAxis("LClimb", m_operatorController::getLeftY).withDeadband(0.2);
+        InputAxis rightClimberStick = new InputAxis("RClimb", m_operatorController::getRightY).withDeadband(0.2);
     m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     m_shooterPivotS.setDefaultCommand(
@@ -313,10 +315,10 @@ public class RobotContainer implements Logged {
      m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995 * 2,()-> -0.6995 * 2));
      // intake move 
      m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2));
-
+    Trigger ampMode = m_operatorController.leftBumper();
      // spinup for amp
-     m_operatorController.leftBumper().whileTrue(
-      parallel(m_shooterWheelsS.spinC(()->3000, ()->3000),
+     ampMode.whileTrue(
+      parallel(m_shooterWheelsS.spinC(()->3000, ()->3500),
       m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
       m_bounceBarS.upC()
       )
@@ -332,7 +334,8 @@ public class RobotContainer implements Logged {
      ));
 
 
-     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_operatorController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
      m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
@@ -340,8 +343,8 @@ public class RobotContainer implements Logged {
      ));
     m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
     m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
-        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* m_operatorController.getLeftY()));
-        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* m_operatorController.getRightY()));
+        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
+        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
     m_operatorController.back().onTrue(runOnce(m_shooterPivotS::resetAngleUp));
     //#endregion
   }
