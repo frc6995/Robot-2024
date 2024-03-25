@@ -1,6 +1,8 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CCW_LIMIT;
+
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -248,7 +250,20 @@ public class RobotContainer implements Logged {
             m_drivebaseS.getPose(),
             m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
                 Constants.Poses.SPEAKER,
-                AllianceWrapper.getAlliance())));
+                AllianceWrapper.getAlliance())))
+        .alongWith(
+        run(()->{
+          var error  = m_drivebaseS.getPoseHeading().minus(new Rotation2d(this.directionToSpeaker())).getRadians();
+          if (error >= Units.degreesToRadians(1)) {
+            // drivetrain is too far ccw, light the left third of the bar
+            LightStripS.getInstance().requestState(States.LeftThird);
+          } else if (error <= Units.degreesToRadians(-1)) {
+            LightStripS.getInstance().requestState(States.RightThird);
+          } else {
+            LightStripS.getInstance().requestState(States.CenterThird);
+          }
+        })        
+        );
   }
 
   public Command faceNote() {
@@ -306,7 +321,7 @@ public class RobotContainer implements Logged {
     // X: midtake spit
     // Y: midtake move in
     // LB: spin for amp
-    // RB: spin for driveby
+    // RB: spin for passing
     // sticks: climb
     // 
 
@@ -324,14 +339,19 @@ public class RobotContainer implements Logged {
       )
     );
     m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
-     // spinup for driveby
-     m_operatorController.rightBumper().whileTrue(parallel(
-      spinDistance(this::xDistToSpeaker),
-      m_shooterPivotS.rotateWithVelocity(
-            ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
-            () -> 0)
+    //  // spinup for driveby
+    m_operatorController.rightBumper().whileTrue(
+      parallel(
+        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT),
+        m_shooterWheelsS.spinC(()->5000, ()->5000)
+      )
+    );
+    //   spinDistance(this::xDistToSpeaker),
+    //   m_shooterPivotS.rotateWithVelocity(
+    //         ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
+    //         () -> 0)
 
-     ));
+    //  ));
 
 
      m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
@@ -364,12 +384,13 @@ public class RobotContainer implements Logged {
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
     m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
-    m_autoSelector.addOption("W1", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W1")));
+    m_autoSelector.addOption("W1", m_autos.w1());
     // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
     m_autoSelector.addOption("C5", m_autos.c5());
     m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c5ThruStage());
     m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote(2));
     m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
+    m_autoSelector.addOption("4Close-c3c4", m_autos.centerFourWingC3C4());
     m_autoSelector.addOption("Disrupt", m_autos.disruptor());
   }
 
