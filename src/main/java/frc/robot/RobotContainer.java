@@ -63,6 +63,7 @@ import java.util.function.DoubleSupplier;
 import org.photonvision.PhotonCamera;
 import java.util.Optional;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -177,6 +178,8 @@ public class RobotContainer implements Logged {
     configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
+    //SignalLogger.setPath("/media/sda1/");
+    SignalLogger.start();
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
@@ -399,10 +402,7 @@ public class RobotContainer implements Logged {
   }
 
   public Command getAutonomousCommand() {
-    return m_autoSelector.getSelected().deadlineWith(parallel(
-      m_rightClimberS.runVoltage(()->0),
-      m_leftClimberS.runVoltage(()->0)
-    ));
+    return m_autoSelector.getSelected();
   }
 
   /**

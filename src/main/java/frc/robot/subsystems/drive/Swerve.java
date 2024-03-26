@@ -61,6 +61,7 @@ import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.trajectory.PPChasePoseCommand;
 import monologue.Logged;
+import monologue.Annotations.IgnoreLogged;
 import monologue.Annotations.Log;
 import java.util.List;
 
@@ -74,7 +75,7 @@ import static edu.wpi.first.units.Units.Volts;
  * Subsystem so it can be used in command-based projects easily.
  */
 public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
-	private static final double kSimLoopPeriod = 0.001; // 5 ms
+	private static final double kSimLoopPeriod = 0.005; // 5 ms
 	private Notifier m_simNotifier = null;
 	private double m_lastSimTime;
 
@@ -110,6 +111,12 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
     public final PIDController m_yController = new PIDController(10, 0, 0.0);
     public final PIDController m_thetaController = new PIDController(7, 0, 0);
 	private final SysIdSwerveTranslation characterization = new SysIdSwerveTranslation();
+	private final SwerveModuleLog fr = new SwerveModuleLog("0-FR");
+	private final SwerveModuleLog fl = new SwerveModuleLog("1-FL");
+	private final SwerveModuleLog br = new SwerveModuleLog("2-BR");
+	private final SwerveModuleLog bl = new SwerveModuleLog("3-BL");
+	@IgnoreLogged
+	private final SwerveModuleLog[] mods = new SwerveModuleLog[] {fr, fl, br, bl};
 	// private final SysIdSwerveRotation characterization = new
 	// SysIdSwerveRotation();
 	// private final SysIdSwerveSteerGains characterization = new
@@ -368,6 +375,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 
 	public void periodic() {
 		var swerveState = getState();
+		log("rotationSpeed", swerveState.speeds.omegaRadiansPerSecond);
 		// log_rotationSpeed.accept(Units.radiansToRotations(swerveState.speeds.omegaRadiansPerSecond));
 		// log_desiredRot.accept(m_desiredRot.getDegrees());
 		// log_rot.accept(swerveState.Pose.getRotation().getDegrees());
@@ -381,6 +389,25 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		// log_desiredPose.accept(m_desiredPose);
 
 		for (int i = 0; i < Modules.length; i++) {
+			var modLog = mods[i];
+		
+			var state = swerveState.ModuleStates[i];
+			var target = swerveState.ModuleTargets[i];
+			modLog.log("velocity", state.speedMetersPerSecond);
+			modLog.log("tgtSpeed", target.speedMetersPerSecond);
+			modLog.log("absVel", Math.abs(state.speedMetersPerSecond));
+			modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
+			modLog.log("angle", state.angle.getRadians());
+			modLog.log("tgtAngle", target.angle.getRadians());
+			var module = Modules[i];
+			var drive = module.getDriveMotor();
+			var steer = module.getSteerMotor();
+			modLog.log("driveVolts", drive.getMotorVoltage().getValue());
+			modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
+			modLog.log("steerVolts", steer.getMotorVoltage().getValue());
+			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
+			
+			
 			m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
 			m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
 			m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);

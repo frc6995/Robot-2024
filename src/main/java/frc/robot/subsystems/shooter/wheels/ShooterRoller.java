@@ -16,8 +16,10 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+
 public class ShooterRoller implements Subsystem, Logged {
-    private ShooterRollerIO m_io;
+    private CTREShooterRollerIO m_io;
 
     public final Trigger atGoal = new Trigger(this::atGoal);
 
@@ -27,34 +29,19 @@ public class ShooterRoller implements Subsystem, Logged {
     private SimpleMotorFeedforward ff;
     @Log
     private double desiredSpeed;
-    public ShooterRoller(int canId, boolean invert, double kS, double kV, String name){
-        if(RobotBase.isReal()) {
-            m_io = new RealShooterRollerIO(canId, invert);
-        } else {
-            m_io = new SimShooterRollerIO(kS, kV);
-        }
+    public ShooterRoller(int canId, boolean invert, double kS, double kV, double kA, double kP, String name){
+
+        m_io = new CTREShooterRollerIO(canId, invert,
+            new Slot0Configs().withKS(kS).withKV(kV).withKA(kA).withKP(kP)
+            , this);
+        m_idRoutine = m_io.sysIdRoutine;
+        // if(RobotBase.isReal()) {
+        //     m_io = new RealShooterRollerIO(canId, invert);
+        // } else {
+        //     m_io = new SimShooterRollerIO(kS, kV);
+        // }
         this.ff = new SimpleMotorFeedforward(kS, kV);
         this.name = name;
-        MutableMeasure<Velocity<Angle>> velocityMeasure = MutableMeasure.ofBaseUnits(0, RPM);
-        MutableMeasure<Angle> positionMeasure = MutableMeasure.ofBaseUnits(0, Rotations);
-        MutableMeasure<Voltage> voltsMeasure = MutableMeasure.ofBaseUnits(0, Volts);
-        String sysidName = "shooter" + this.name;
-        m_idRoutine = new SysIdRoutine(
-        new Config(
-        Volts.of(1).per(Second),
-        Volts.of(7),
-        Seconds.of(20)
-        ), 
-        new Mechanism(
-        (Measure<Voltage> volts)->m_io.setVolts(volts.in(Volts)),
-        (log)->{
-            log.motor(sysidName).angularVelocity(
-            velocityMeasure.mut_replace(m_io.getVelocity(), RPM)
-            ).voltage(
-            voltsMeasure.mut_replace(m_io.getVolts(), Volts)
-            ).angularPosition(positionMeasure.mut_replace(m_io.getPosition(), Rotations));
-
-        }, this, sysidName));
         setDefaultCommand(stopC());
     }
 
