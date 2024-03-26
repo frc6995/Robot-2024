@@ -60,6 +60,9 @@ public class LightStripS {
     SetupDone(setColor(0, 64, 0)), // set in robotPeriodic
     Disabled(setColor(64, 0, 0)), // set in robotPeriodic
     Error(pulse(0.25, setColor(255, 0, 0))),
+    LeftThird(leftThird(64, 0, 0)),
+    CenterThird(centerThird(64, 64, 64)),
+    RightThird(rightThird(64, 0, 0)),
     Climbing(
         (ledBuffer, persistentState) -> {
           for (int i = 0; i < ledBuffer.getLength(); i++) {
@@ -177,6 +180,35 @@ public class LightStripS {
       for (int i = 0; i < buffer.getLength(); i++) {
         buffer.setRGB(i, r, g, b);
       }
+    };
+  }
+
+  private static BiConsumer<AddressableLEDBuffer, PersistentLedState> leftThird(int r, int g, int b) {
+    var blank = setColor(0, 0, 0);
+        return (buffer, state) -> {
+          blank.accept(buffer, state);
+        for (int i = 2 * STRIP_LENGTH / 3; i < buffer.getLength(); i++) {
+          buffer.setRGB(i, r, g, b);
+        }
+    };
+  }
+    private static BiConsumer<AddressableLEDBuffer, PersistentLedState> centerThird(int r, int g, int b) {
+    var blank = setColor(0, 0, 0);
+        return (buffer, state) -> {
+          blank.accept(buffer, state);
+        for (int i = STRIP_LENGTH / 3; i < 2 * STRIP_LENGTH / 3; i++) {
+          buffer.setRGB(i, r, g, b);
+        }
+    };
+  }
+
+  private static BiConsumer<AddressableLEDBuffer, PersistentLedState> rightThird(int r, int g, int b) {
+    var blank = setColor(0, 0, 0);
+        return (buffer, state) -> {
+          blank.accept(buffer, state);
+        for (int i = 0; i < STRIP_LENGTH / 3; i++) {
+          buffer.setRGB(i, r, g, b);
+        }
     };
   }
 

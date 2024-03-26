@@ -160,6 +160,10 @@ public class Vision implements Logged {
                 double avgDistance = 0;
                 double closeEnoughTgts = 0;
                 boolean ignore = false;
+                if (robotPose.targetsUsed.size() == 1) {
+                    var tgtId = robotPose.targetsUsed.get(0).getFiducialId();
+                    if (tgtId != 5 && tgtId != 6) {continue;}
+                }
                 for (var tgt : robotPose.targetsUsed ) {
                     double tdist = tgt.getBestCameraToTarget().getTranslation().getNorm();
                     avgDistance += tdist;
@@ -169,8 +173,6 @@ public class Vision implements Logged {
                     if (tdist <= Units.feetToMeters(15)) {
                         closeEnoughTgts++;
                     }
-                    ignore |= (tgt.getFiducialId() == 13);
-                    ignore |= (tgt.getFiducialId() == 14);
                 }
                 if (ignore) {continue;}
                 double distance = avgDistance / robotPose.targetsUsed.size();

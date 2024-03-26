@@ -290,6 +290,30 @@ public class CommandGroups {
 
     );
   }
+
+  public Command w1() {
+    var path = PathPlannerPath.fromChoreoTrajectory("W1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    return deadline(
+      sequence(
+            m_drivebaseS.resetPoseToBeginningC(path),
+            Pathing.setRotationOverride(()->Optional.of(new Rotation2d(this.directionToSpeaker()))),
+            m_drivebaseS.choreoCommand("W1"),
+            m_drivebaseS.stopOnceC(),
+            waitSeconds(1),
+            feed().asProxy().withTimeout(5)
+      ),
+      m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> Interpolation.dThetadX(distanceToSpeaker()) *
+                -Pathing.velocityTorwardsSpeaker(
+                    m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+                    speaker()))
+            .asProxy(),
+
+        spinDistance(this::distanceToSpeaker).asProxy()
+
+    ).finallyDo(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty()));
+  }
   public Command centerFourWingNote(double endWait) {
     var path = PathPlannerPath.fromChoreoTrajectory("W2.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
     return deadline(
@@ -355,6 +379,28 @@ public class CommandGroups {
                 .asProxy(),
             spinDistance(this::distanceToSpeaker).asProxy()));
   }
+  public Command centerFourWingC3C4() {
+    return sequence(
+        centerFourWingNote(0.25),
+        parallel(
+            sequence(
+                autoIntakeCycle("4Close-C3.1", 0.5, true, 0.75),
+                m_drivebaseS.stopOnceC(),
+                feed().asProxy().withTimeout(0.25),
+                autoIntakeCycle("4Close-C3.2", 0.25, true, 0.75),
+                m_drivebaseS.stopOnceC(),
+                feed().asProxy().withTimeout(5)
+            ),
+            m_shooterPivotS.rotateWithVelocity(
+                this::pivotAngle,
+                () -> Interpolation.dThetadX(distanceToSpeaker()) *
+                    -Pathing.velocityTorwardsSpeaker(
+                        m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+                        speaker()))
+                .asProxy(),
+            spinDistance(this::distanceToSpeaker).asProxy()));
+  }
+
 
   public Command w3w2() {
     return parallel(
