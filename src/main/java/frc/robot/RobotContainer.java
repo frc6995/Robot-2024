@@ -418,6 +418,7 @@ public class RobotContainer implements Logged {
     // /* Trace the loop duration and plot to shuffleboard */
     LightStripS.getInstance().periodic();
     updateFields();
+    Monologue.setFileOnly(DriverStation.isFMSAttached());
     var beforeLog = Timer.getFPGATimestamp();
     Monologue.updateAll();
     var afterLog = Timer.getFPGATimestamp();
