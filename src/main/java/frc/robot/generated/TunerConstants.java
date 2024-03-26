@@ -147,6 +147,6 @@ public class TunerConstants {
 		kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset,
 		Units.inchesToMeters(kBackRightXPosInches), Units.inchesToMeters(kBackRightYPosInches), kInvertRightSide);
 
-	public static final Swerve drivetrain = new Swerve(DrivetrainConstants, Utils.isSimulation() ? 10 : 100, FrontLeft,
+	public static final Swerve drivetrain = new Swerve(DrivetrainConstants, Utils.isSimulation() ? 100 : 100, FrontLeft,
 		FrontRight, BackLeft, BackRight);
 }

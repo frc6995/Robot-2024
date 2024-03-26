@@ -1,5 +1,14 @@
 {
   "HALProvider": {
+    "Addressable LEDs": {
+      "0": {
+        "columns": 39,
+        "start": 2
+      },
+      "window": {
+        "visible": true
+      }
+    },
     "Other Devices": {
       "window": {
         "visible": false
@@ -102,6 +111,9 @@
               "open": true
             }
           }
+        },
+        "m_autoSelector": {
+          "open": true
         },
         "m_drivebaseS": {
           "io": {
