@@ -13,6 +13,7 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -50,7 +51,6 @@ import lib.sparkmax.SparkBaseConfig;
 public class CTREShooterRollerIO extends ShooterRollerIO {
 
     private TalonFX m_motor;
-    private SparkPIDController m_pid;
     private double ffVolts = 0;
 
     class Constants {
@@ -78,6 +78,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
 
     public final SysIdRoutine sysIdRoutine;
     public final VoltageOut sysIdControl = new VoltageOut(0);
+    public final VelocityVoltage velocityControl = new VelocityVoltage(0);
     private LinearSystemSim<N2, N1, N2> m_sim;
     public CTREShooterRollerIO(int CAN_ID, boolean invert, Slot0Configs pidConfigs, ShooterRoller self) {
         m_motor = new TalonFX(CAN_ID);
@@ -91,7 +92,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
 			null,
 			Volts.of(7),
 			null,
-			(state) -> SignalLogger.writeString("state", state.toString())),
+			(state) -> SignalLogger.writeString("state-"+CAN_ID, state.toString())),
 		new SysIdRoutine.Mechanism(
 			(volts) -> m_motor.setControl(sysIdControl.withOutput(volts.baseUnitMagnitude())),
 			null,

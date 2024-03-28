@@ -105,6 +105,7 @@ public class CTREVision implements Logged {
 
                 
                 var robotPose = robotPoseOpt.get();
+                if (robotPose.timestampSeconds > Timer.getFPGATimestamp()) {continue;}
                 for (var target : robotPose.targetsUsed) {
                     if (target.getFiducialId() == 7 || target.getFiducialId() == 4) {
                         
@@ -183,6 +184,7 @@ public class CTREVision implements Logged {
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
                 log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
+                
                 addVisionMeasurement.accept( new VisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
                         VecBuilder.fill(xConfidence, yConfidence, angleConfidence)));

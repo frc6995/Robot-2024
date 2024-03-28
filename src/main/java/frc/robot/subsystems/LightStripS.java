@@ -16,8 +16,6 @@ import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
-
 public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
@@ -73,6 +71,7 @@ public class LightStripS {
           persistentState.rainbowFirstPixelHue += 3;
           persistentState.rainbowFirstPixelHue %= 180;
         }), // set through triggers in RobotContainer
+    HasNote(setColor(245, 224, 66)),
     IntakedNote(pulse(0.25, setColor(245, 224, 66))),
     Scoring(setColor(0, 0, 255)),
     AutoAlign(

@@ -113,7 +113,8 @@ public class CommandGroups {
 
             parallel(
                 new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
-                new ScheduleCommand(m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)),
+                new ScheduleCommand(m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)
+                  .andThen(m_lightStripS.stateC(()->States.HasNote).withTimeout(1.5))),
                 sequence(
                     waitSeconds(0.5),
                     m_intakePivotS.retract()),

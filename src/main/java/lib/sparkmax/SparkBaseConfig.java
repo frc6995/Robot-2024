@@ -242,7 +242,7 @@ public class SparkBaseConfig extends Config<CANSparkBase, SparkBaseConfig> {
         System.out.println("Config "+s.getDeviceId());
         if (restoreFactoryDefaults)
             config(s::restoreFactoryDefaults);
-        config(()->s.setCANTimeout(50));
+        config(()->s.setCANTimeout(5));
         for (Call<CANSparkBase, ?, SparkBaseConfig> config : calls) {
             applyConfig(s, this, defaults, config, restoreFactoryDefaults);
         }

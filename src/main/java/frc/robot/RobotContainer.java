@@ -156,7 +156,7 @@ public class RobotContainer implements Logged {
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
     RobotVisualizer.addClimber(m_leftClimberS.ELEVATOR);
     RobotVisualizer.addClimber(m_rightClimberS.ELEVATOR);
-    m_drivebaseS = TunerConstants.drivetrain;
+    m_drivebaseS = TunerConstants.DriveTrain;
     // m_drivebaseS = new DrivebaseS(
     //     addPeriodic,
     //     (name, poses) -> m_field.getObject(name).setPoses(poses));

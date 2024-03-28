@@ -27,6 +27,7 @@ import com.pathplanner.lib.path.PathPlannerTrajectory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -36,6 +37,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -109,7 +111,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
     public final PIDController m_xController = new PIDController(10, 0, 0.0);
 
     public final PIDController m_yController = new PIDController(10, 0, 0.0);
-    public final PIDController m_thetaController = new PIDController(7, 0, 0);
+	public final PIDController m_thetaController = new PIDController(7, 0, 0);
+    public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(7, 0, 0, new TrapezoidProfile.Constraints(8, 12));
 	private final SysIdSwerveTranslation characterization = new SysIdSwerveTranslation();
 	private final SwerveModuleLog fr = new SwerveModuleLog("0-FR");
 	private final SwerveModuleLog fl = new SwerveModuleLog("1-FL");
@@ -154,7 +157,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 
 
 	public void addVisionMeasurement(VisionMeasurement measurement) {
-		m_odometry.addVisionMeasurement(
+		addVisionMeasurement(
 			measurement.pose(), measurement.timestamp(), measurement.stddevs());
 	}
 	private void configureAutoBuilder() {
@@ -177,7 +180,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			startSimThread();
 		}
 		m_gyroYawRadsSupplier = () -> Units.degreesToRadians(getPigeon2().getAngle());
-		m_thetaController.enableContinuousInput(0, 2 * Math.PI);
+		m_profiledThetaController.enableContinuousInput(0, 2 * Math.PI);
 		m_fieldCentric.ForwardReference = ForwardReference.RedAlliance;
 		m_allianceRelative.ForwardReference = ForwardReference.OperatorPerspective;
 	}
@@ -373,7 +376,11 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		return m_sysId.dynamic(direction);
 	}
 
+	private static final Rotation2d BLUE_PERSPECTIVE = new Rotation2d();
+	private static final Rotation2d RED_PERSPECTIVE = new Rotation2d(Math.PI);
 	public void periodic() {
+		m_vision.periodic();
+		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
 		var swerveState = getState();
 		log("rotationSpeed", swerveState.speeds.omegaRadiansPerSecond);
 		// log_rotationSpeed.accept(Units.radiansToRotations(swerveState.speeds.omegaRadiansPerSecond));
@@ -408,9 +415,9 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
 			
 			
-			m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
-			m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
-			m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);
+			// m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
+			// m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
+			// m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);
 		}
 		// log_wheelVelos.accept(m_wheelVelos);
 		// log_wheelVeloTargets.accept(m_wheelVeloTargets);
@@ -558,7 +565,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 	InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
   return runOnce(
 		  () -> {
-			m_thetaController.reset();
+			m_profiledThetaController.reset(getPoseHeading().getRadians());
 		  })
 	  .andThen(
 		  run(
@@ -578,10 +585,10 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 				double rot;
 
 				rot =
-					m_thetaController.calculate(
+					m_profiledThetaController.calculate(
 						getPoseHeading().getRadians(),
 						headingFieldRelative.getAsDouble());
-				log("thetaSetpt", m_thetaController.getSetpoint());
+				log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
 				log("thetaReal", getPoseHeading().getRadians());
 				rot += headingFF.getAsDouble();
 				driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
