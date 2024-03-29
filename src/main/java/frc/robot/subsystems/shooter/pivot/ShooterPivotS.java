@@ -83,14 +83,14 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     resetAngleDown();
     setDefaultCommand(hold());
   }
-  @Log.NT public double getGoal() {return m_desiredState.position;}
+  public double getGoal() {return m_desiredState.position;}
   public double getGoalVelocity() {return m_desiredState.velocity;}
-  @Log.NT public double getSetpoint() {return m_setpoint.position;}
+  public double getSetpoint() {return m_setpoint.position;}
   public double getSetpointVelocity() {return m_setpoint.velocity;}
-  @Log.NT public double getAngle() {return m_io.getAngle();}
+  public double getAngle() {return m_io.getAngle();}
   public double getVelocity() {return m_io.getVelocity();}
   public double getPidVolts() {return m_io.getPidVolts();}
-  @Log.NT public double getVolts() {return m_io.getVolts();}
+  public double getVolts() {return m_io.getVolts();}
   public void resetProfile() {
     m_setpoint.position = getAngle();
   }
@@ -133,17 +133,16 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     m_setpoint = m_profile.calculate(0.02, m_setpoint, m_desiredState);
     
     // log that information
-    log("setpointVelocity", m_setpoint.velocity);
-    log("setpointPosition", m_setpoint.position);
-    log("dbCompVelocity", velocity);
-    log("totalSetptVel", m_setpoint.velocity + velocity);
+    // log("setpointVelocity", m_setpoint.velocity);
+    // log("setpointPosition", m_setpoint.position);
+    // log("dbCompVelocity", velocity);
+    // log("totalSetptVel", m_setpoint.velocity + velocity);
     var totalVelocity = m_setpoint.velocity + velocity;
     // Calculate the feedforward. This is partly to counter gravity
     double ffVolts = getGravityFF()+ m_feedforward.calculate(totalVelocity, nextSetpoint.velocity + velocity, 0.02);
     m_io.setPIDFF(m_setpoint.position, ffVolts);
   }
 
-  @Log
   public double getCurrent() {
     return m_io.getCurrent();
   }

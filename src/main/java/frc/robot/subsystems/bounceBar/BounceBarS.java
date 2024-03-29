@@ -98,7 +98,7 @@ public class BounceBarS extends SubsystemBase implements Logged {
     return run(this::stop);
   }
 
-  @Log public double getCurrent() {
+  public double getCurrent() {
     return m_leader.getOutputCurrent();
   }
 }

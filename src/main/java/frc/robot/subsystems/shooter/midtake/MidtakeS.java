@@ -139,7 +139,6 @@ public class MidtakeS extends SubsystemBase implements Logged {
     return runOnce(this::stop);
   }
 
-  @Log
   public double tofDistance() {
     if (RobotBase.isSimulation()) {
       return Constants.TOF_NO_NOTE;
@@ -147,7 +146,6 @@ public class MidtakeS extends SubsystemBase implements Logged {
     return m_tof.getRange();
   }
 
-  @Log
   public boolean hasNote() {
     return hasNote.getAsBoolean();
   }
@@ -157,22 +155,18 @@ public class MidtakeS extends SubsystemBase implements Logged {
   public boolean isRunning() {
     return isRunning.getAsBoolean();
   }
-  @Log
   public double getVolts() {
     return m_front.getAppliedOutput() * 12;
   }
 
-  @Log
   public double getBackVolts() {
     return m_back.getAppliedOutput() * 12;
   }
 
-  @Log
   public double getFrontCurrent() {
     return m_front.getOutputCurrent();
   }
 
-  @Log
   public double getBackCurrent() {
     return m_back.getOutputCurrent();
   }

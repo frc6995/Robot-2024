@@ -382,7 +382,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		m_vision.periodic();
 		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
 		var swerveState = getState();
-		log("rotationSpeed", swerveState.speeds.omegaRadiansPerSecond);
+		//log("rotationSpeed", swerveState.speeds.omegaRadiansPerSecond);
 		// log_rotationSpeed.accept(Units.radiansToRotations(swerveState.speeds.omegaRadiansPerSecond));
 		// log_desiredRot.accept(m_desiredRot.getDegrees());
 		// log_rot.accept(swerveState.Pose.getRotation().getDegrees());
@@ -395,30 +395,30 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		// m_desiredPose[2] = Units.radiansToDegrees(m_thetaController.getSetpoint());
 		// log_desiredPose.accept(m_desiredPose);
 
-		for (int i = 0; i < Modules.length; i++) {
-			var modLog = mods[i];
+		// for (int i = 0; i < Modules.length; i++) {
+		// 	var modLog = mods[i];
 		
-			var state = swerveState.ModuleStates[i];
-			var target = swerveState.ModuleTargets[i];
-			modLog.log("velocity", state.speedMetersPerSecond);
-			modLog.log("tgtSpeed", target.speedMetersPerSecond);
-			modLog.log("absVel", Math.abs(state.speedMetersPerSecond));
-			modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
-			modLog.log("angle", state.angle.getRadians());
-			modLog.log("tgtAngle", target.angle.getRadians());
-			var module = Modules[i];
-			var drive = module.getDriveMotor();
-			var steer = module.getSteerMotor();
-			modLog.log("driveVolts", drive.getMotorVoltage().getValue());
-			modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
-			modLog.log("steerVolts", steer.getMotorVoltage().getValue());
-			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
+		// 	var state = swerveState.ModuleStates[i];
+		// 	var target = swerveState.ModuleTargets[i];
+		// 	modLog.log("velocity", state.speedMetersPerSecond);
+		// 	modLog.log("tgtSpeed", target.speedMetersPerSecond);
+		// 	modLog.log("absVel", Math.abs(state.speedMetersPerSecond));
+		// 	modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
+		// 	modLog.log("angle", state.angle.getRadians());
+		// 	modLog.log("tgtAngle", target.angle.getRadians());
+		// 	var module = Modules[i];
+		// 	var drive = module.getDriveMotor();
+		// 	var steer = module.getSteerMotor();
+		// 	modLog.log("driveVolts", drive.getMotorVoltage().getValue());
+		// 	modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
+		// 	modLog.log("steerVolts", steer.getMotorVoltage().getValue());
+		// 	modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
 			
 			
-			// m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
-			// m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
-			// m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);
-		}
+		// 	// m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
+		// 	// m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
+		// 	// m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);
+		// }
 		// log_wheelVelos.accept(m_wheelVelos);
 		// log_wheelVeloTargets.accept(m_wheelVeloTargets);
 		// log_wheelVeloErrors.accept(m_wheelVeloErrs);
@@ -588,8 +588,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 					m_profiledThetaController.calculate(
 						getPoseHeading().getRadians(),
 						headingFieldRelative.getAsDouble());
-				log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
-				log("thetaReal", getPoseHeading().getRadians());
+				// log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
+				// log("thetaReal", getPoseHeading().getRadians());
 				rot += headingFF.getAsDouble();
 				driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
 			  }));

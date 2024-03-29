@@ -76,7 +76,7 @@ public class RobotContainer implements Logged {
   private final DriverDisplay m_driverDisplay = new DriverDisplay();
   private final Swerve m_drivebaseS;
 
-  @Log.NT
+  @Log
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
   private final ShooterFeederS m_shooterFeederS;
   private final ShooterPivotS m_shooterPivotS;
@@ -89,7 +89,7 @@ public class RobotContainer implements Logged {
   private final ClimberS m_rightClimberS;
   private final BlobDetectionCamera m_noteCamera;
   private final LightStripS m_lightStripS;
-  @Log.NT(level = LogLevel.OVERRIDE_FILE_ONLY)
+  @Log
   private double loopTime = 0;
   private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
   @Log.NT
@@ -116,17 +116,14 @@ public class RobotContainer implements Logged {
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
   private boolean m_setupDone = false;
 
-  @Log.NT
   private double getFwdAxis() {
     return m_fwdXAxis.getAsDouble();
   }
 
-  @Log.NT
   private double getSideAxis() {
     return m_fwdYAxis.getAsDouble();
   }
 
-  @Log.NT
   private double getRotAxis() {
     return m_rotAxis.getAsDouble();
   }
@@ -179,12 +176,12 @@ public class RobotContainer implements Logged {
     configureButtonBindings();
     addAutoRoutines();
     //SignalLogger.setPath("/media/sda1/");
-    SignalLogger.start();
+    //SignalLogger.start();
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
     SparkDevice.burnFlashInSync();
-    Commands.sequence(waitSeconds(4), runOnce(() -> m_setupDone = true))
+    Commands.sequence(waitSeconds(2), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
@@ -226,7 +223,7 @@ public class RobotContainer implements Logged {
   public Translation2d speaker() {
     return m_autos.speaker();
   }
-  @Log
+  
   public double xDistToSpeaker() {
     return Math.abs(m_drivebaseS.getPose().getTranslation().getX() - speaker().getX());
   }
@@ -363,23 +360,30 @@ public class RobotContainer implements Logged {
 
      m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
      m_operatorController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
-     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker).alongWith(
+     m_operatorController.leftTrigger().whileTrue(
+      spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
             () -> 0)
      ));
     m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
-    m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
+    //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
         m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
-    m_operatorController.back().onTrue(runOnce(m_shooterPivotS::resetAngleUp));
+    m_operatorController.back().onTrue(
+      spinDistance(()->3.0).alongWith(
+      m_shooterPivotS.rotateWithVelocity(
+            ()->Interpolation.PIVOT_MAP.get(3.0),
+            () -> 0)
+     )
+    );
     //#endregion
   }
 
   public Command driveIntakeRelativePOV() {
     return m_drivebaseS.run(() -> {
       double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
-      double adjustSpeed = Units.feetToMeters(7); // m/s
+      double adjustSpeed = Units.feetToMeters(6); // m/s
       m_drivebaseS.drive(
           new ChassisSpeeds(
               Math.cos(pov) * adjustSpeed,

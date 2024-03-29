@@ -364,7 +364,7 @@ public class CommandGroups {
         centerFourWingNote(0.25),
         parallel(
             sequence(
-                autoIntakeCycle("W2.5", 2, true, 0.75),
+                autoIntakeCycle("W2.5", 1, true, 0.75),
                 m_drivebaseS.stopOnceC(),
                 feed().asProxy().withTimeout(0.25),
                 autoIntakeCycle("W2.6", 0.25, true, 0.75),

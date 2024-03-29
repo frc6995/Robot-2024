@@ -27,7 +27,6 @@ public class ShooterRoller implements Subsystem, Logged {
     private String name;
     public final SysIdRoutine m_idRoutine;
     private SimpleMotorFeedforward ff;
-    @Log
     private double desiredSpeed;
     public ShooterRoller(int canId, boolean invert, double kS, double kV, double kA, double kP, String name){
 
@@ -45,14 +44,13 @@ public class ShooterRoller implements Subsystem, Logged {
         setDefaultCommand(stopC());
     }
 
-    @Log public double getGoalVelocity() {return desiredSpeed;}
-    @Log public double getVelocity() {return m_io.getVelocity();}
-    @Log public double getPidVolts() {return m_io.getPidVolts();}
-    @Log public double getVolts() {return m_io.getVolts();}
-    @Log public double getCurrent() {return m_io.getCurrent();}
-    @Log public double getPosition() {return m_io.getPosition();}
+    public double getGoalVelocity() {return desiredSpeed;}
+    public double getVelocity() {return m_io.getVelocity();}
+    public double getPidVolts() {return m_io.getPidVolts();}
+    public double getVolts() {return m_io.getVolts();}
+    public double getCurrent() {return m_io.getCurrent();}
+    public double getPosition() {return m_io.getPosition();}
 
-    @Log
     public boolean atGoal() {
         return Math.abs(desiredSpeed - getVelocity()) < 50;
     }

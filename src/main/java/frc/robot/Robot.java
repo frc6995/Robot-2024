@@ -47,9 +47,12 @@ public class Robot extends TimedRobot {
     // DataLogManager.logNetworkTables(true);
     addPeriodic(
         () -> {
+          if (DriverStation.isDisabled()) {
           AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
+          }
+
         },
-        1);
+        10);
     //addPeriodic(FaultLogger::update, 1);
     System.gc();
   }

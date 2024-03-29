@@ -599,9 +599,9 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                       m_profiledThetaController.calculate(
                           getPoseHeading().getRadians(),
                           headingFieldRelative.getAsDouble());
-                  log("thetaGoal", m_profiledThetaController.getGoal().position);
-                  log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
-                  log("thetaReal", getPoseHeading().getRadians());
+                  // log("thetaGoal", m_profiledThetaController.getGoal().position);
+                  // log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
+                  // log("thetaReal", getPoseHeading().getRadians());
                   rot += headingFF.getAsDouble();
                   driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
                 }));

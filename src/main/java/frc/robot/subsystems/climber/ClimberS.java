@@ -90,9 +90,9 @@ public class ClimberS extends SubsystemBase implements Logged {
   }
   public double getGoal() {return m_desiredState.position;}
   public double getGoalVelocity() {return m_desiredState.velocity;}
-  @Log.NT public double getLength() {return m_io.getLength();}
+  public double getLength() {return m_io.getLength();}
   public double getPidVolts() {return m_io.getPidVolts();}
-  @Log.NT public double getVolts() {return m_io.getVolts();}
+  public double getVolts() {return m_io.getVolts();}
   public void periodic() {
     // Update our visualization
     ELEVATOR.setLength(m_io.getLength());
