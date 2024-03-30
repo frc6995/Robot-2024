@@ -188,6 +188,7 @@ public class RobotContainer implements Logged {
     DriverStation.reportWarning("Setup Done", false);
     PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
     PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
+    
   }
 
   @Log
@@ -348,11 +349,11 @@ public class RobotContainer implements Logged {
       )
     );
     m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
-    //  // spinup for driveby
+    //  // spinup for passing
     m_operatorController.rightBumper().whileTrue(
       parallel(
-        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT),
-        m_shooterWheelsS.spinC(()->5000, ()->5000)
+        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CW_LIMIT),
+        m_shooterWheelsS.spinC(()->7000, ()->7000)
       )
     );
     //   spinDistance(this::xDistToSpeaker),

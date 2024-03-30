@@ -20,6 +20,7 @@ public class Interpolation {
     }
     static {
         var five = Units.degreesToRadians(5);
+        //cw limit 2.216
         entry(1.45, CW_LIMIT, 7000,7000);
         // entry(2.100, 2.333, 5700, 6000);
         // entry(2.652, 2.434, 5600, 6400);

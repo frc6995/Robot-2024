@@ -99,7 +99,7 @@ public class CommandGroups {
    * End: When note is in midtake
    */
   public Command deployRunIntake(Trigger overrideTOF) {
-    Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
+    Trigger hasNote = m_midtakeS.hasNote;
     return parallel(
         sequence(
             parallel(
@@ -109,7 +109,7 @@ public class CommandGroups {
                 waitSeconds(0.1).andThen(
                     // m_midtakeS.intakeC()
                     m_midtakeS.runVoltage(() -> MidtakeS.Constants.IN_VOLTAGE, () -> MidtakeS.Constants.IN_VOLTAGE)))
-                .until(hasNote),
+                .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
 
             parallel(
                 new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
