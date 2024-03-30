@@ -364,10 +364,10 @@ public class CommandGroups {
         centerFourWingNote(0.25),
         parallel(
             sequence(
-                autoIntakeCycle("W2.5", 1, true, 0.75),
+                autoIntakeCycle("W2.5", 1, true, 0.75, this::notAtMidline),
                 m_drivebaseS.stopOnceC(),
                 feed().asProxy().withTimeout(0.25),
-                autoIntakeCycle("W2.6", 0.25, true, 0.75),
+                autoIntakeCycle("W2.6", 0.25, true, 0.75, this::notAtMidline),
                 m_drivebaseS.stopOnceC(),
                 feed().asProxy().withTimeout(5)
             ),
@@ -385,10 +385,10 @@ public class CommandGroups {
         centerFourWingNote(0.25),
         parallel(
             sequence(
-                autoIntakeCycle("4Close-C3.1", 0.5, true, 0.75),
+                autoIntakeCycle("4Close-C3.1", 0.5, true, 0.75, this::notAtMidline),
                 m_drivebaseS.stopOnceC(),
                 feed().asProxy().withTimeout(0.25),
-                autoIntakeCycle("4Close-C3.2", 0.25, true, 0.75),
+                autoIntakeCycle("4Close-C3.2", 0.25, true, 0.75, this::notAtMidline),
                 m_drivebaseS.stopOnceC(),
                 feed().asProxy().withTimeout(5)
             ),
@@ -431,7 +431,7 @@ public class CommandGroups {
     ;
   }
 
-  public Command autoIntakeCycle(String choreoTrajectory, double intakeTimeout, boolean feed, double aimTime) {
+  public Command autoIntakeCycle(String choreoTrajectory, double intakeTimeout, boolean feed, double aimTime, BooleanSupplier noNoteYet) {
     var path = PathPlannerPath.fromChoreoTrajectory(choreoTrajectory);
     var traj = path.getTrajectory(new ChassisSpeeds(), new Rotation2d());
     var startAimTime = traj.getTotalTimeSeconds() - aimTime;
@@ -447,11 +447,14 @@ public class CommandGroups {
                 () -> Optional.of(new Rotation2d(this.directionToSpeaker()))))
             : none()),
         (feed ? feed().asProxy().withTimeout(intakeTimeout) : waitSeconds(intakeTimeout)).andThen(
-            deployRunIntake(new Trigger(() -> false)).asProxy()))
+            deployRunIntake(new Trigger(noNoteYet)).asProxy()))
         .finallyDo(
             () -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty()));
   }
 
+  public boolean notAtMidline() {
+    return Math.abs(m_drivebaseS.getPose().getX() - 8.22) > 0.5;
+  }
   public Command c5() {
     var path = PathPlannerPath.fromChoreoTrajectory("C5S.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
     return parallel(
@@ -460,11 +463,11 @@ public class CommandGroups {
         spinDistance(this::distanceToSpeaker).asProxy(),
         sequence(
             m_drivebaseS.resetPoseToBeginningC(path),
-            autoIntakeCycle("C5S.1", 3, false, 1),
+            autoIntakeCycle("C5S.1", 3, false, 1, ()->false),
             feed().asProxy().withTimeout(0.5),
-            autoIntakeCycle("C5S.2", 1, true, 0.75),
+            autoIntakeCycle("C5S.2", 1, true, 0.75, this::notAtMidline),
             feed().asProxy().withTimeout(0.5),
-            autoIntakeCycle("C5S.3", 0.2, true, 0.75),
+            autoIntakeCycle("C5S.3", 0.2, true, 0.75, this::notAtMidline),
             feed().asProxy().withTimeout(0.5)));
   }
 
@@ -476,13 +479,13 @@ public class CommandGroups {
         sequence(
             m_drivebaseS.resetPoseToBeginningC(path),
             // too-long intake delay
-            autoIntakeCycle("C5.1", 2, false, 1),
+            autoIntakeCycle("C5.1", 2, false, 1, ()->false),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5.2", 1, true, 0.75),
+            autoIntakeCycle("C5.2", 1, true, 0.75, this::notAtMidline),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5.3", 0.2, true, 0.75),
+            autoIntakeCycle("C5.3", 0.2, true, 0.75, this::notAtMidline),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5.4", 0.2, true, 0.75),
+            autoIntakeCycle("C5.4", 0.2, true, 0.75, this::notAtMidline),
             feed().asProxy().withTimeout(0.3)));
   }
 
@@ -493,11 +496,11 @@ public class CommandGroups {
         sequence(
             m_drivebaseS.choreoCommand("C5Red.1"),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5Red.2", 1, true, 0.75),
+            autoIntakeCycle("C5Red.2", 1, true, 0.75, ()->false),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5Red.3", 0.2, true, 0.75),
+            autoIntakeCycle("C5Red.3", 0.2, true, 0.75, ()->false),
             feed().asProxy().withTimeout(0.3),
-            autoIntakeCycle("C5Red.4", 0.2, true, 0),
+            autoIntakeCycle("C5Red.4", 0.2, true, 0, ()->false),
             feed().asProxy().withTimeout(0.3)));
   }
 

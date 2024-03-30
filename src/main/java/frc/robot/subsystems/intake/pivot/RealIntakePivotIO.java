@@ -29,7 +29,7 @@ public class RealIntakePivotIO extends IntakePivotIO {
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
-    private DigitalInput m_button = new DigitalInput(9);
+    private DigitalInput m_button = new DigitalInput(0);
     private Trigger m_coastModeButton = new Trigger(m_button::get).negate();
     public RealIntakePivotIO() {
         super();

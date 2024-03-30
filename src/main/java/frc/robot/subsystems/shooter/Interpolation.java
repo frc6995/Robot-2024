@@ -7,7 +7,7 @@ import edu.wpi.first.math.util.Units;
 
 public class Interpolation {
     public static final double AMP_SPEED = 4000.0;
-    public static final double AMP_PIVOT = CW_LIMIT+ Units.degreesToRadians(4);
+    public static final double AMP_PIVOT = CW_LIMIT+ Units.degreesToRadians(0);
     public static final double MAX_DISTANCE = 4;
     public static final double MIN_DISTANCE = 1;
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();
@@ -28,16 +28,15 @@ public class Interpolation {
         // entry(4.200, 2.655, 5500, 6500);
         // entry(4.640, 2.665, 5500, 6500);
         
-        entry(1.5, 2.257, 7000, 7000);
-        entry(1.75, 2.336, 7000, 7000);
-        entry(2, 2.4, 7000, 7000);
-        entry(2.5, 2.48, 7000, 7000);
-        entry(2.58, 2.51, 7000, 7000);
-        entry(2.75, 2.53, 7000, 7000);
-        entry(3.1, 2.56, 7000, 7000);
-        entry(3.5, 2.585, 7500, 7500);
-        entry(4.1, 2.62, 8000, 8000);
-        entry(4.5, 2.63, 9000, 9000);
+        entry(1.5, CW_LIMIT, 7000, 7000);
+        entry(1.75, 2.336-Units.degreesToRadians(1), 7000, 7000);
+        entry(2, 2.4 - Units.degreesToRadians(2), 7000, 7000);
+        entry(2.5, 2.48-Units.degreesToRadians(2), 7000, 7000);
+        entry(2.75, 2.51-Units.degreesToRadians(3), 7000, 7000);
+        entry(3.1, 2.56- Units.degreesToRadians(3), 7000, 7000);
+        entry(3.5, 2.6-Units.degreesToRadians(4), 7500, 7500);
+        entry(4, 2.61-Units.degreesToRadians(2), 8000, 8000);
+        entry(4.5, 2.63-Units.degreesToRadians(3), 9000, 9000);
         entry(5, 2.65, 9000, 9000);
         entry(5.447, 2.66, 9000, 9000);
         // PIVOT_MAP.put(1.45, CW_LIMIT);

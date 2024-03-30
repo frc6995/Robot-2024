@@ -64,6 +64,7 @@ import org.photonvision.PhotonCamera;
 import java.util.Optional;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -189,6 +190,10 @@ public class RobotContainer implements Logged {
     PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
   }
 
+  @Log
+  public boolean notAtMidline() {
+    return m_autos.notAtMidline();
+  }
   // aiming left of the speaker is positive
   public double sidewaysErrorToSpeaker() {
     var error = m_drivebaseS.getPoseHeading()
@@ -337,7 +342,7 @@ public class RobotContainer implements Logged {
     Trigger ampMode = m_operatorController.leftBumper();
      // spinup for amp
      ampMode.whileTrue(
-      parallel(m_shooterWheelsS.spinC(()->3000, ()->3500),
+      parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
       m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
       m_bounceBarS.upC()
       )
@@ -425,7 +430,7 @@ public class RobotContainer implements Logged {
     // /* Trace the loop duration and plot to shuffleboard */
     LightStripS.getInstance().periodic();
     updateFields();
-    Monologue.setFileOnly(DriverStation.isFMSAttached());
+    Monologue.setFileOnly(Robot.isReal() && DriverStation.isFMSAttached());
     var beforeLog = Timer.getFPGATimestamp();
     Monologue.updateAll();
     var afterLog = Timer.getFPGATimestamp();

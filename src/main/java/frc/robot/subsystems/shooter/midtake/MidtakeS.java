@@ -139,6 +139,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     return runOnce(this::stop);
   }
 
+  @Log
   public double tofDistance() {
     if (RobotBase.isSimulation()) {
       return Constants.TOF_NO_NOTE;
@@ -146,6 +147,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     return m_tof.getRange();
   }
 
+  @Log
   public boolean hasNote() {
     return hasNote.getAsBoolean();
   }
