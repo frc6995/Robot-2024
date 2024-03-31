@@ -404,7 +404,7 @@ public class RobotContainer implements Logged {
     m_autoSelector.addOption("W1", m_autos.w1());
     // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
     m_autoSelector.addOption("C5", m_autos.c5());
-    m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c5ThruStage());
+    m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c4c3());
     m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote(2));
     m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
     m_autoSelector.addOption("4Close-c3c4", m_autos.centerFourWingC3C4());

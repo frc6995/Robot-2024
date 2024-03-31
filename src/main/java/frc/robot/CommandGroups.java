@@ -489,6 +489,24 @@ public class CommandGroups {
             feed().asProxy().withTimeout(0.3)));
   }
 
+  public Command c4c3() {
+    var path = PathPlannerPath.fromChoreoTrajectory("C5 (1).1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    return parallel(
+        m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
+        spinDistance(this::distanceToSpeaker).asProxy(),
+        sequence(
+            m_drivebaseS.resetPoseToBeginningC(path),
+            // too-long intake delay
+            autoIntakeCycle("C5 (1).1", 2, false, 1, ()->false),
+            feed().asProxy().withTimeout(0.3),
+            autoIntakeCycle("C5 (1).2", 0.2, true, 0.75, this::notAtMidline),
+            feed().asProxy().withTimeout(0.3),
+            autoIntakeCycle("C5 (1).3", 0.2, true, 0.75, this::notAtMidline),
+            feed().asProxy().withTimeout(0.3),
+            autoIntakeCycle("C5 (1).4", 0.2, true, 0.75, this::notAtMidline),
+            feed().asProxy().withTimeout(0.3)));
+  }
+
   public Command c5ThruStageRed() {
     return parallel(
         m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
