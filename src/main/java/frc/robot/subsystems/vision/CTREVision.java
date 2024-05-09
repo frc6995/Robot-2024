@@ -182,8 +182,8 @@ public class CTREVision implements Logged {
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
-                // log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
-                // log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
+                log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
+                log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
                 
                 addVisionMeasurement.accept( new VisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
@@ -199,8 +199,8 @@ public class CTREVision implements Logged {
 
     public void updateCameraPoses(Pose2d drivebasePose) {
         for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
-            // log("cam-"+pair.getFirst(), 
-            //     new Pose3d(drivebasePose).transformBy(pair.getSecond().getRobotToCameraTransform()));
+            log("cam-"+pair.getFirst(), 
+                new Pose3d(drivebasePose).transformBy(pair.getSecond().getRobotToCameraTransform()));
         }
     }
 

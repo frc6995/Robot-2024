@@ -77,7 +77,7 @@ import static edu.wpi.first.units.Units.Volts;
  * Subsystem so it can be used in command-based projects easily.
  */
 public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
-	private static final double kSimLoopPeriod = 0.005; // 5 ms
+	private static final double kSimLoopPeriod = 0.01; // 5 ms
 	private Notifier m_simNotifier = null;
 	private double m_lastSimTime;
 
@@ -273,12 +273,15 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		m_simNotifier = new Notifier(() -> {
 			final double currentTime = Utils.getCurrentTimeSeconds();
 			double deltaTime = currentTime - m_lastSimTime;
+			SmartDashboard.putNumber("delta", deltaTime);
 			m_lastSimTime = currentTime;
-
+			
 			/* use the measured time delta, get battery voltage from WPILib */
 			updateSimState(deltaTime, RobotController.getBatteryVoltage());
 		});
+		Notifier.setHALThreadPriority(true, 99);
 		m_simNotifier.startPeriodic(kSimLoopPeriod);
+
 	}
 
 	public void logModulePositions() {
@@ -395,25 +398,25 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		// m_desiredPose[2] = Units.radiansToDegrees(m_thetaController.getSetpoint());
 		// log_desiredPose.accept(m_desiredPose);
 
-		// for (int i = 0; i < Modules.length; i++) {
-		// 	var modLog = mods[i];
+		for (int i = 0; i < Modules.length; i++) {
+			var modLog = mods[i];
 		
-		// 	var state = swerveState.ModuleStates[i];
-		// 	var target = swerveState.ModuleTargets[i];
-		// 	modLog.log("velocity", state.speedMetersPerSecond);
-		// 	modLog.log("tgtSpeed", target.speedMetersPerSecond);
-		// 	modLog.log("absVel", Math.abs(state.speedMetersPerSecond));
-		// 	modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
-		// 	modLog.log("angle", state.angle.getRadians());
-		// 	modLog.log("tgtAngle", target.angle.getRadians());
-		// 	var module = Modules[i];
-		// 	var drive = module.getDriveMotor();
-		// 	var steer = module.getSteerMotor();
-		// 	modLog.log("driveVolts", drive.getMotorVoltage().getValue());
-		// 	modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
-		// 	modLog.log("steerVolts", steer.getMotorVoltage().getValue());
-		// 	modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
-			
+			var state = swerveState.ModuleStates[i];
+			var target = swerveState.ModuleTargets[i];
+			modLog.log("velocity", state.speedMetersPerSecond);
+			modLog.log("tgtSpeed", target.speedMetersPerSecond);
+			modLog.log("absVel", Math.abs(state.speedMetersPerSecond));
+			modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
+			modLog.log("angle", state.angle.getRadians());
+			modLog.log("tgtAngle", target.angle.getRadians());
+			var module = Modules[i];
+			var drive = module.getDriveMotor();
+			var steer = module.getSteerMotor();
+			modLog.log("driveVolts", drive.getMotorVoltage().getValue());
+			modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
+			modLog.log("steerVolts", steer.getMotorVoltage().getValue());
+			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
+		}
 			
 		// 	// m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
 		// 	// m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
