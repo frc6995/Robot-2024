@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -50,6 +51,7 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
+import frc.robot.util.logging.PDData;
 import frc.robot.util.sparkmax.SparkDevice;
 import monologue.LogLevel;
 import monologue.Logged;
@@ -97,6 +99,8 @@ public class RobotContainer implements Logged {
   private final Field2d m_field = new Field2d();
   private final Field2d m_driverField = new Field2d();
 
+  private final PDData m_powerLogger = PDData.create(1,ModuleType.kRev);
+  @Log public PDData power() {return m_powerLogger.update();}
   private final CommandGroups m_autos;
 
   private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)

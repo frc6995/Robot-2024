@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
+import frc.robot.util.logging.RevFaults;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -93,6 +94,8 @@ public class ClimberS extends SubsystemBase implements Logged {
   public double getLength() {return m_io.getLength();}
   public double getPidVolts() {return m_io.getPidVolts();}
   public double getVolts() {return m_io.getVolts();}
+  @Log
+  public RevFaults faults() {return new RevFaults(m_io.getFaults());}
   public void periodic() {
     // Update our visualization
     ELEVATOR.setLength(m_io.getLength());

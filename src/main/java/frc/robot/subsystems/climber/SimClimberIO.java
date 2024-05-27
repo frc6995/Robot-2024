@@ -3,6 +3,7 @@ package frc.robot.subsystems.climber;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+import com.revrobotics.CANSparkBase.FaultID;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.MathUtil;
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
+import frc.robot.util.FaultLogger.Fault;
 
 public class SimClimberIO extends ClimberIO {
     private double m_pidVolts = 0;
@@ -74,6 +76,10 @@ public class SimClimberIO extends ClimberIO {
 
     public double getVolts() {
         return m_inputVolts;
+    }
+
+    public short getFaults() {
+        return (short) (0 | 1 << FaultID.kSoftLimitRev.value);
     }
 
     public class Constants {

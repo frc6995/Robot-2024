@@ -11,4 +11,5 @@ public abstract class ClimberIO implements Logged {
     public abstract void setVolts(double volts);
     public abstract double getVolts();
     public abstract double getPidVolts();
+    public abstract short getFaults();
 }

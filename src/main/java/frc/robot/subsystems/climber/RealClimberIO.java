@@ -39,6 +39,9 @@ public class RealClimberIO extends ClimberIO {
     public double getLength() {
         return m_encoder.getPosition();
     }
+    public short getFaults() {
+        return m_leader.getFaults();
+    }
 
     @Override
     public void setPIDFF(double length, double ffVolts) {

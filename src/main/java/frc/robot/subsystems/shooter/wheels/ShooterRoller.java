@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.util.logging.RevFaults;
 import monologue.Annotations.Log;
 import monologue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -43,7 +44,6 @@ public class ShooterRoller implements Subsystem, Logged {
         this.name = name;
         setDefaultCommand(stopC());
     }
-
     @Log public double getGoalVelocity() {return desiredSpeed;}
     @Log public double getVelocity() {return m_io.getVelocity();}
     @Log public double getPidVolts() {return m_io.getPidVolts();}
