@@ -99,8 +99,8 @@ public class RobotContainer implements Logged {
   private final Field2d m_field = new Field2d();
   private final Field2d m_driverField = new Field2d();
 
-  private final PDData m_powerLogger = PDData.create(1,ModuleType.kRev);
-  @Log public PDData power() {return m_powerLogger.update();}
+  // private final PDData m_powerLogger = PDData.create(1,ModuleType.kRev);
+  // @Log public PDData power() {return m_powerLogger.update();}
   private final CommandGroups m_autos;
 
   private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
@@ -341,9 +341,16 @@ public class RobotContainer implements Logged {
 
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
-     m_operatorController.x().whileTrue(m_midtakeS.runVoltage(()-> -0.6995 * 2,()-> -0.6995 * 2));
+     m_operatorController.x().whileTrue(
+      parallel(
+      m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2)),
+      m_intakeRollerS.runVoltageC(()->0.6995*2)));
      // intake move 
-     m_operatorController.y().whileTrue(m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2));
+     m_operatorController.y().whileTrue(
+      parallel(
+      m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2),
+      m_intakeRollerS.runVoltageC(()->-0.6995*2)
+     ));
     Trigger ampMode = m_operatorController.leftBumper();
      // spinup for amp
      ampMode.whileTrue(

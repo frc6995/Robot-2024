@@ -7,6 +7,7 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.CANSparkMax;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkBase.IdleMode;
 
@@ -29,7 +30,7 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     public static final int LEADER_CAN_ID = 20;
     public static final int FOLLOWER_CAN_ID = 21;
     public static final int CURRENT_LIMIT = 100;
-    public static final double OUT_VOLTAGE = 12;
+    public static final double OUT_VOLTAGE = 6;
     public static final double IN_VOLTAGE = -12;
         public static final Consumer<SparkBaseConfig> config = c->{
       c.
@@ -96,6 +97,10 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
   /**returns the command to stop the intake */
   public Command stopC(){
     return run(this::stop);
+  }
+
+  public Command runVoltageC(DoubleSupplier volts) {
+    return run(()->m_leader.setVoltage(volts.getAsDouble()));
   }
 
   public Command slowInC() {

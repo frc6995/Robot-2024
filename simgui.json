@@ -84,11 +84,6 @@
     }
   },
   "NetworkTables": {
-    "retained": {
-      ".schema": {
-        "open": true
-      }
-    },
     "transitory": {
       "DriverDisplay": {
         "Faults": {
@@ -206,7 +201,8 @@
               "open": true
             },
             "open": true
-          }
+          },
+          "open": true
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
@@ -309,6 +305,15 @@
                 1.0
               ],
               "id": "NT:/Robot/m_drivebaseS/0-FR/velocity"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Robot/m_drivebaseS/0-FR/driveCurrent"
             }
           ]
         }
@@ -341,7 +346,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <2>": {
       "plots": [
@@ -357,7 +365,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 503
+          "height": 517
         }
       ],
       "window": {
@@ -373,7 +381,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 893,
+          "height": 517,
           "series": [
             {
               "color": [
@@ -494,7 +502,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <4>": {
       "plots": [
@@ -599,7 +610,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <5>": {
       "plots": [
@@ -672,7 +686,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

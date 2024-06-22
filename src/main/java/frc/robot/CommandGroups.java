@@ -46,8 +46,6 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import javax.swing.text.html.Option;
-
 import java.util.function.DoubleConsumer;
 
 public class CommandGroups {

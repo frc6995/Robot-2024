@@ -86,7 +86,6 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
         var configurator = m_motor.getConfigurator();
         configurator.apply(Constants.config);
         configurator.apply(pidConfigs);
-
         sysIdRoutine = new SysIdRoutine(
 		new SysIdRoutine.Config(
 			null,

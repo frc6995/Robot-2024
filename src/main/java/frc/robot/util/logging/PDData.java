@@ -1,6 +1,7 @@
 package frc.robot.util.logging;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.hal.PowerDistributionFaults;
@@ -233,19 +234,19 @@ public class PDData implements StructSerializable {
             return new PowerDistributionStickyFaults(packed);
         }
     }
-
+    public static final int NUM_CHANNELS = 26;
     public int faults;
     public int stickyFaults;
     public double voltage;
     public double totalCurrent;
     public boolean switchableChannel;
     public double temperature;
-    public double[] currents;
+    public double[] currents = new double[NUM_CHANNELS];
     private PD pd;
     private boolean valid = false;
 
     public PDData(final PD pd) {
-        currents = new double[24];
+        
         if (pd != null) {
             valid = true;
             this.pd = pd;
@@ -283,27 +284,19 @@ public class PDData implements StructSerializable {
         return this;
     }
 
-    public static final PDDataStruct struct = new PDDataStruct(new String[] {
-        null,
-        "frontMidtake",
-        "backMidtake",
-        "topShooter",
-        "bottomShooter",
-        "FR Drive",
-        "FR Steer",
-        "FL Drive",
-        "FL Steer",
-        null,
-        null,
-        "BR Drive",
-        "BR Steer",
-        "BL Drive",
-        "BL Steer"
-    });
+    public static final PDDataStruct struct = new PDDataStruct(
+        Map.of(
+            0, "FL Steer",
+            1, "FL Drive",
+            3, "Top Shooter",
+            19, "FR Steer",
+            18, "FL Drive"
+        )
+    );
 
     private static final Struct<double[]> makeChannelStruct(String[] channels) {
         StringBuilder schemaBuilder = new StringBuilder();
-        for (int i = 0; i < 24; i++) {
+        for (int i = 0; i < NUM_CHANNELS; i++) {
             schemaBuilder.append("double c").append(i);
             if (i < channels.length && channels[i] != null) {
                 schemaBuilder.append("_").append(channels[i].replace(" ", "_"));
@@ -329,7 +322,7 @@ public class PDData implements StructSerializable {
             @Override
             public int getSize() {
                 // TODO Auto-generated method stub
-                return 24 * 8;
+                return NUM_CHANNELS * 8;
             }
 
             @Override
@@ -340,8 +333,8 @@ public class PDData implements StructSerializable {
 
             @Override
             public double[] unpack(ByteBuffer bb) {
-                double[] values = new double[24];
-                for (int i = 0; i < 24; i++) {
+                double[] values = new double[NUM_CHANNELS];
+                for (int i = 0; i < NUM_CHANNELS; i++) {
                     values[i] = bb.getDouble();
                 }
                 return values;
@@ -349,7 +342,7 @@ public class PDData implements StructSerializable {
 
             @Override
             public void pack(ByteBuffer bb, double[] value) {
-                for (int i = 0; i < 24; i++) {
+                for (int i = 0; i < NUM_CHANNELS; i++) {
                     
                     double field = i >= value.length ? value[i] : 0; 
                     bb.putDouble(field);
@@ -359,6 +352,13 @@ public class PDData implements StructSerializable {
     }
     protected static final class PDDataStruct implements Struct<PDData> {
         Struct<double[]> channelsStruct;
+        public PDDataStruct(Map<Integer, String> names) {
+            var channels = new String[NUM_CHANNELS];
+            for (int i = 0; i < NUM_CHANNELS; i++) {
+                channels[i] = names.get(i);
+            }
+            channelsStruct = makeChannelStruct(channels);
+        }
         public PDDataStruct(String[] channels) {
             channelsStruct = makeChannelStruct(channels);
         }

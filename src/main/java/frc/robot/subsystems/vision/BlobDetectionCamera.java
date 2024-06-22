@@ -63,9 +63,16 @@ public class BlobDetectionCamera implements Logged {
         if (result.getBestTarget().getPitch() > 9) return false;
         return true;
     }
+    @Log
     public double getDistance() {
         if (!hasTarget()) return 0;
         return getDistance(result.getBestTarget());
+    }
+
+    @Log
+    public double getDistanceInches() {
+        
+        return Units.metersToInches(getDistance());
     }
 
     public double[][] getThreeTargetAngles() {
@@ -87,7 +94,7 @@ public class BlobDetectionCamera implements Logged {
         return PhotonUtils.calculateDistanceToTargetMeters(
             Constants.cameraHeight,
             Constants.targetHeight,
-            Constants.cameraPitch, Units.degreesToRadians(target.getPitch()))
+            Constants.cameraPitch, Units.degreesToRadians(target.getPitch()))/Math.cos(Units.degreesToRadians(target.getYaw()))
         + Units.inchesToMeters(7);
     }
 
@@ -127,9 +134,11 @@ public class BlobDetectionCamera implements Logged {
     }
     public class Constants {
         public static final String CAMERA_NAME = "OV9782";
-        public static final double cameraHeight = Units.inchesToMeters(21.75-2.5);
+        public static final double cameraHeight = Units.inchesToMeters(19.75);
         public static final double cameraX = Units.inchesToMeters(-0.5);
-        public static final double cameraPitch = Units.degreesToRadians(-15);
+        public static final double cameraPitch = Units.degreesToRadians(-18.75);
         public static final double targetHeight = Units.inchesToMeters(0);
+        public static final double fov_h = Units.degreesToRadians(76.4);
+        public static final double fov_v = Units.degreesToRadians(57.3);
     }
 }

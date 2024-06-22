@@ -35,11 +35,11 @@ public class TunerConstants {
     private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.Voltage;
     // The closed-loop output type to use for the drive motors;
     // This affects the PID/FF gains for the drive motors
-    private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.Voltage;
+    private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final double kSlipCurrentA = 60.0;
+    private static final double kSlipCurrentA = 180.0;
 
 
 
@@ -60,13 +60,12 @@ public class TunerConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = 
-        Robot.isReal() ? 
-    new Slot0Configs()
-        .withKP(0.3).withKI(0).withKD(0)
-        .withKS(0.1).withKV(1.0/kSpeedAt12VoltsMps).withKA(0.05):
+//     new Slot0Configs()
+//         .withKP(0.3).withKI(0).withKD(0)
+//         .withKS(0.1).withKV(12.0/kSpeedAt12VoltsRps).withKA(0.05);
       new Slot0Configs()
-        .withKP(0).withKI(0).withKD(0)
-        .withKS(0).withKV(12.0/kSpeedAt12VoltsRps).withKA(0.0);
+        .withKP(4).withKI(0).withKD(0)
+        .withKS(0.0).withKV(/*12.0/kSpeedAt12VoltsRps*/0).withKA(0.0);
     private static final boolean kSteerMotorReversed = true;
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;
@@ -80,7 +79,7 @@ public class TunerConstants {
     private static final double kDriveInertia = 0.01;
     // Simulated voltage necessary to overcome friction
     private static final double kSteerFrictionVoltage = 0;
-    private static final double kDriveFrictionVoltage = 0;
+    private static final double kDriveFrictionVoltage = 0.01;
 
     public static final double kDriveRotationsPerMeter = 2 * Math.PI / Units.inchesToMeters(kWheelRadiusInches);
     public static final double kDriveRadius = Units.inchesToMeters(kWheelRadiusInches);

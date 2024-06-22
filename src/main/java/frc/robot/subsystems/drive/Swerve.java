@@ -77,7 +77,7 @@ import static edu.wpi.first.units.Units.Volts;
  * Subsystem so it can be used in command-based projects easily.
  */
 public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
-	private static final double kSimLoopPeriod = 0.01; // 5 ms
+	private static final double kSimLoopPeriod = 0.005; // 5 ms
 	private Notifier m_simNotifier = null;
 	private double m_lastSimTime;
 
@@ -134,28 +134,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			(volts) -> setControl(characterization.withVolts(volts)),
 			null,
 			this));
-
-	// private final DoubleLogger log_accumGyro = WaltLogger.logDouble("Swerve", "accumGyro");
-	// private final DoubleLogger log_avgWheelPos = WaltLogger.logDouble("Swerve", "avgWheelPos");
-	// private final DoubleLogger log_curEffWheelRad = WaltLogger.logDouble("Swerve", "curEffWheelRad");
-	// private final DoubleLogger log_lastGyro = WaltLogger.logDouble("Swerve", "lastGyro");
-	// private final DoubleLogger log_rotationSpeed = WaltLogger.logDouble("Swerve", "rot_sec",
-	// 	PubSubOption.sendAll(true));
-
-	// private final DoubleLogger log_desiredRot = WaltLogger.logDouble("Swerve", "desiredRot");
-	// private final DoubleLogger log_rot = WaltLogger.logDouble("Swerve", "rotation");
-	// private final DoubleArrayLogger log_poseError = WaltLogger.logDoubleArray("Swerve", "poseError");
-	private double[] m_poseError = new double[3];
-	//private final DoubleArrayLogger log_desiredPose = WaltLogger.logDoubleArray("Swerve", "desiredPose");
-	private double[] m_desiredPose = new double[3];
-	//private final DoubleArrayLogger log_wheelVeloErrors = WaltLogger.logDoubleArray("Swerve", "wheelVeloErrors");
-	private double[] m_wheelVeloErrs = new double[4];
-	//private final DoubleArrayLogger log_wheelVelos = WaltLogger.logDoubleArray("Swerve", "wheelVelos");
-	private double[] m_wheelVelos = new double[4];
-	//private final DoubleArrayLogger log_wheelVeloTargets = WaltLogger.logDoubleArray("Swerve", "wheelVeloTargets");
-	private double[] m_wheelVeloTargets = new double[4];
-
-
 	public void addVisionMeasurement(VisionMeasurement measurement) {
 		addVisionMeasurement(
 			measurement.pose(), measurement.timestamp(), measurement.stddevs());
@@ -273,7 +251,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		m_simNotifier = new Notifier(() -> {
 			final double currentTime = Utils.getCurrentTimeSeconds();
 			double deltaTime = currentTime - m_lastSimTime;
-			SmartDashboard.putNumber("delta", deltaTime);
+			//SmartDashboard.putNumber("delta", deltaTime);
 			m_lastSimTime = currentTime;
 			
 			/* use the measured time delta, get battery voltage from WPILib */
@@ -297,61 +275,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			getModule(i).getSteerMotor().setNeutralMode(NeutralModeValue.Brake);
 		}
 	}
-
-	// public Command resetPoseToSpeaker() {
-	// 	return runOnce(() -> {
-	// 		if (DriverStation.getAlliance().get() == Alliance.Blue) {
-	// 			seedFieldRelative(new Pose2d(1.45, 5.5, Rotation2d.fromRadians(0)));
-	// 		} else {
-	// 			seedFieldRelative(new Pose2d(1.45, kFieldWidth.magnitude() - 5.5, Rotation2d.fromRadians(0)));
-	// 		}
-	// 	});
-	// }
-
-	// public Command goToAutonPose() {
-	// 	return run(() -> {
-	// 		var bluePose = AutonChooser.getChosenAutonInitPose();
-	// 		if (bluePose.isPresent()) {
-	// 			Pose2d pose;
-	// 			if (DriverStation.getAlliance().get() == Alliance.Red) {
-	// 				Translation2d redTranslation = new Translation2d(bluePose.get().getX(),
-	// 					kFieldWidth.magnitude() - bluePose.get().getY());
-	// 				Rotation2d redRotation = bluePose.get().getRotation().times(-1);
-	// 				pose = new Pose2d(redTranslation, redRotation);
-	// 			} else {
-	// 				pose = bluePose.get();
-	// 			}
-
-	// 			SmartDashboard.putNumberArray("desiredPose", AdvantageScopeUtil.toDoubleArr(pose));
-
-	// 			var curPose = getState().Pose;
-	// 			var xSpeed = m_xController.calculate(curPose.getX(), pose.getX());
-	// 			var ySpeed = m_yController.calculate(curPose.getY(), pose.getY());
-	// 			var thetaSpeed = m_thetaController.calculate(curPose.getRotation().getRadians(),
-	// 				pose.getRotation().getRadians());
-	// 			var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, thetaSpeed, pose.getRotation());
-
-	// 			setControl(m_autoRequest.withSpeeds(speeds));
-	// 		}
-	// 	});
-	// }
-
-	// public Command aim(double radians) {
-	// 	return run(() -> {
-	// 		m_desiredRot = AllianceFlipUtil.apply(Rotation2d.fromRadians(radians));
-	// 		var curPose = getState().Pose;
-	// 		var thetaSpeed = m_thetaController.calculate(curPose.getRotation().getRadians(),
-	// 			m_desiredRot.getRadians());
-	// 		var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(0, 0, thetaSpeed, m_desiredRot);
-
-	// 		setControl(m_autoRequest.withSpeeds(speeds));
-	// 	}).until(() -> {
-	// 		boolean check = MathUtil.isNear(m_desiredRot.getDegrees(), getState().Pose.getRotation().getDegrees(), 1);
-	// 		if (check) {
-	// 		}
-	// 		return check;
-	// 	});
-	// }
 
 	public Pose3d getPose3d() {
 		var txr2d = getState().Pose.getTranslation();
@@ -385,18 +308,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		m_vision.periodic();
 		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
 		var swerveState = getState();
-		//log("rotationSpeed", swerveState.speeds.omegaRadiansPerSecond);
-		// log_rotationSpeed.accept(Units.radiansToRotations(swerveState.speeds.omegaRadiansPerSecond));
-		// log_desiredRot.accept(m_desiredRot.getDegrees());
-		// log_rot.accept(swerveState.Pose.getRotation().getDegrees());
-		// m_poseError[0] = m_xController.getPositionError();
-		// m_poseError[1] = m_yController.getPositionError();
-		// m_poseError[2] = Units.radiansToDegrees(m_thetaController.getPositionError());
-		//log_poseError.accept(m_poseError);
-		// m_desiredPose[0] = m_xController.getSetpoint();
-		// m_desiredPose[1] = m_yController.getSetpoint();
-		// m_desiredPose[2] = Units.radiansToDegrees(m_thetaController.getSetpoint());
-		// log_desiredPose.accept(m_desiredPose);
+
 
 		for (int i = 0; i < Modules.length; i++) {
 			var modLog = mods[i];
@@ -417,14 +329,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			modLog.log("steerVolts", steer.getMotorVoltage().getValue());
 			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
 		}
-			
-		// 	// m_wheelVelos[i] = Math.abs(swerveState.ModuleStates[i].speedMetersPerSecond);
-		// 	// m_wheelVeloTargets[i] = Math.abs(swerveState.ModuleTargets[i].speedMetersPerSecond);
-		// 	// m_wheelVeloErrs[i] = Math.abs(m_wheelVeloTargets[i] - m_wheelVelos[i]);
-		// }
-		// log_wheelVelos.accept(m_wheelVelos);
-		// log_wheelVeloTargets.accept(m_wheelVeloTargets);
-		// log_wheelVeloErrors.accept(m_wheelVeloErrs);
 	}
 
     public ChassisSpeeds getRobotRelativeChassisSpeeds() {
