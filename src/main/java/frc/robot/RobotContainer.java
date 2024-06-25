@@ -301,23 +301,30 @@ public class RobotContainer implements Logged {
     //#region driver controller
 
     // button bindings for stage orientation
-    m_driverController.b().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/3.0));
-    m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
-    m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
+    // m_driverController.b().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/3.0));
+    // m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
+    // m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
 
     // face note
     m_driverController.a().whileTrue(faceNote());
+    m_driverController.y().whileTrue(faceSpeaker());
 
     // intaking
     m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
 
     // face amp
-    m_driverController.leftTrigger().whileTrue(
-      m_drivebaseS.chasePoseC(Pathing::getOwnAmp));
+    // m_driverController.leftTrigger().whileTrue(
+    //   m_drivebaseS.chasePoseC(Pathing::getOwnAmp));
       //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
     // face speaker
-    m_driverController.rightTrigger().whileTrue(faceSpeaker());
+    m_driverController.leftTrigger().whileTrue(
+      spinDistance(this::distanceToSpeaker).alongWith(
+      m_shooterPivotS.rotateWithVelocity(
+            this::pivotAngle,
+            () -> 0)
+    ));
+    //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
     m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
     m_driverController.start().onTrue(runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
@@ -375,15 +382,14 @@ public class RobotContainer implements Logged {
     //  ));
 
 
-     m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
-     m_operatorController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
+     m_driverController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_driverController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
      m_operatorController.leftTrigger().whileTrue(
       spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
             () -> 0)
      ));
-    m_operatorController.a().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0));
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
         m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
