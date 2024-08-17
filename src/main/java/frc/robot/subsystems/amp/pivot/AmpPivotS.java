@@ -236,9 +236,11 @@ public class AmpPivotS extends SubsystemBase implements Logged {
   //     }, this, "intake"));
   public class Constants {
     //TODO: determine constants for amp pivot
-    public static final double CCW_LIMIT = Units.degreesToRadians(230);
+    public static final double CCW_LIMIT = Units.degreesToRadians(235);
     public static final double CW_LIMIT = Units.degreesToRadians(0);
-    public static final double SCORE_ANGLE = 2*Math.PI/3.0;
+    public static final double SCORE_ANGLE = Units.degreesToRadians(120);
+    public static final double FEED_ANGLE = Units.degreesToRadians(232);
+    //TODO: shooter feed angle radians: 2.747360
     public static final int CAN_ID = 42;
     /**
      * Also equivalent to motor radians per pivot radian
