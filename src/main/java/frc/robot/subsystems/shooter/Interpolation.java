@@ -11,12 +11,12 @@ public class Interpolation {
     public static final double MAX_DISTANCE = 4;
     public static final double MIN_DISTANCE = 1;
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();
-    public static final InterpolatingDoubleTreeMap TOP_MAP = new InterpolatingDoubleTreeMap();
-    public static final InterpolatingDoubleTreeMap BOTTOM_MAP = new InterpolatingDoubleTreeMap();
-    public static final void entry (double distance, double pivot, double top, double bottom) {
+    public static final InterpolatingDoubleTreeMap LEFT_MAP = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap RIGHT_MAP = new InterpolatingDoubleTreeMap();
+    public static final void entry (double distance, double pivot, double left, double right) {
         PIVOT_MAP.put(distance, pivot);
-        TOP_MAP.put(distance, top);
-        BOTTOM_MAP.put(distance, bottom);
+        LEFT_MAP.put(distance, left);
+        RIGHT_MAP.put(distance, right);
     }
     // Orange County
     // static {

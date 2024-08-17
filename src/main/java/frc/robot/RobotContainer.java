@@ -34,6 +34,8 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.amp.AmpRollerS;
+import frc.robot.subsystems.amp.pivot.AmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -87,7 +89,8 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
-  private final BounceBarS m_bounceBarS;
+  private final AmpPivotS m_ampPivotS;
+  private final AmpRollerS m_ampRollerS;
   private final ClimberS m_leftClimberS;
   private final ClimberS m_rightClimberS;
   private final BlobDetectionCamera m_noteCamera;
@@ -141,18 +144,19 @@ public class RobotContainer implements Logged {
     m_shooterPivotS = new ShooterPivotS();
     m_shooterWheelsS = new ShooterWheelsS();
     m_midtakeS = new MidtakeS();
-    m_bounceBarS = new BounceBarS();
     m_intakePivotS = new IntakePivotS();
     m_intakeRollerS = new IntakeRollerS();
     m_lightStripS = LightStripS.getInstance();
     m_leftClimberS = new ClimberS(true);
     m_rightClimberS = new ClimberS(false);
+    m_ampPivotS = new AmpPivotS();
+    m_ampRollerS = new AmpRollerS();
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
-    RobotVisualizer.addBounceBar(m_bounceBarS.INTAKE_ROLLER);
+    RobotVisualizer.addAmpPivot(m_ampPivotS.AMP_PIVOT);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
     // //m_climberS.TRAP_PIVOT_BASE.append(m_trapPivotS.TRAP_PIVOT);
@@ -170,7 +174,8 @@ public class RobotContainer implements Logged {
         m_intakePivotS,
         m_intakeRollerS,
         m_midtakeS,
-        m_bounceBarS,
+        m_ampPivotS,
+        m_ampRollerS,
         m_shooterFeederS,
         m_shooterPivotS,
         m_shooterWheelsS,
@@ -253,8 +258,8 @@ public class RobotContainer implements Logged {
     return m_autos.pivotAngle();
   }
   public Command spinDistance(DoubleSupplier distance) {
-    return m_shooterWheelsS.spinC(()->Interpolation.TOP_MAP.get(distance.getAsDouble()),
-      ()->Interpolation.BOTTOM_MAP.get(distance.getAsDouble()) );
+    return m_shooterWheelsS.spinC(()->Interpolation.LEFT_MAP.get(distance.getAsDouble()),
+      ()->Interpolation.RIGHT_MAP.get(distance.getAsDouble()) );
   }
 
   public Command faceSpeaker() {
@@ -326,7 +331,7 @@ public class RobotContainer implements Logged {
     ));
     //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
-    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC());
+    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC().alongWith(m_ampPivotS.resetToRetractedC()));
     m_driverController.start().onTrue(runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
@@ -346,6 +351,14 @@ public class RobotContainer implements Logged {
     // sticks: climb
     // 
 
+    m_operatorController.a().whileTrue(
+      sequence(
+        
+        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
+          .until(m_ampPivotS.onTarget).withTimeout(4),
+        m_ampRollerS.outtakeC().withTimeout(0.5),
+        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+      ));
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
@@ -359,19 +372,37 @@ public class RobotContainer implements Logged {
       m_intakeRollerS.runVoltageC(()->-0.6995*2)
      ));
     Trigger ampMode = m_operatorController.leftBumper();
-     // spinup for amp
-     ampMode.whileTrue(
-      parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
-      m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
-      m_bounceBarS.upC()
-      )
-    );
-    m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
+    //  // spinup for amp
+    //  ampMode.whileTrue(
+    //   parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
+    //   m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
+    //   m_bounceBarS.upC()
+    //   )
+    // );
+    //m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
     //  // spinup for passing
+
+    // amp handoff
     m_operatorController.rightBumper().whileTrue(
+      sequence(
+        parallel(
+        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
+        ).until(m_ampPivotS.onTarget).withTimeout(4),
       parallel(
-        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CW_LIMIT),
-        m_shooterWheelsS.spinC(()->7000, ()->7000)
+        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(2)),
+        m_shooterWheelsS.spinC(()->2000, ()->2000),
+        m_shooterFeederS.runVoltageC(()->2),
+        sequence(
+          waitSeconds(0.1),
+          waitUntil(m_ampPivotS.onTarget).withTimeout(4),
+          m_midtakeS.runVoltage(()->0.6995*2, ()->0.6995*2)
+        ),
+        m_ampRollerS.intakeC(),
+        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
+      ).until(m_ampRollerS.receiveNote),
+        new ScheduleCommand(
+          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+        )
       )
     );
     //   spinDistance(this::xDistToSpeaker),
@@ -391,8 +422,8 @@ public class RobotContainer implements Logged {
             () -> 0)
      ));
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
-        m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
-        m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
+        // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
+        // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
     m_operatorController.back().onTrue(
       spinDistance(()->3.0).alongWith(
       m_shooterPivotS.rotateWithVelocity(
@@ -400,6 +431,11 @@ public class RobotContainer implements Logged {
             () -> 0)
      )
     );
+    //m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->6*rightClimberStick.getAsDouble()));
+    m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT));
+    m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
+    m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE));
+    m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT));
     //#endregion
   }
 

@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.amp.AmpRollerS;
+import frc.robot.subsystems.amp.pivot.AmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -53,7 +55,8 @@ public class CommandGroups {
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
-  private BounceBarS m_bounceBarS;
+  private AmpPivotS m_ampPivotS;
+  private AmpRollerS m_ampRollerS;
   private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
   private ShooterWheelsS m_shooterWheelsS;
@@ -68,7 +71,8 @@ public class CommandGroups {
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
       MidtakeS midtakeS,
-      BounceBarS bounceBarS,
+      AmpPivotS ampPivotS,
+      AmpRollerS ampRollerS,
       ShooterFeederS shooterFeederS,
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
@@ -82,7 +86,8 @@ public class CommandGroups {
     m_shooterFeederS = shooterFeederS;
     m_shooterPivotS = shooterPivotS;
     m_shooterWheelsS = shooterWheelsS;
-    // m_climberS = climberS;
+    m_ampPivotS = ampPivotS;
+    m_ampRollerS = ampRollerS;
     m_lightStripS = lightStripS;
     m_noteCamera = noteCamera;
     m_driverController = driverController;
@@ -353,8 +358,8 @@ public class CommandGroups {
   }
 
   public Command spinDistance(DoubleSupplier distance) {
-    return m_shooterWheelsS.spinC(() -> Interpolation.TOP_MAP.get(distance.getAsDouble()),
-        () -> Interpolation.BOTTOM_MAP.get(distance.getAsDouble()));
+    return m_shooterWheelsS.spinC(() -> Interpolation.LEFT_MAP.get(distance.getAsDouble()),
+        () -> Interpolation.RIGHT_MAP.get(distance.getAsDouble()));
   }
 
   public Command centerFourWingMidline() {

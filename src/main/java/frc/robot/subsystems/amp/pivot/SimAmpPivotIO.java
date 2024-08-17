@@ -1,4 +1,4 @@
-package frc.robot.subsystems.trap.pivot;
+package frc.robot.subsystems.amp.pivot;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -19,12 +19,12 @@ import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 
-public class SimTrapPivotIO extends TrapPivotIO {
+public class SimAmpPivotIO extends AmpPivotIO {
     private double m_pidVolts = 0;
     private PIDController m_pid = new PIDController(1, 0, 0);
-    public SimTrapPivotIO () {
+    public SimAmpPivotIO () {
         super();
-        m_pivotSim.setState(VecBuilder.fill(TrapPivotS.Constants.CCW_LIMIT,0));
+        m_pivotSim.setState(VecBuilder.fill(AmpPivotS.Constants.CW_LIMIT,0));
         // we need this to calculate outputs
         m_pivotSim.update(0.0001);
 
@@ -50,12 +50,12 @@ public class SimTrapPivotIO extends TrapPivotIO {
     private final SingleJointedArmSim m_pivotSim = new SingleJointedArmSim(
         Constants.PLANT,
         DCMotor.getNEO(1),
-        TrapPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION,
-        TrapPivotS.Constants.CG_DIST * 2,
-        TrapPivotS.Constants.CW_LIMIT,
-        TrapPivotS.Constants.CCW_LIMIT,
+        AmpPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION,
+        AmpPivotS.Constants.CG_DIST * 2,
+        AmpPivotS.Constants.CW_LIMIT,
+        AmpPivotS.Constants.CCW_LIMIT,
         true,
-        TrapPivotS.Constants.CCW_LIMIT,
+        AmpPivotS.Constants.CW_LIMIT,
         null
     );
 
@@ -78,12 +78,18 @@ public class SimTrapPivotIO extends TrapPivotIO {
         return m_inputVolts;
     }
 
+    @Override
+    public double getCurrent() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
     public class Constants {
         public static final LinearSystem<N2, N1, N1> PLANT =
             LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getNeoVortex(1), 
-                SingleJointedArmSim.estimateMOI(TrapPivotS.Constants.CG_DIST, 5),
-            TrapPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
+                DCMotor.getNEO(1), 
+                SingleJointedArmSim.estimateMOI(AmpPivotS.Constants.CG_DIST, 1),
+            AmpPivotS.Constants.MOTOR_ROTATIONS_PER_ARM_ROTATION);
     }
     
 }

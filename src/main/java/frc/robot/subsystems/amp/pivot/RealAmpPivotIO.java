@@ -1,39 +1,30 @@
-package frc.robot.subsystems.trap.pivot;
+package frc.robot.subsystems.amp.pivot;
 
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
-import static frc.robot.subsystems.trap.pivot.TrapPivotS.Constants.*;
-import static frc.robot.subsystems.trap.pivot.RealTrapPivotIO.Constants.*;
+import static frc.robot.subsystems.amp.pivot.AmpPivotS.Constants.*;
+import static frc.robot.subsystems.amp.pivot.RealAmpPivotIO.Constants.*;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import frc.robot.util.sparkmax.SparkDevice;
+import lib.sparkmax.SparkBaseConfig;
 
-public class RealTrapPivotIO extends TrapPivotIO {
-    private CANSparkFlex m_motor;
+public class RealAmpPivotIO extends AmpPivotIO {
+    private CANSparkMax m_motor;
     private SparkPIDController m_controller;
     private RelativeEncoder m_encoder;
     private double ffVolts;
-    public RealTrapPivotIO() {
+    public RealAmpPivotIO() {
         super();
-        m_motor = SparkDevice.getSparkFlex(TrapPivotS.Constants.CAN_ID);
-        m_motor.setIdleMode(IdleMode.kBrake);
-        m_motor.setInverted(INVERTED);
-        m_motor.setSmartCurrentLimit(CURRENT_LIMIT);
-        m_controller = m_motor.getPIDController();
+        m_motor = SparkDevice.getSparkMax(AmpPivotS.Constants.CAN_ID);
+        CONFIG.apply(m_motor,true);
         m_encoder = SparkDevice.getMainEncoder(m_motor);
-        m_encoder.setPositionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
-        m_encoder.setVelocityConversionFactor(
-            Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION)
-        );
-        m_controller.setP(kP);
-        m_controller.setI(kI);
-        m_controller.setD(kD);
-        m_controller.setFF(0);
-    }
+        m_controller = m_motor.getPIDController();
+    }   
 
     @Override
     public double getAngle() {
@@ -68,15 +59,32 @@ public class RealTrapPivotIO extends TrapPivotIO {
     public double getPidVolts() {
         return getVolts() - ffVolts;
     }
+
+    @Override
+    public double getCurrent() {
+        return m_motor.getOutputCurrent();
+    }
     
     public class Constants {
-        public static final double kP = 0.1;
-        public static final double kI = 0;
-        public static final double kD = 0;
         /**
          * We want positive voltage to drive towards the lower hardstop.
          */
         public static final boolean INVERTED = false;
         public static final int CURRENT_LIMIT = 20;
+        public static final SparkBaseConfig CONFIG = new SparkBaseConfig((c)->{
+            c
+            .inverted(true)
+            .idleMode(IdleMode.kBrake)
+            .forwardSoftLimit(Units.degreesToRadians(230))
+            .forwardSoftLimitEnabled(true)
+            .reverseSoftLimit(Units.degreesToRadians(0))
+            .reverseSoftLimitEnabled(true)
+            .stallLimit(120)
+            .freeLimit(120);
+            c.pid.slot0.pidFF(0.5, 0, 0, 0);
+            c.hallEncoder
+            .positionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION))
+            .velocityConversionFactor(Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
+        });
     }
 }
