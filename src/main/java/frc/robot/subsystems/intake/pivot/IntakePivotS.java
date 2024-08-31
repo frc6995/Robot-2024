@@ -9,6 +9,8 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.function.DoubleSupplier;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -30,11 +32,14 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.CommandGroups;
 import frc.robot.Robot;
+import frc.robot.StateMachine;
 import monologue.Logged;
 import monologue.Annotations.Log;
 import static edu.wpi.first.units.Units.*;
@@ -82,6 +87,29 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   public final MechanismLigament2d INTAKE_BEND = new MechanismLigament2d(
     "intake-bend", Units.inchesToMeters(11), -80, 4, new Color8Bit(235, 137, 52));
 
+  public enum IP {
+    DEPLOY,// expecting a note to be intaken and hit beambreak
+    HOLD, //continuing to bring the note in
+    RETRACT,
+    COAST,
+    IDLE
+  }
+  public StateMachine<IP> SM = new StateMachine<IP>(IP.RETRACT);
+
+  private void setupStateMachine(){
+    SM.trg(IP.COAST).and(DriverStation::isDisabled)
+    .onTrue(
+      Commands.runOnce(()->{m_io.setIdleMode(IdleMode.kCoast);}).ignoringDisable(true))
+    .onFalse(
+      Commands.runOnce(()->{m_io.setIdleMode(IdleMode.kBrake);}).ignoringDisable(true));
+    SM.trg(IP.IDLE).onTrue(this.run(()->{}));
+    SM.trg(IP.DEPLOY).whileTrue(deploy());
+    SM.trg(IP.RETRACT).whileTrue(retract());
+    SM.trg(IP.HOLD).whileTrue(hold());
+    RobotModeTriggers.disabled().negate().onTrue(SM.clearState());
+    RobotModeTriggers.disabled().onTrue(SM.clearState());
+    
+  }
   /** Creates a new IntakePivotS. */
   public IntakePivotS() {
     // Create the IO class.
@@ -95,8 +123,8 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
-
-    setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
+    setupStateMachine();
+    //setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
   /*@Log.NT*/ public double getGoal() {return m_desiredState.position;}

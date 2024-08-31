@@ -34,7 +34,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     public static final int CURRENT_LIMIT = 15;
     public static final double OUT_VOLTAGE = 2;
     public static final double IN_VOLTAGE = 6;
-    public static final Consumer<SparkBaseConfig> config = c->{
+    public static final Consumer<SparkBaseConfig> MIDTAKE_CONFIG = c->{
       c.
         freeLimit(60)
         .stallLimit(60)
@@ -49,23 +49,40 @@ public class MidtakeS extends SubsystemBase implements Logged {
       ;
     };
   }
+  public class FeederConstants {
+    public static final int CAN_ID = 33;
+    public static final int CURRENT_LIMIT = 15;
+    public static final double OUT_VOLTAGE = 10;
+    public static final double THROUGH_VOLTAGE = -3;
+    public static final Consumer<SparkBaseConfig> config = c->{
+      c.freeLimit(CURRENT_LIMIT).idleMode(IdleMode.kCoast)
+      .status6(32767)
+      .status5(32767)
+      .status4(32767)
+      .status3(32767)
+      .status2(32767)
+      .status0(15);
+    };
+  }
   private CANSparkMax m_front;
   private CANSparkMax m_back;
+  private CANSparkMax m_feeder;
   private TimeOfFlight m_tof;
   public final Trigger hasNote;
   public final Trigger recvNote;
   public final Trigger isRunning;
 
-      public final MechanismLigament2d MIDTAKE_ROLLER = new MechanismLigament2d(
+  public final MechanismLigament2d MIDTAKE_ROLLER = new MechanismLigament2d(
     "midtake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
+
   /** Creates a new IntakeRollerS. */
   public MidtakeS() {
-    m_front = new SparkBaseConfig(Constants.config)
+    m_front = new SparkBaseConfig(Constants.MIDTAKE_CONFIG)
                 .applyMax(
                   SparkDevice.getSparkMax(Constants.FRONT_CAN_ID), true
                 );
     //m_front.setOpenLoopRampRate(0.25);
-    m_back = new SparkBaseConfig(Constants.config)
+    m_back = new SparkBaseConfig(Constants.MIDTAKE_CONFIG)
                 .status1(40)
                 .status2(32767)
                 //.status0(40)
@@ -73,6 +90,8 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 .applyMax(
                   SparkDevice.getSparkMax(Constants.BACK_CAN_ID), true
                 );
+    m_feeder = new SparkBaseConfig(FeederConstants.config).applyMax(
+      SparkDevice.getSparkMax(FeederConstants.CAN_ID), true);
     m_tof = new TimeOfFlight(32);
     m_tof.setRangingMode(RangingMode.Short, 24);
     m_tof.setRangeOfInterest(8, 8,12,12);
@@ -98,38 +117,40 @@ public class MidtakeS extends SubsystemBase implements Logged {
 
   /**sets motor to outtake */
   public void feed () {
-    m_front.setVoltage(Constants.OUT_VOLTAGE);
-    m_back.setVoltage(Constants.OUT_VOLTAGE);
-
+    setVoltage(Constants.IN_VOLTAGE, Constants.IN_VOLTAGE, FeederConstants.OUT_VOLTAGE);
   }
   /**sets motor to intake */
   public void intake () {
-    m_front.setVoltage(Constants.IN_VOLTAGE);
-    m_back.setVoltage(Constants.IN_VOLTAGE);
+    setVoltage(Constants.IN_VOLTAGE, Constants.IN_VOLTAGE, 0);
+  }
+
+  public void backup () {
+    setVoltage(-2, -2, -3);
   }
   /**stops the intake motor */
   public void stop() {
-    m_front.setVoltage(0);
-    m_back.setVoltage(0);
+    setVoltage(0, 0, 0);
   }
 
-  public void setVoltage(double frontVolts, double backVolts) {
+  public void setVoltage(double frontVolts, double backVolts, double feederVolts) {
     m_front.setVoltage(frontVolts);
     m_back.setVoltage(backVolts);
+    m_feeder.setVoltage(feederVolts);
   }
-  public void setVoltage(double volts) {
-    setVoltage(volts, volts);
-  }
-  public Command runVoltage(DoubleSupplier frontVolts, DoubleSupplier backVolts) {
-    return run(()->setVoltage(frontVolts.getAsDouble(), backVolts.getAsDouble()));
+  public Command runVoltage(DoubleSupplier frontVolts, DoubleSupplier backVolts, DoubleSupplier feederVolts) {
+    return run(()->setVoltage(frontVolts.getAsDouble(), backVolts.getAsDouble(), feederVolts.getAsDouble()));
   }
   /**returns the command of the outtake */
-  public Command outtakeC() {
+  public Command feedC() {
     return run(this::feed);
   }
   /**returns the command of the intake */
   public Command intakeC() {
     return run(this::intake);
+  }
+
+  public Command backupC() {
+    return run(this::backup);
   }
   /**returns the command to stop the intake */
   public Command stopC(){
@@ -168,11 +189,20 @@ public class MidtakeS extends SubsystemBase implements Logged {
   }
 
   @Log
+  public double getFeederVolts() {
+    return m_back.getAppliedOutput() * 12;
+  }
+
+  @Log
   public double getFrontCurrent() {
     return m_front.getOutputCurrent();
   }
   @Log
   public double getBackCurrent() {
+    return m_back.getOutputCurrent();
+  }
+  @Log
+  public double getFeederCurrent() {
     return m_back.getOutputCurrent();
   }
 }

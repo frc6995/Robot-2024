@@ -10,6 +10,7 @@ import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.CW_LIMI
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
@@ -70,6 +72,8 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     "shooter_test", 8, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 137, 52));
     public final MechanismLigament2d SHOOTER_GOAL_PIVOT = new MechanismLigament2d(
     "shooter_goal", 4, Units.radiansToDegrees(CW_LIMIT), 4, new Color8Bit(235, 235, 235));
+
+    public final Trigger atGoal;
   /** Creates a new ShooterPivotS. */
   public ShooterPivotS() {
     // Create the IO class.
@@ -82,6 +86,10 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
     resetAngleUp();
     setDefaultCommand(hold());
+    atGoal = new Trigger(()->atGoal(Units.degreesToRadians(1)));
+  }
+  public boolean atGoal(double tolerance) {
+    return MathUtil.isNear(m_io.getAngle(), m_desiredState.position, tolerance);
   }
   @Log public double getGoal() {return m_desiredState.position;}
   @Log public double getGoalVelocity() {return m_desiredState.velocity;}
@@ -187,6 +195,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     private static final double NEW_LOWER_STOP = Units.degreesToRadians(161.38);
     public static final double CCW_LIMIT = NEW_LOWER_STOP;
     public static final double CW_LIMIT = Units.degreesToRadians(180-53);
+    public static final double SUBWOOFER_ANGLE = CW_LIMIT;
+    public static final double AMP_ANGLE = CCW_LIMIT - Units.degreesToRadians(3);
+    public static final double PRELOAD_TOLERANCE = Units.degreesToRadians(2);
     public static final int CAN_ID = 40;
     /**
      * Also equivalent to motor radians per pivot radian

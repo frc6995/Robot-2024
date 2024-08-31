@@ -13,12 +13,16 @@ import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.CommandGroups;
+import frc.robot.StateMachine;
 import frc.robot.util.FaultLogger;
 import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
@@ -51,6 +55,23 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     public final MechanismLigament2d INTAKE_ROLLER = new MechanismLigament2d(
     "intake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
 
+      // Intake Roller
+  public enum IR {
+    FAST_IN,
+    SLOW_IN, //continuing to bring the note in
+    STOP
+  }
+  public StateMachine<IR> SM = new StateMachine<IR>(IR.STOP);
+
+  public void setupStateMachine() {
+    SM.trg(IR.STOP).or(DriverStation::isDisabled)
+      .onTrue(
+        stopC()
+      );
+    RobotModeTriggers.disabled().negate().onTrue(SM.clearState());
+    SM.trg(IR.FAST_IN).whileTrue(intakeC());
+    SM.trg(IR.SLOW_IN).whileTrue(slowInC());
+  }
   /** Creates a new IntakeRollerS. */
   public IntakeRollerS() {
     m_leader = new SparkBaseConfig(Constants.config)
@@ -66,7 +87,7 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     // m_leader.setIdleMode(IdleMode.kCoast);
     // m_follower.setIdleMode(IdleMode.kCoast);
 
-    setDefaultCommand(stopC());
+    //setDefaultCommand(stopC());
   }
 
   @Override
@@ -96,7 +117,7 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
   }
   /**returns the command to stop the intake */
   public Command stopC(){
-    return run(this::stop);
+    return run(this::stop).ignoringDisable(true);
   }
 
   public Command runVoltageC(DoubleSupplier volts) {

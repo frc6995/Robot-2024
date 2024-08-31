@@ -11,13 +11,18 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.concurrent.Event;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -29,9 +34,10 @@ import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
+import frc.robot.subsystems.intake.IntakeRollerS.IR;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.intake.pivot.IntakePivotS.IP;
 import frc.robot.subsystems.shooter.Interpolation;
-import frc.robot.subsystems.shooter.feeder.ShooterFeederS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
@@ -43,6 +49,7 @@ import monologue.Annotations.Log;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -51,19 +58,91 @@ import java.util.function.DoubleSupplier;
 import java.util.function.DoubleConsumer;
 
 public class CommandGroups {
+
+
+    private boolean autonIntake = false;
+    private boolean straightThrough = false;
+    private boolean autonShoot = false;
+    private boolean driverRumbled = false;
+    private boolean manipulatorRumbled = false;
+    private boolean preload = false;
+
+    public final EventLoop sensorEventLoop = new EventLoop();
+    public final EventLoop stateEventLoop = new EventLoop();
+
+    /** true = driver wants to intake */
+    private final Trigger trg_driverIntakeReq;
+    private final Trigger trg_driverCancelIntakeReq;
+    /** true = driver wants to shoot */
+    private final Trigger trg_driverShootReq;
+    private final Trigger trg_driverAmpReq;
+    private final Trigger trg_driverTrapReq;
+
+    private final Trigger trg_autonIntakeReq = new Trigger(() -> autonIntake);
+    private final Trigger trg_straightThroughReq = new Trigger(() -> straightThrough);
+    private final Trigger trg_autonShootReq = new Trigger(() -> autonShoot);
+
+    private final Trigger trg_preloadShootReq = new Trigger(() -> preload).and(RobotModeTriggers.autonomous());
+
+    /** true = has note */
+
+    public final Trigger trg_spunUp;
+    public final Trigger trg_atAngle;
+    public final Trigger trg_atPreloadAngle;
+
+    private final Trigger trg_subwooferAngle;
+    private final Trigger trg_ampAngle;
+
+    private final Trigger trg_intakeReq;
+    private final Trigger trg_shootReq;
+
+    private final Trigger trg_midtakeNote;
+    private final Trigger trg_overrideTOF;
+    private final Trigger trg_atMidline;
+    private final DigitalInput m_coastButton = new DigitalInput(0);
+    private final Trigger trg_onbotCoastButton = new Trigger(m_coastButton::get).negate();
+    private final Trigger trg_coastMode;
+  private enum NoteState {
+    EMPTY,
+    FULL,//sitting in midtake
+    INTAKE,// expecting a note to be intaken and hit beambreak
+    EJECT, // slowly push note out of front of midtake
+    SHOOTING,
+    AMP_HANDOFF, // push note out of midtake, through shooter, to amp
+    AMP_FULL; // note held entirely in amp rollers
+
+    private NoteState() {
+    }
+  }
+  private StateMachine<NoteState> m_noteSM = new StateMachine<CommandGroups.NoteState>(NoteState.EMPTY);
+
+  // Midtake State (includes feeder roller)
+  private enum MS {
+    RECEIVE,// expecting a note to be intaken and hit beambreak
+    PULL_IN, //continuing to bring the note in
+    ADJUST, // reversing note back to beam break,
+    EJECT,
+    FEED,
+    FEED_AMP,
+    IDLE
+  }
+  private StateMachine<MS> midSM = new StateMachine<CommandGroups.MS>(MS.IDLE, MS.IDLE);
+  // Intake Pivot
+
+
   private Swerve m_drivebaseS;
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
   private AmpPivotS m_ampPivotS;
   private AmpRollerS m_ampRollerS;
-  private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
   private ShooterWheelsS m_shooterWheelsS;
   // private ClimberS m_climberS;
   private BlobDetectionCamera m_noteCamera;
   private LightStripS m_lightStripS;
   private CommandXboxController m_driverController;
+  private CommandXboxController m_operatorController;
 
   public CommandGroups(
       Swerve drivebaseS,
@@ -73,17 +152,19 @@ public class CommandGroups {
       MidtakeS midtakeS,
       AmpPivotS ampPivotS,
       AmpRollerS ampRollerS,
-      ShooterFeederS shooterFeederS,
+
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
       // ClimberS climberS,
       LightStripS lightStripS,
-      CommandXboxController driverController) {
+      CommandXboxController driverController,
+      CommandXboxController operatorController,
+      Trigger intaking, Trigger cancelIntake, Trigger shooting, Trigger ampShot, Trigger trapShot,
+        DoubleConsumer driverRumbler, DoubleConsumer manipRumbler) {
     m_drivebaseS = drivebaseS;
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
     m_midtakeS = midtakeS;
-    m_shooterFeederS = shooterFeederS;
     m_shooterPivotS = shooterPivotS;
     m_shooterWheelsS = shooterWheelsS;
     m_ampPivotS = ampPivotS;
@@ -92,6 +173,121 @@ public class CommandGroups {
     m_noteCamera = noteCamera;
     m_driverController = driverController;
 
+        trg_driverIntakeReq = intaking;
+        trg_driverCancelIntakeReq = cancelIntake;
+        trg_driverShootReq = shooting;
+        trg_driverAmpReq = ampShot;
+        trg_driverTrapReq = trapShot;
+
+        trg_subwooferAngle = new Trigger(() -> MathUtil.isNear(ShooterPivotS.Constants.SUBWOOFER_ANGLE, m_shooterPivotS.getAngle(), Units.degreesToRadians(2)));
+        trg_ampAngle = new Trigger(() -> MathUtil.isNear(ShooterPivotS.Constants.AMP_ANGLE, m_shooterPivotS.getAngle(), Units.degreesToRadians(2)));
+
+
+        trg_intakeReq = trg_driverIntakeReq.or(trg_autonIntakeReq).or(trg_straightThroughReq);
+        trg_shootReq = trg_driverShootReq.or(trg_autonShootReq).or(trg_preloadShootReq);
+        trg_midtakeNote = m_midtakeS.hasNote;
+        trg_atMidline = new Trigger(this::notAtMidline).negate();
+        trg_overrideTOF = (
+          RobotModeTriggers.autonomous().and(trg_atMidline.negate())
+        ).or(
+          RobotModeTriggers.teleop().and(trg_driverIntakeReq)
+        );
+
+        
+        trg_coastMode = trg_onbotCoastButton.or(m_driverController.back()).or(m_operatorController.back()).and(DriverStation::isDisabled);
+
+        // irqTrg_frontSensor = new Trigger(sensorEventLoop, () -> frontVisiSightSeenNote);
+        
+        // // initialize (inverted)
+        // shooterBeamBreakIrq = !shooterBeamBreak.get();
+
+        // irqTrg_conveyorBeamBreak = new Trigger(sensorEventLoop, () -> conveyorBeamBreakIrq);
+        // irqTrg_conveyorBeamBreak
+        //     .onTrue(Commands.runOnce(()-> log_conveyorBeamBreakExtended.accept(true)).ignoringDisable(true));
+        // irqTrg_conveyorBeamBreak.negate().debounce(0.1)
+        //     .onTrue(Commands.runOnce(() -> log_conveyorBeamBreakExtended.accept(false)).ignoringDisable(true));
+
+        // irqTrg_shooterBeamBreak = new Trigger(sensorEventLoop, () -> shooterBeamBreakIrq);
+        // irqTrg_shooterBeamBreak
+        //     .onTrue(Commands.runOnce(()-> log_shooterBeamBreakExtended.accept(true)).ignoringDisable(true));
+        // irqTrg_shooterBeamBreak.negate().debounce(0.1)
+        //     .onTrue(Commands.runOnce(() -> log_shooterBeamBreakExtended.accept(false)).ignoringDisable(true));
+
+        trg_spunUp = m_shooterWheelsS.leftAtGoal.and(m_shooterWheelsS.rightAtGoal).debounce(0.05);
+        trg_atAngle = m_shooterPivotS.atGoal;
+        trg_atPreloadAngle = new Trigger(()->m_shooterPivotS.atGoal(ShooterPivotS.Constants.PRELOAD_TOLERANCE)).and(RobotModeTriggers.autonomous());
+
+        // configureStateTriggers();
+
+        // configureShootTimer();
+  }
+
+  public void configureMidtakeCommands() {
+    trg_intakeReq
+      .onTrue(midSM.setState(MS.RECEIVE));
+    RobotModeTriggers.disabled()
+      .onTrue(midSM.setState(MS.IDLE));
+    midSM.trg(MS.IDLE)
+      .whileTrue(m_midtakeS.stopC());
+    midSM.trg(MS.RECEIVE)
+      .onTrue(m_midtakeS.intakeC());
+    midSM.trg(MS.PULL_IN)
+      .onTrue(m_midtakeS.intakeC());
+    midSM.trg(MS.ADJUST)
+      .onTrue(m_midtakeS.backupC());
+    midSM.trg(MS.EJECT)
+      .onTrue(m_midtakeS.backupC());
+    midSM.trg(MS.FEED)
+      .onTrue(m_midtakeS.feedC());
+    // state transition logic
+    midSM.trg(MS.RECEIVE).and(trg_midtakeNote).and(trg_overrideTOF.negate())
+      .onTrue(midSM.setState(MS.PULL_IN));
+    midSM.trg(MS.PULL_IN).and(trg_midtakeNote.negate())
+      .onTrue(midSM.setState(MS.ADJUST));
+    midSM.trg(MS.ADJUST).and(trg_midtakeNote)
+      .onTrue(midSM.setState(MS.IDLE));
+    // timeouts
+    Trigger pullInTimeout = midSM.trg(MS.PULL_IN).debounce(1);
+    Trigger reverseTimeout = midSM.trg(MS.ADJUST).debounce(3);
+    pullInTimeout.or(reverseTimeout)
+      .onTrue(midSM.setState(MS.IDLE));
+      
+    
+  }
+  public void configureIntakeCommands() {
+
+    Trigger driverCancelIntake = 
+      midSM.trg(MS.RECEIVE).and(trg_driverCancelIntakeReq);
+    Trigger driverRetract = 
+      (midSM.trg(MS.PULL_IN).or(midSM.trg(MS.ADJUST))).and(trg_driverCancelIntakeReq);
+    Trigger pullInTimeout = midSM.trg(MS.PULL_IN).debounce(1);
+    Trigger reverseTimeout = midSM.trg(MS.ADJUST).debounce(3);
+    // coast behavior for intake pivot
+    trg_coastMode
+      .onTrue(
+        m_intakePivotS.SM.setState(IP.COAST)
+      ).onFalse(
+        m_intakePivotS.SM.clearState()
+      );
+      trg_intakeReq
+      .onTrue(
+        m_intakePivotS.SM.setState(IP.DEPLOY)
+      )
+      .onTrue(
+        m_intakeRollerS.SM.setState(IR.FAST_IN)
+      );
+    // if driver pushes cancel intake while 
+
+
+    driverRetract.onTrue(
+      m_intakeRollerS.SM.setState(IR.STOP)
+    ).onTrue(
+      m_intakePivotS.SM.setState(IP.RETRACT)
+    );
+    driverCancelIntake
+    .onTrue(
+        either(m_noteSM.setState(NoteState.FULL), m_noteSM.setState(NoteState.EMPTY), trg_midtakeNote)
+    );
   }
 
   /**
@@ -106,12 +302,10 @@ public class CommandGroups {
     return parallel(
         sequence(
             parallel(
-                m_shooterFeederS.runVoltageC(() -> 0),
                 m_intakePivotS.deploy(),
                 waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
                 waitSeconds(0.1).andThen(
-                    // m_midtakeS.intakeC()
-                    m_midtakeS.runVoltage(() -> MidtakeS.Constants.IN_VOLTAGE, () -> MidtakeS.Constants.IN_VOLTAGE)))
+                    m_midtakeS.intakeC()))
                 .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
 
             parallel(
@@ -122,8 +316,7 @@ public class CommandGroups {
                     waitSeconds(0.5),
                     m_intakePivotS.retract()),
                 m_intakeRollerS.slowInC(),
-                m_midtakeS.runVoltage(() -> 6, () -> 6),
-                m_shooterFeederS.runVoltageC(() -> 0))
+                m_midtakeS.intakeC())
                 .withTimeout(1)
                 .until(hasNote.negate())
                 .onlyIf(hasNote),
@@ -132,14 +325,12 @@ public class CommandGroups {
                 new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
                 new ScheduleCommand(m_intakePivotS.retract()),
                 new ScheduleCommand(
-                    parallel(
-                        m_midtakeS.runVoltage(() -> -1, () -> -1),
-                        m_shooterFeederS.backupC())
-
+                    
+                        m_midtakeS.backupC()
                         .withTimeout(3)
                         .until(hasNote)
                         .andThen(parallel(
-                            m_midtakeS.stopOnceC(), m_shooterFeederS.stopC())))))
+                            m_midtakeS.stopOnceC())))))
 
     )
     // .or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
@@ -266,9 +457,8 @@ public class CommandGroups {
   }
 
   public Command feed() {
-    return parallel(
-        m_midtakeS.intakeC(),
-        m_shooterFeederS.feedC());
+    return 
+        m_midtakeS.feedC();
   }
 
   public Command centerWingNote(PathPlannerPath startToPrePickup) {
@@ -536,6 +726,6 @@ public class CommandGroups {
     return sequence(
         m_drivebaseS.resetPoseToBeginningC(path),
         m_drivebaseS.choreoCommand("disruptor"),
-        m_drivebaseS.stopOnceC()).alongWith(m_midtakeS.runVoltage(() -> -2, () -> -2).asProxy());
+        m_drivebaseS.stopOnceC()).alongWith(m_midtakeS.runVoltage(() -> -2, () -> -2, ()->0).asProxy());
   }
 }
