@@ -68,11 +68,6 @@ public class BounceBarS extends SubsystemBase implements Logged {
     setDefaultCommand(downC());
   }
 
-  @Override
-  public void periodic() {
-      //INTAKE_ROLLER.setAngle(INTAKE_ROLLER.getAngle() + m_leader.getAppliedOutput());
-  }
-
   /**sets motor to outtake */
   public void down () {
     m_leader.setVoltage(Constants.DOWN_VOLTAGE);

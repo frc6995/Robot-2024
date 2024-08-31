@@ -97,6 +97,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
                 .inverted(false)
                 .freeLimit(CURRENT_LIMIT)
                 .stallLimit(CURRENT_LIMIT)
+                .idleMode(IdleMode.kCoast)
                 .forwardSoftLimit(ShooterPivotS.Constants.CCW_LIMIT)
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(ShooterPivotS.Constants.CW_LIMIT)

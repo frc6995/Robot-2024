@@ -42,10 +42,6 @@ public class RealAmpPivotIO extends AmpPivotIO {
     }
 
     @Override
-    public void periodic() {
-    }
-
-    @Override
     public void setVolts(double volts) {
         m_motor.setVoltage(volts);
     }
@@ -81,10 +77,14 @@ public class RealAmpPivotIO extends AmpPivotIO {
             .reverseSoftLimitEnabled(true)
             .stallLimit(120)
             .freeLimit(120);
-            c.pid.slot0.pidFF(0.5, 0, 0, 0);
+            c.pid.slot0.pidFF(0.3, 0, 0, 0);
             c.hallEncoder
             .positionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION))
             .velocityConversionFactor(Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));
         });
+    }
+
+    @Override
+    public void periodic() {
     }
 }

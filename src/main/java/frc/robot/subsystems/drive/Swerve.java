@@ -307,9 +307,10 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 	public void periodic() {
 		m_vision.periodic();
 		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
+		if (false) {
 		var swerveState = getState();
 
-
+		
 		for (int i = 0; i < Modules.length; i++) {
 			var modLog = mods[i];
 		
@@ -328,7 +329,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			modLog.log("driveCurrent", drive.getSupplyCurrent().getValue());
 			modLog.log("steerVolts", steer.getMotorVoltage().getValue());
 			modLog.log("steerCurrent", steer.getSupplyCurrent().getValue());
-		}
+		}}
 	}
 
     public ChassisSpeeds getRobotRelativeChassisSpeeds() {
@@ -450,10 +451,14 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
                    * give output from -1 to 1, we multiply the outputs by the max speed Otherwise,
                    * our max speed would be 1 meter per second and 1 radian per second
                    */
-                  double fwdX = fwdXAxis.getAsDouble() * MAX_LINEAR_SPEED;
-                  double fwdY = fwdYAxis.getAsDouble() * MAX_LINEAR_SPEED;
+				  double fwdX = fwdXAxis.getAsDouble();
+                  double fwdY = fwdYAxis.getAsDouble();
+				  double speed = MathUtil.applyDeadband(Math.hypot(fwdX, fwdY), 0.05) * MAX_LINEAR_SPEED;
+				  double angle = Math.atan2(fwdY, fwdX);
+                  
+
                   double rot = rotAxis.getAsDouble() * MAX_TURN_SPEED;
-                  driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
+                  driveAllianceRelative(new ChassisSpeeds(speed * Math.cos(angle), speed* Math.sin(angle), rot));
                 }));
   }
   public Command manualHeadingDriveC(

@@ -80,7 +80,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
       m_io = new RealShooterPivotIO();
     }
     m_profile = new TrapezoidProfile(Constants.CONSTRAINTS);
-    resetAngleDown();
+    resetAngleUp();
     setDefaultCommand(hold());
   }
   @Log public double getGoal() {return m_desiredState.position;}

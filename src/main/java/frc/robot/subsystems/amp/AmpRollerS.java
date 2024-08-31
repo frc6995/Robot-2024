@@ -30,7 +30,7 @@ public class AmpRollerS extends SubsystemBase implements Logged {
     m_motor.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
     m_motor.setIdleMode(IdleMode.kCoast);
     setDefaultCommand(stopC());
-    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 12).debounce(0.2);
+    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 10).debounce(0.1);
   }
 
   /**sets motor to outtake */

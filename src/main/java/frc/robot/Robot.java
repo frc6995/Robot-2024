@@ -64,7 +64,7 @@ public class Robot extends TimedRobot {
     
     
     robotContainer.periodic();
-    NetworkTableInstance.getDefault().flush();
+    //NetworkTableInstance.getDefault().flush();
     var afterLog = Timer.getFPGATimestamp();
     robotContainer.log("commandsRun", (afterLog-beforeLog));
   }

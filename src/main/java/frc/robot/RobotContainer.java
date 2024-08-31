@@ -107,15 +107,12 @@ public class RobotContainer implements Logged {
   private final CommandGroups m_autos;
 
   private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
-      .withDeadband(0.1)
       .withInvert(true)
-      .withSlewRate(3)
-      .withSquaring(true);
+      .withSlewRate(3);
   private InputAxis m_fwdYAxis = new InputAxis("Strafe", m_driverController::getLeftX)
-      .withDeadband(0.1)
       .withInvert(true)
-      .withSlewRate(3)
-      .withSquaring(true);
+      .withSlewRate(3);
+      
   private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
       .withDeadband(0.2)
       .withInvert(true)
@@ -123,18 +120,6 @@ public class RobotContainer implements Logged {
   @Log
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
   private boolean m_setupDone = false;
-
-  private double getFwdAxis() {
-    return m_fwdXAxis.getAsDouble();
-  }
-
-  private double getSideAxis() {
-    return m_fwdYAxis.getAsDouble();
-  }
-
-  private double getRotAxis() {
-    return m_rotAxis.getAsDouble();
-  }
 
   public RobotContainer(Consumer<Runnable> addPeriodic) {
     if (true || RobotBase.isSimulation()) {
@@ -151,6 +136,7 @@ public class RobotContainer implements Logged {
     m_rightClimberS = new ClimberS(false);
     m_ampPivotS = new AmpPivotS();
     m_ampRollerS = new AmpRollerS();
+    // Mechanism2d setup
     RobotVisualizer.setupVisualizer();
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
@@ -163,9 +149,6 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addClimber(m_leftClimberS.ELEVATOR);
     RobotVisualizer.addClimber(m_rightClimberS.ELEVATOR);
     m_drivebaseS = TunerConstants.DriveTrain;
-    // m_drivebaseS = new DrivebaseS(
-    //     addPeriodic,
-    //     (name, poses) -> m_field.getObject(name).setPoses(poses));
     m_noteCamera = new BlobDetectionCamera(addPeriodic, m_field.getObject("note"));
     LightStripS.setNoteAngles(m_noteCamera::getThreeTargetAngles);
     m_autos = new CommandGroups(
@@ -185,8 +168,8 @@ public class RobotContainer implements Logged {
     configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
-    //SignalLogger.setPath("/media/sda1/");
-    //SignalLogger.start();
+    SignalLogger.setPath("/media/sda1/");
+    SignalLogger.start();
     Monologue.setupMonologue(this, "Robot", false, true);
     DriverStation.startDataLog(DataLogManager.getLog());
     DataLogManager.logNetworkTables(false);
@@ -331,7 +314,12 @@ public class RobotContainer implements Logged {
     ));
     //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
-    m_driverController.back().whileTrue(m_intakePivotS.resetToRetractedC().alongWith(m_ampPivotS.resetToRetractedC()));
+    m_driverController.back().whileTrue(
+      parallel(
+        m_intakePivotS.resetToRetractedC(),
+        m_ampPivotS.resetToRetractedC(),
+        runOnce(m_shooterPivotS::resetAngleUp).ignoringDisable(true)
+      ));
     m_driverController.start().onTrue(runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
@@ -353,10 +341,14 @@ public class RobotContainer implements Logged {
 
     m_operatorController.a().whileTrue(
       sequence(
-        
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
-          .until(m_ampPivotS.onTarget).withTimeout(4),
-        m_ampRollerS.outtakeC().withTimeout(0.5),
+        deadline(
+          sequence(
+            waitSeconds(0.5),
+            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
+            m_ampRollerS.outtakeC().withTimeout(0.5)
+          ),
+          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
+        ),
         m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
       ));
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());

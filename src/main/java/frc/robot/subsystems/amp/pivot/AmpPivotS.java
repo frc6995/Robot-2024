@@ -91,10 +91,10 @@ public class AmpPivotS extends SubsystemBase implements Logged {
     }
     else {
       m_io = new RealAmpPivotIO();
-      isHomed = new Trigger(()-> getCurrent()>10).debounce(0.6995);
+      isHomed = new Trigger(()->false);// getCurrent()>10).debounce(0.6995);
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
-    onTarget = new Trigger(()->Math.abs(m_desiredState.position - getAngle()) < Units.degreesToRadians(2)).debounce(0.05, DebounceType.kRising);
+    onTarget = new Trigger(()->Math.abs(m_desiredState.position - getAngle()) < Units.degreesToRadians(2));
     setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
@@ -105,6 +105,7 @@ public class AmpPivotS extends SubsystemBase implements Logged {
   @Log public double getPidVolts() {return m_io.getPidVolts();}
   @Log public double getVolts() {return m_io.getVolts();}
   @Log public double getCurrent() {return m_io.getCurrent();}
+  @Log public boolean onTarget() {return onTarget.getAsBoolean();}
   public boolean isHomed() {return isHomed.getAsBoolean();}
   public boolean hasHomed() {return hasHomed;};
   public void periodic() {
@@ -245,8 +246,8 @@ public class AmpPivotS extends SubsystemBase implements Logged {
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 44.0/16.0 * 30.0/18.0;//48.0/11.0 * 30.0/18.0;
     // ks + kg = 0.83
-    public static final double K_G = 0.53;
-    public static final double K_S = 0.3;
+    public static final double K_G = 0.53 / ( 48.0/44.0 * 11.0/16.0);
+    public static final double K_S = 0.2;
     /**
      * Units: Volts / (Pivot radians/sec)
      * 1/((motor rad/s)/volt) = volts/(motorRad/s)
@@ -257,7 +258,7 @@ public class AmpPivotS extends SubsystemBase implements Logged {
      */
     public static final double K_V =  
       MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
-    public static final double K_A = 0.045;
+    public static final double K_A = 0.045 * ( 48.0/44.0 * 11.0/16.0);
     public static final double CG_DIST = Units.inchesToMeters(6);
     public static final double MAX_VOLTS = 1.5;
 
