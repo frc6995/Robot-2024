@@ -84,7 +84,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     public class Constants {
         public static final double kP = 2;
         public static final double kI = 0;
-        public static final double kD = 0;
+        public static final double kD = 0.1;
         /**
          * We want positive voltage to drive towards the lower hardstop.
          */

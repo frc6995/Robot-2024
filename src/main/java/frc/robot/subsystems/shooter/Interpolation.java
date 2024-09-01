@@ -37,19 +37,19 @@ public class Interpolation {
     static {
         var five = Units.degreesToRadians(5);
         //cw limit 2.216
-        entry(1.45, CW_LIMIT, 7000,7000);      
-        entry(1.5, CW_LIMIT, 7000, 7000);
-        entry(1.75, 2.336, 7000, 7000);
-        entry(2, 2.4, 7000, 7000);
-        entry(2.5, 2.48, 7000, 7000);
-        entry(2.75, 2.51, 7000, 7000);
-        entry(3.1, 2.56, 7000, 7000);
-        entry(3.5, 2.6, 7500, 7500);
-        entry(3.7, 2.6-Units.degreesToRadians(0.5), 7500, 7500);
-        entry(4, 2.6-Units.degreesToRadians(0.5), 8000, 8000);
-        entry(4.5, 2.63, 9000, 9000);
-        entry(5, 2.65, 9000, 9000);
-        entry(5.447, 2.66, 9000, 9000);
+        entry(1.45, CW_LIMIT, 7000,7000-1000);      
+        entry(1.5, CW_LIMIT, 7000, 7000-1000);
+        entry(1.75, 2.336+Units.degreesToRadians(2), 7000, 7000-0);
+        entry(2, 2.4+Units.degreesToRadians(2), 7000, 7000-000);
+        entry(2.5, 2.48+Units.degreesToRadians(3), 7000, 7000-2000);
+        entry(2.75, 2.51+Units.degreesToRadians(3), 7000, 7000-1000);
+        entry(3.1, 2.56+Units.degreesToRadians(3), 7000, 7000-2000);
+        entry(3.5, 2.6+Units.degreesToRadians(3), 7500, 7500-2000);
+        entry(3.7, 2.6+Units.degreesToRadians(4), 7500, 7500-2000);
+        entry(4, 2.6+Units.degreesToRadians(6), 8000, 8000-2000);
+        entry(4.5, 2.63+Units.degreesToRadians(6), 9000, 9000-2500);
+        entry(5, 2.65+Units.degreesToRadians(6), 10000, 9000-3500);
+        entry(5.447, 2.66+Units.degreesToRadians(6), 10000, 9000-3500);
     }
 
     public static final double dThetadX(double x) {

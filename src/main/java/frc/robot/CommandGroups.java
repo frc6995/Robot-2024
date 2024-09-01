@@ -252,7 +252,7 @@ public class CommandGroups {
   public double directionToSpeaker() {
     return Pathing.speakerDirection(
         m_drivebaseS.getPose(),
-        speaker()).getRadians() + Units.degreesToRadians(6);
+        speaker()).getRadians();
   }
 
   public double distanceToSpeaker() {

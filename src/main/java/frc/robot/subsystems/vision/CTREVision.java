@@ -83,6 +83,7 @@ public class CTREVision implements Logged {
 
     public void periodic() {
         if (RobotBase.isReal()) {
+            
             for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
                 var estimator = pair.getSecond();
                 estimator.setReferencePose(getPose.get());
@@ -172,7 +173,7 @@ public class CTREVision implements Logged {
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
                 log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
                 log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
-                
+                updateCameraPoses(robotPose.estimatedPose.toPose2d());
                 addVisionMeasurement.accept( new VisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
                         VecBuilder.fill(xConfidence, yConfidence, angleConfidence)));
@@ -198,10 +199,10 @@ public class CTREVision implements Logged {
          */
         public static final Map<String, Transform3d> cameras= Map.of(
             "Arducam_OV2311_USB_Camera", new Transform3d(
-                Units.inchesToMeters(-12.5)+0.4,
+                Units.inchesToMeters(-4.75),
                 Units.inchesToMeters(0),
-                Units.inchesToMeters(23.125),
-                new Rotation3d(Units.degreesToRadians(-90), Units.degreesToRadians(-35), Units.degreesToRadians(180))
+                Units.inchesToMeters(25.25),
+                new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-35), Units.degreesToRadians(180))
             )
             // "OV9281-BR", new Transform3d(
             //     Units.inchesToMeters(-12.5+9.2),

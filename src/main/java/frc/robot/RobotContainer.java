@@ -12,6 +12,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -63,8 +66,12 @@ import monologue.Annotations.Log;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
+import java.util.stream.Collectors;
 
 import org.photonvision.PhotonCamera;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -405,8 +412,8 @@ public class RobotContainer implements Logged {
     //  ));
 
 
-     m_driverController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
-     m_driverController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
+     m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
+     m_operatorController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
      m_operatorController.leftTrigger().whileTrue(
       spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
@@ -460,10 +467,15 @@ public class RobotContainer implements Logged {
     return m_autoSelector.getSelected();
   }
 
+  Pose3d origin = new Pose3d();
+  Transform3d inBotNote = new Transform3d(0.1, 0, 0.3, new Rotation3d());
   /**
    * runs after subsystem periodics and after commands
    * */
   public void periodic() {
+    Pose3d startPose = m_midtakeS.hasNote() ? new Pose3d(m_drivebaseS.getPose())
+        .transformBy(inBotNote) : origin;
+    log("notePose", startPose);
     if (DriverStation.isDisabled()) {
       if (m_setupDone) {
         LightStripS.getInstance().requestState(States.SetupDone);
@@ -484,10 +496,15 @@ public class RobotContainer implements Logged {
     m_driverDisplay.update();
   }
 
+  StructArrayPublisher<Pose3d> notePosePub = NetworkTableInstance.getDefault().getStructArrayTopic("Robot/Note3d",Pose3d.struct).publish();
+  Transform3d noteTransform = new Transform3d(0, 0, Units.inchesToMeters(1), new Rotation3d());
   public void updateFields() {
     m_drivebaseS.drawRobotOnField(m_field);
     m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
-    m_field.getObject("note").setPoses(m_noteCamera.getTargets((time)->Optional.of(m_drivebaseS.getPose())));
+    List<Pose2d> poses = m_noteCamera.getTargets((time)->Optional.of(m_drivebaseS.getPose()));
+    m_field.getObject("note").setPoses(poses);
+    List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
+    notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
     //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
 
   }
