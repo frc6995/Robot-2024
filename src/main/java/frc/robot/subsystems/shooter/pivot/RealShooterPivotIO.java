@@ -82,19 +82,19 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     }
     
     public class Constants {
-        public static final double kP = 2;
+        public static final double kP = 4;
         public static final double kI = 0;
-        public static final double kD = 0.1;
+        public static final double kD = 0;
         /**
          * We want positive voltage to drive towards the lower hardstop.
          */
         public static final boolean INVERTED = false;
-        public static final int CURRENT_LIMIT = 40;
+        public static final int CURRENT_LIMIT = 15;
 
         public static final Consumer<SparkBaseConfig> config = c->{
             c
                 .alternateEncoderMode(true)
-                .inverted(false)
+                .inverted(true)
                 .freeLimit(CURRENT_LIMIT)
                 .stallLimit(CURRENT_LIMIT)
                 .idleMode(IdleMode.kCoast)
@@ -110,6 +110,7 @@ public class RealShooterPivotIO extends ShooterPivotIO {
                 .countsPerRev(8192)
                 .positionConversionFactor(2 * Math.PI / 6.0)
                 .velocityConversionFactor(2 * Math.PI / (6.0 * 60.0))
+                .isInverted = false
                 ;
             c.pid.pidFF(kP, kI, kD, 0).feedbackSensor(FeedbackDevice.kAlternateEncoder);
             
@@ -121,5 +122,9 @@ public class RealShooterPivotIO extends ShooterPivotIO {
     @Override
     public double getVelocity() {
         return m_encoder.getVelocity();
+    }
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        m_motor.setIdleMode(mode);
     }
 }

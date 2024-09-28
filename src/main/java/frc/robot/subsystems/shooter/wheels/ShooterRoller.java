@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 
 public class ShooterRoller implements Subsystem, Logged {
     private CTREShooterRollerIO m_io;
@@ -32,7 +33,8 @@ public class ShooterRoller implements Subsystem, Logged {
     public ShooterRoller(int canId, boolean invert, double kS, double kV, double kA, double kP, String name){
 
         m_io = new CTREShooterRollerIO(canId, invert,
-            new Slot0Configs().withKS(kS).withKV(kV).withKA(kA).withKP(kP)
+            new Slot0Configs().withKS(kS).withKV(kV).withKA(kA).withKP(kP),
+            new Slot1Configs().withKS(10).withKV(0).withKA(0).withKP(10)
             , this);
         m_idRoutine = m_io.sysIdRoutine;
         // if(RobotBase.isReal()) {

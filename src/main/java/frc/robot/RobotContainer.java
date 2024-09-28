@@ -16,6 +16,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -79,6 +80,7 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import static frc.robot.util.Defaults.*;
 public class RobotContainer implements Logged {
 
   /** Establishes the controls and subsystems of the robot */
@@ -124,6 +126,8 @@ public class RobotContainer implements Logged {
       .withDeadband(0.2)
       .withInvert(true)
       .withSlewRate(6);
+  private DigitalInput m_button = new DigitalInput(0);
+  private Trigger m_coastModeButton = new Trigger(m_button::get).negate();
   @Log
   SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
   private boolean m_setupDone = false;
@@ -332,6 +336,7 @@ public class RobotContainer implements Logged {
 
     //#endregion
 
+    m_coastModeButton.whileTrue(m_shooterPivotS.coast()).whileTrue(m_intakePivotS.coast());
 
     //#region operator controller start
 
@@ -346,13 +351,14 @@ public class RobotContainer implements Logged {
     // sticks: climb
     // 
 
-    m_operatorController.a().whileTrue(
+    m_operatorController.a().onTrue(
       sequence(
         deadline(
           sequence(
-            waitSeconds(0.5),
+            waitSeconds(0.1),
             waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            m_ampRollerS.outtakeC().withTimeout(0.5)
+            m_ampRollerS.outtakeC().withTimeout(0.5),
+            m_ampRollerS.stopC()
           ),
           m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
         ),
@@ -363,14 +369,15 @@ public class RobotContainer implements Logged {
      m_operatorController.x().whileTrue(
       parallel(
       m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2)),
+      m_shooterFeederS.runVoltageC(()-> -0.6995),
       m_intakeRollerS.runVoltageC(()->0.6995*2)));
      // intake move 
      m_operatorController.y().whileTrue(
       parallel(
       m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2),
+      m_shooterFeederS.runVoltageC(()-> 0.6995),
       m_intakeRollerS.runVoltageC(()->-0.6995*2)
      ));
-    Trigger ampMode = m_operatorController.leftBumper();
     //  // spinup for amp
     //  ampMode.whileTrue(
     //   parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
@@ -387,21 +394,25 @@ public class RobotContainer implements Logged {
         parallel(
         m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
         ).until(m_ampPivotS.onTarget).withTimeout(4),
-      parallel(
-        m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(2)),
-        m_shooterWheelsS.spinC(()->2000, ()->2000),
-        m_shooterFeederS.runVoltageC(()->2),
-        sequence(
-          waitSeconds(0.1),
-          waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-          m_midtakeS.runVoltage(()->0.6995*2, ()->0.6995*2)
-        ),
-        m_ampRollerS.intakeC(),
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
-      ).until(m_ampRollerS.receiveNote),
-        new ScheduleCommand(
-          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+        parallel(
+          m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
+          m_shooterWheelsS.spinC(()->2000, ()->2000),
+          m_shooterFeederS.runVoltageC(()->2),
+          sequence(
+            waitSeconds(0.1),
+            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
+            m_midtakeS.runVoltage(()->0.6995*2, ()->0.6995*2)
+          ),
+          m_ampRollerS.intakeC(),
+          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
+        ).until(m_ampRollerS.receiveNote),
+        parallel(
+          new ScheduleCommand(
+            m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+          ),
+          new ScheduleCommand(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(1))
         )
+
       )
     );
     //   spinDistance(this::xDistToSpeaker),
@@ -412,8 +423,7 @@ public class RobotContainer implements Logged {
     //  ));
 
 
-     m_operatorController.rightTrigger().and(ampMode.negate()).whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->10.5)));
-     m_operatorController.rightTrigger().and(ampMode).whileTrue(m_midtakeS.runVoltage(()->7, ()->7).alongWith(m_shooterFeederS.runVoltageC(()->7)));
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->12)));
      m_operatorController.leftTrigger().whileTrue(
       spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
@@ -467,7 +477,7 @@ public class RobotContainer implements Logged {
     return m_autoSelector.getSelected();
   }
 
-  Pose3d origin = new Pose3d();
+  Pose3d origin = ZERO_POSE3D;
   Transform3d inBotNote = new Transform3d(0.1, 0, 0.3, new Rotation3d());
   /**
    * runs after subsystem periodics and after commands

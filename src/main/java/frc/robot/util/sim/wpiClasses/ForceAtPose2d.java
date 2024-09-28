@@ -3,6 +3,7 @@ package frc.robot.util.sim.wpiClasses;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import java.util.Objects;
+import static frc.robot.util.Defaults.*;
 
 public class ForceAtPose2d {
   public Force2d force;
@@ -10,7 +11,7 @@ public class ForceAtPose2d {
 
   /** Constructs a ForceAtDistance2d that's all zeroed out */
   public ForceAtPose2d() {
-    this(new Force2d(), new Pose2d());
+    this(new Force2d(), ZERO_POSE2D);
   }
 
   /**

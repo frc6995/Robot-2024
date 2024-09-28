@@ -94,7 +94,7 @@ public class AmpPivotS extends SubsystemBase implements Logged {
       isHomed = new Trigger(()->false);// getCurrent()>10).debounce(0.6995);
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
-    onTarget = new Trigger(()->Math.abs(m_desiredState.position - getAngle()) < Units.degreesToRadians(2));
+    onTarget = new Trigger(()->Math.abs(m_desiredState.position - getAngle()) < Units.degreesToRadians(4));
     setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};

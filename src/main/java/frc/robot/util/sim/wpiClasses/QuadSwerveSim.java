@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Twist2d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import static frc.robot.util.Defaults.*;
 
 public class QuadSwerveSim {
 
@@ -27,7 +28,7 @@ public class QuadSwerveSim {
   public final List<Translation2d> robotToModuleTL;
   public final List<Transform2d> robotToModuleTF;
 
-  Pose2d curPose = new Pose2d();
+  Pose2d curPose = ZERO_POSE2D;
 
   double robotMass_kg;
   double robotMOI;
@@ -71,7 +72,7 @@ public class QuadSwerveSim {
 
   public void update(double dtSeconds) {
 
-    Pose2d fieldReferenceFrame = new Pose2d(); // global origin
+    Pose2d fieldReferenceFrame = ZERO_POSE2D; // global origin
     Transform2d fieldToRobotTrans = new Transform2d(fieldReferenceFrame, curPose);
 
     ////////////////////////////////////////////////////////////////

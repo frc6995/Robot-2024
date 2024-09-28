@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake.pivot;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import monologue.Logged;
 
 public abstract class IntakePivotIO implements Logged {
@@ -13,4 +15,5 @@ public abstract class IntakePivotIO implements Logged {
     public abstract double getVolts();
     public abstract double getPidVolts();
     public abstract double getCurrent();
+    public void setIdleMode(IdleMode mode) {}
 }

@@ -12,6 +12,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.networktables.DoubleArrayEntry;
 import java.util.ArrayList;
 import java.util.List;
+import static frc.robot.util.Defaults.*;
 
 /** Game field object on a Field3d. */
 public class FieldObject3d implements AutoCloseable {
@@ -58,7 +59,7 @@ public class FieldObject3d implements AutoCloseable {
   public synchronized Pose3d getPose() {
     updateFromEntry();
     if (m_poses.isEmpty()) {
-      return new Pose3d();
+      return ZERO_POSE3D;
     }
     return m_poses.get(0);
   }

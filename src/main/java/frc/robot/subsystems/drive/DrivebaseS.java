@@ -64,6 +64,7 @@ import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import static frc.robot.util.Defaults.*;
 
 /**
  * Subsystem that controls the drivetrain of the robot Handles all the odometry and base movement
@@ -101,7 +102,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     io = Robot.isReal() ? new RealSwerveDriveIO(addPeriodic) : new SimSwerveDriveIO(addPeriodic);
     this.drawTrajectory = drawTrajectory;
     m_vision = new Vision(m_kinematics, io::getGyroHeading, io::getCurrentPositions);
-    m_vision.resetPose(new Pose2d(4, 4, new Rotation2d()));
+    m_vision.resetPose(new Pose2d(4, 4, ZERO_ROTATION2D));
     m_thetaController.setTolerance(Units.degreesToRadians(0.5));
     m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
     m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
@@ -131,7 +132,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
       "drivebaseAng"
       )
     );
-    resetPose(new Pose2d());
+    resetPose(ZERO_POSE2D);
   }
 
   public Rotation3d getRotation3d() {
@@ -371,7 +372,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   private Transform2d shotTransform = 
   new Transform2d(
     -10 * Math.cos(Units.degreesToRadians(-6)), 
-    -10* Math.sin(Units.degreesToRadians(-6)), new Rotation2d());
+    -10* Math.sin(Units.degreesToRadians(-6)), ZERO_ROTATION2D);
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
     field.getObject("shot").setPoses(getPose(), getPose().transformBy(
@@ -426,11 +427,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
   /**** COMMANDS */
 
   public Command stopOnceC() {
-    return runOnce(() -> this.drive(new ChassisSpeeds()));
+    return runOnce(() -> this.drive(ZERO_CHASSISSPEEDS));
   }
 
   public Command stopC() {
-    return run(() -> this.drive(new ChassisSpeeds()));
+    return run(() -> this.drive(ZERO_CHASSISSPEEDS));
   }
 
   public Command xLockC() {

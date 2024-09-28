@@ -10,6 +10,8 @@ import static frc.robot.subsystems.shooter.pivot.ShooterPivotS.Constants.CW_LIMI
 
 import java.util.function.DoubleSupplier;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -24,6 +26,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import monologue.Logged;
@@ -182,6 +185,14 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     return m_feedforward.calculate(m_setpoint.velocity);
   }
 
+    public Command coast() {return 
+    sequence(
+      Commands.runOnce(
+        ()->m_io.setIdleMode(IdleMode.kCoast)),
+      Commands.idle()
+    ).ignoringDisable(true).finallyDo(()->{m_io.setIdleMode(IdleMode.kBrake);});
+  }
+
   public class Constants {
     private static final double OLD_LOWER_STOP = Units.degreesToRadians(180-19+0.75+0.4);
     private static final double NEW_LOWER_STOP = Units.degreesToRadians(161.38);
@@ -191,9 +202,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     /**
      * Also equivalent to motor radians per pivot radian
      */
-    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 18;
-    public static final double K_G = 0.3;
-    public static final double K_S = 0;
+    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 20 * 2 * 6;
+    public static final double K_G = 0.06;
+    public static final double K_S = 0.03;
     /**
      * Units: Volts / (Pivot radians/sec)
      * 1/((motor rad/s)/volt) = volts/(motorRad/s)
@@ -203,7 +214,7 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
      * a given pivot speed than to get the same motor speed.
      */
     public static final double K_V = 
-      MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNEO(1).KvRadPerSecPerVolt); 
+      MOTOR_ROTATIONS_PER_ARM_ROTATION/(DCMotor.getNeo550(1).KvRadPerSecPerVolt); 
     public static final double K_A = 0.03;
     public static final double CG_DIST = Units.inchesToMeters(6);
     /**

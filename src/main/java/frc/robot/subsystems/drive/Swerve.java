@@ -71,6 +71,7 @@ import java.util.function.BiConsumer;
 import static frc.robot.generated.TunerConstants.kDriveRadius;
 import static frc.robot.generated.TunerConstants.kDriveRotationsPerMeter;
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.util.Defaults.*;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
@@ -92,7 +93,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 	private final SwerveRequest.FieldCentric m_allianceRelative = new SwerveRequest.FieldCentric()
 		.withDriveRequestType(DriveRequestType.Velocity);
 	
-	private Rotation2d m_desiredRot = new Rotation2d();
+	private Rotation2d m_desiredRot = ZERO_ROTATION2D;
 
 	private final double m_characterisationSpeed = 1;
 	public final DoubleSupplier m_gyroYawRadsSupplier;
@@ -302,7 +303,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		return m_sysId.dynamic(direction);
 	}
 
-	private static final Rotation2d BLUE_PERSPECTIVE = new Rotation2d();
+	private static final Rotation2d BLUE_PERSPECTIVE = ZERO_ROTATION2D;
 	private static final Rotation2d RED_PERSPECTIVE = new Rotation2d(Math.PI);
 	public void periodic() {
 		m_vision.periodic();
@@ -374,7 +375,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
     return pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory(choreoTrajectory));
   }
   public void stop() {
-	setControl(m_autoRequest.withSpeeds(new ChassisSpeeds()));
+	setControl(m_autoRequest.withSpeeds(ZERO_CHASSISSPEEDS));
   }
   public Command stopOnceC() {
 	return runOnce(this::stop);
@@ -390,7 +391,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
   private Transform2d shotTransform = 
 	new Transform2d(
 		-10 * Math.cos(Units.degreesToRadians(-6)), 
-		-10* Math.sin(Units.degreesToRadians(-6)), new Rotation2d());
+		-10* Math.sin(Units.degreesToRadians(-6)), ZERO_ROTATION2D);
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
     field.getObject("shot").setPoses(getPose(), getPose().transformBy(

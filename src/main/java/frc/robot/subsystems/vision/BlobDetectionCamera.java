@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import monologue.Logged;
 import monologue.Annotations.Log;
+import static frc.robot.util.Defaults.*;
 
 public class BlobDetectionCamera implements Logged {
     private PhotonCamera camera;
@@ -34,9 +35,9 @@ public class BlobDetectionCamera implements Logged {
         this.simNotes = simNotes;
         if (RobotBase.isSimulation()) {
             simNotes.setPoses(
-                new Pose2d(1, 1, new Rotation2d()),
-                new Pose2d(1, 2, new Rotation2d()),
-                new Pose2d(1, 3, new Rotation2d()));
+                new Pose2d(1, 1, ZERO_ROTATION2D),
+                new Pose2d(1, 2, ZERO_ROTATION2D),
+                new Pose2d(1, 3, ZERO_ROTATION2D));
         }
         hasTarget = new Trigger(this::hasTarget);
     }

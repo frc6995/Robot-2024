@@ -66,7 +66,7 @@ public class RealAmpPivotIO extends AmpPivotIO {
          * We want positive voltage to drive towards the lower hardstop.
          */
         public static final boolean INVERTED = false;
-        public static final int CURRENT_LIMIT = 20;
+        public static final int CURRENT_LIMIT = 30;
         public static final SparkBaseConfig CONFIG = new SparkBaseConfig((c)->{
             c
             .inverted(true)
@@ -77,7 +77,7 @@ public class RealAmpPivotIO extends AmpPivotIO {
             .reverseSoftLimitEnabled(true)
             .stallLimit(120)
             .freeLimit(120);
-            c.pid.slot0.pidFF(0.3, 0, 0, 0);
+            c.pid.slot0.pidFF(0.6, 0, 0, 0);
             c.hallEncoder
             .positionConversionFactor(Units.rotationsToRadians(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION))
             .velocityConversionFactor(Units.rotationsPerMinuteToRadiansPerSecond(1.0/MOTOR_ROTATIONS_PER_ARM_ROTATION));

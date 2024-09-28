@@ -18,6 +18,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static frc.robot.util.Defaults.*;
+
 /**
  * A command that uses two PID controllers ({@link PIDController}) and a ProfiledPIDController
  * ({@link ProfiledPIDController}) to follow a trajectory {@link PathPlannerTrajectory} with a
@@ -151,7 +153,7 @@ public class PPChasePoseCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    m_outputChassisSpeedsRobotRelative.accept(new ChassisSpeeds());
+    m_outputChassisSpeedsRobotRelative.accept(ZERO_CHASSISSPEEDS);
     m_timer.stop();
   }
 

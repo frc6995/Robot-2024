@@ -7,7 +7,9 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -16,6 +18,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
@@ -40,7 +43,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
                 new Slot0Configs()
                 .withKP(0.001)
                 .withKS(0.00)
-                .withKV(12 / 9000.0)
+                .withKV(12/(5800* (38.0 / 23.0) / 60.0))
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(60)
@@ -51,9 +54,10 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
 
     public final SysIdRoutine sysIdRoutine;
     public final VoltageOut sysIdControl = new VoltageOut(0);
+    public final VelocityTorqueCurrentFOC focControl = new VelocityTorqueCurrentFOC(0).withSlot(1);
     public final VelocityVoltage velocityControl = new VelocityVoltage(0);
     private LinearSystemSim<N2, N1, N2> m_sim;
-    public CTREShooterRollerIO(int CAN_ID, boolean invert, Slot0Configs pidConfigs, ShooterRoller self) {
+    public CTREShooterRollerIO(int CAN_ID, boolean invert, Slot0Configs pidConfigs, Slot1Configs focConfigs, ShooterRoller self) {
         m_motor = new TalonFX(CAN_ID);
         Constants.config.MotorOutput.Inverted = invert ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
         var configurator = m_motor.getConfigurator();
@@ -81,7 +85,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
     @Override
     public void setPIDFF(double velocityRPM, double ffVolts) {
         this.ffVolts = ffVolts;
-        m_motor.setControl(new VelocityVoltage(velocityRPM / 60.0));
+        m_motor.setControl(velocityControl.withVelocity(velocityRPM / 60.0));
     }
 
     @Override
