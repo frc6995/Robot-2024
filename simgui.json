@@ -84,9 +84,6 @@
     }
   },
   "NetworkTables": {
-    "Retained Values": {
-      "open": false
-    },
     "transitory": {
       "DriverDisplay": {
         "Faults": {
@@ -111,7 +108,10 @@
             }
           }
         },
-        "m_autoSelector": {
+        "PDData##v_/Robot/power": {
+          "PowerDistributionChannels##v_currents": {
+            "open": true
+          },
           "open": true
         },
         "m_drivebaseS": {
@@ -214,6 +214,14 @@
             "open": true
           }
         },
+        "m_leftClimberS": {
+          "RevFaults##v_/Robot/m_leftClimberS/faults": {
+            "open": true
+          }
+        },
+        "m_rightClimberS": {
+          "open": true
+        },
         "m_shooterPivotS": {
           "m_io": {
             "open": true
@@ -222,8 +230,7 @@
         "m_shooterWheelsS": {
           "Top": {
             "open": true
-          },
-          "open": true
+          }
         },
         "open": true,
         "tree": {
@@ -292,24 +299,6 @@
             },
             {
               "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Robot/m_drivebaseS/0-FR/tgtAngle"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Robot/m_drivebaseS/0-FR/angle"
-            },
-            {
-              "color": [
                 0.5764706134796143,
                 0.4705882668495178,
                 0.3764706254005432,
@@ -319,9 +308,9 @@
             },
             {
               "color": [
-                0.8549020290374756,
-                0.545098066329956,
-                0.7647059559822083,
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
                 1.0
               ],
               "id": "NT:/Robot/m_drivebaseS/0-FR/driveCurrent"
@@ -333,6 +322,11 @@
     "Plot <1>": {
       "plots": [
         {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
           "backgroundColor": [
             0.0,
             0.0,
@@ -348,61 +342,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Robot/m_intakePivotS/getVolts"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getPidVolts"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getGravityFF"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getVelocityFF"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getAngle"
-            },
-            {
-              "color": [
-                0.5764706134796143,
-                0.4705882668495178,
-                0.3764706254005432,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/getGoal"
-            },
-            {
-              "color": [
-                0.8549020290374756,
-                0.545098066329956,
-                0.7647059559822083,
-                1.0
-              ],
-              "id": "NT:/Robot/m_intakePivotS/setpointPosition"
+              "id": "NT:/SmartDashboard/delta"
             }
           ]
         }
@@ -425,7 +365,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 503
+          "height": 517
         }
       ],
       "window": {
@@ -441,7 +381,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 503,
+          "height": 517,
           "series": [
             {
               "color": [
@@ -562,7 +502,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <4>": {
       "plots": [
@@ -667,7 +610,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <5>": {
       "plots": [
@@ -740,7 +686,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

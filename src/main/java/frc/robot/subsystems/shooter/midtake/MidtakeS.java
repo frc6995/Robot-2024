@@ -93,7 +93,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
         if (DriverStation.isDisabled()) {
             stop();
         }
-      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_front.getAppliedOutput());
+      //MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_front.getAppliedOutput());
   }
 
   /**sets motor to outtake */
@@ -157,18 +157,21 @@ public class MidtakeS extends SubsystemBase implements Logged {
   public boolean isRunning() {
     return isRunning.getAsBoolean();
   }
+  @Log
   public double getVolts() {
     return m_front.getAppliedOutput() * 12;
   }
 
+  @Log
   public double getBackVolts() {
     return m_back.getAppliedOutput() * 12;
   }
 
+  @Log
   public double getFrontCurrent() {
     return m_front.getOutputCurrent();
   }
-
+  @Log
   public double getBackCurrent() {
     return m_back.getOutputCurrent();
   }

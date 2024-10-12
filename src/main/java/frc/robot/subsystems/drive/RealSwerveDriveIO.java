@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import java.util.ArrayList;
 import java.util.function.Consumer;
+import static frc.robot.util.Defaults.*;
 
 public class RealSwerveDriveIO extends SwerveDriveIO {
   public RealSwerveDriveIO(Consumer<Runnable> addPeriodic) {
@@ -30,6 +31,6 @@ public class RealSwerveDriveIO extends SwerveDriveIO {
 
   @Override
   public Pose2d getSimPose() {
-    return new Pose2d();
+    return ZERO_POSE2D;
   }
 }

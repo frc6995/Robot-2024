@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import frc.robot.Robot;
 import frc.robot.util.TimingTracer;
+import static frc.robot.util.Defaults.*;
 
 public class SimGyroSensorModel {
 
@@ -44,6 +45,6 @@ public class SimGyroSensorModel {
     if (Robot.isSimulation()) {
       return Rotation2d.fromDegrees(m_yawSimDouble.get());
     }
-    return new Rotation2d();
+    return ZERO_ROTATION2D;
   }
 }

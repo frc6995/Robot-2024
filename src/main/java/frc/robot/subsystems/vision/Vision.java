@@ -38,6 +38,7 @@ import frc.robot.util.AprilTags;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
+import static frc.robot.util.Defaults.*;
 public class Vision implements Logged {
     private SwerveDrivePoseEstimator m_poseEstimator;
     private Supplier<Rotation2d> getHeading;
@@ -57,7 +58,7 @@ public class Vision implements Logged {
         m_poseEstimator = new SwerveDrivePoseEstimator(kinematics,
                 getHeading.get(),
                 getModulePositions.get(),
-                new Pose2d());
+                ZERO_POSE2D);
         m_cameras = new ArrayList<>();
         m_actualCameras = new ArrayList<>();
         Constants.cameras.entrySet().iterator().forEachRemaining((entry) -> {

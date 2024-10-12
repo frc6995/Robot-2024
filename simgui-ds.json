@@ -4,18 +4,12 @@
       "visible": true
     }
   },
-  "Keyboard 1 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
         {
           "decKey": 65,
-          "incKey": 68,
-          "maxAbsValue": 0.8999999761581421
+          "incKey": 68
         },
         {
           "decKey": 87,

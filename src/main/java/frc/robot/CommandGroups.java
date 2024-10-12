@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.amp.AmpRollerS;
+import frc.robot.subsystems.amp.pivot.AmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -46,16 +48,16 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import javax.swing.text.html.Option;
-
 import java.util.function.DoubleConsumer;
 
+import static frc.robot.util.Defaults.*;
 public class CommandGroups {
   private Swerve m_drivebaseS;
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
   private MidtakeS m_midtakeS;
-  private BounceBarS m_bounceBarS;
+  private AmpPivotS m_ampPivotS;
+  private AmpRollerS m_ampRollerS;
   private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
   private ShooterWheelsS m_shooterWheelsS;
@@ -70,7 +72,8 @@ public class CommandGroups {
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
       MidtakeS midtakeS,
-      BounceBarS bounceBarS,
+      AmpPivotS ampPivotS,
+      AmpRollerS ampRollerS,
       ShooterFeederS shooterFeederS,
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
@@ -84,7 +87,8 @@ public class CommandGroups {
     m_shooterFeederS = shooterFeederS;
     m_shooterPivotS = shooterPivotS;
     m_shooterWheelsS = shooterWheelsS;
-    // m_climberS = climberS;
+    m_ampPivotS = ampPivotS;
+    m_ampRollerS = ampRollerS;
     m_lightStripS = lightStripS;
     m_noteCamera = noteCamera;
     m_driverController = driverController;
@@ -119,7 +123,7 @@ public class CommandGroups {
                     waitSeconds(0.5),
                     m_intakePivotS.retract()),
                 m_intakeRollerS.slowInC(),
-                m_midtakeS.runVoltage(() -> 6, () -> 6),
+                m_midtakeS.runVoltage(() -> 6, () -> 0),
                 m_shooterFeederS.runVoltageC(() -> 0))
                 .withTimeout(1)
                 .until(hasNote.negate())
@@ -179,7 +183,7 @@ public class CommandGroups {
       if (note.isEmpty()) {
         return Commands.none();
       } // TODO driver feedback? Must be proxied for duration
-      var pickup = note.get().transformBy(new Transform2d(new Translation2d(-1, 0), new Rotation2d()));
+      var pickup = note.get().transformBy(new Transform2d(new Translation2d(-1, 0), ZERO_ROTATION2D));
       return parallel(
           sequence(
               m_drivebaseS.chasePoseC(() -> pickup),
@@ -235,7 +239,7 @@ public class CommandGroups {
                 0,
                 MathUtil.clamp(3 * m_noteCamera.getYaw(), -1, 1)));
       } else {
-        m_drivebaseS.drive(new ChassisSpeeds());
+        m_drivebaseS.drive(ZERO_CHASSISSPEEDS);
       }
     });
   }
@@ -249,7 +253,7 @@ public class CommandGroups {
   public double directionToSpeaker() {
     return Pathing.speakerDirection(
         m_drivebaseS.getPose(),
-        speaker()).getRadians() + Units.degreesToRadians(6);
+        speaker()).getRadians();
   }
 
   public double distanceToSpeaker() {
@@ -269,7 +273,7 @@ public class CommandGroups {
   }
 
   public Command centerWingNote(PathPlannerPath startToPrePickup) {
-    var path = startToPrePickup.getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = startToPrePickup.getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return parallel(
         m_intakePivotS.deploy().asProxy(),
         m_shooterPivotS.rotateToAngle(() -> 2.367).asProxy(),
@@ -293,7 +297,7 @@ public class CommandGroups {
   }
 
   public Command w1() {
-    var path = PathPlannerPath.fromChoreoTrajectory("W1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("W1").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return deadline(
       sequence(
             m_drivebaseS.resetPoseToBeginningC(path),
@@ -316,7 +320,7 @@ public class CommandGroups {
     ).finallyDo(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty()));
   }
   public Command centerFourWingNote(double endWait) {
-    var path = PathPlannerPath.fromChoreoTrajectory("W2.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("W2.1").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return deadline(
         sequence(
             m_drivebaseS.resetPoseToBeginningC(path),
@@ -355,8 +359,8 @@ public class CommandGroups {
   }
 
   public Command spinDistance(DoubleSupplier distance) {
-    return m_shooterWheelsS.spinC(() -> Interpolation.TOP_MAP.get(distance.getAsDouble()),
-        () -> Interpolation.BOTTOM_MAP.get(distance.getAsDouble()));
+    return m_shooterWheelsS.spinC(() -> Interpolation.LEFT_MAP.get(distance.getAsDouble()),
+        () -> Interpolation.RIGHT_MAP.get(distance.getAsDouble()));
   }
 
   public Command centerFourWingMidline() {
@@ -433,7 +437,7 @@ public class CommandGroups {
 
   public Command autoIntakeCycle(String choreoTrajectory, double intakeTimeout, boolean feed, double aimTime, BooleanSupplier noNoteYet) {
     var path = PathPlannerPath.fromChoreoTrajectory(choreoTrajectory);
-    var traj = path.getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var traj = path.getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     var startAimTime = traj.getTotalTimeSeconds() - aimTime;
     return deadline(
 
@@ -456,7 +460,7 @@ public class CommandGroups {
     return Math.abs(m_drivebaseS.getPose().getX() - 8.22) > 0.5;
   }
   public Command c5() {
-    var path = PathPlannerPath.fromChoreoTrajectory("C5S.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("C5S.1").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return parallel(
         new ScheduleCommand(m_intakePivotS.deploy().asProxy()),
         m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
@@ -472,7 +476,7 @@ public class CommandGroups {
   }
 
   public Command c5ThruStageBlue() {
-    var path = PathPlannerPath.fromChoreoTrajectory("C5.1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("C5.1").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return parallel(
         m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
         spinDistance(this::distanceToSpeaker).asProxy(),
@@ -490,7 +494,7 @@ public class CommandGroups {
   }
 
   public Command c4c3() {
-    var path = PathPlannerPath.fromChoreoTrajectory("C5 (1).1").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("C5 (1).1").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return parallel(
         m_shooterPivotS.rotateToAngle(this::pivotAngle).asProxy(),
         spinDistance(this::distanceToSpeaker).asProxy(),
@@ -529,7 +533,7 @@ public class CommandGroups {
   }
 
   public Command disruptor() {
-    var path = PathPlannerPath.fromChoreoTrajectory("disruptor").getTrajectory(new ChassisSpeeds(), new Rotation2d());
+    var path = PathPlannerPath.fromChoreoTrajectory("disruptor").getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);
     return sequence(
         m_drivebaseS.resetPoseToBeginningC(path),
         m_drivebaseS.choreoCommand("disruptor"),

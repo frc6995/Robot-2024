@@ -19,8 +19,8 @@ import java.util.function.Supplier;
 public class LightStripS {
 
   private static LightStripS m_instance = new LightStripS();
-  private static final int STRIP_LENGTH = 39;
-  private AddressableLED led = new AddressableLED(9);
+  private static final int STRIP_LENGTH = 29;
+  private AddressableLED led = new AddressableLED(0);
   private AddressableLEDBuffer buffer = new AddressableLEDBuffer(STRIP_LENGTH);
   private final PersistentLedState persistentLedState = new PersistentLedState();
   private static final double[][] defaultNoteAngles = new double[3][2];

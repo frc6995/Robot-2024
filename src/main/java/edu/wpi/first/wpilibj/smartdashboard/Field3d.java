@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import static frc.robot.util.Defaults.*;
 
 /**
  * 3d representation of game field for dashboards.
@@ -33,7 +34,7 @@ public class Field3d implements NTSendable, AutoCloseable {
   /** Constructor. */
   public Field3d() {
     FieldObject3d obj = new FieldObject3d("Robot");
-    obj.setPose(new Pose3d());
+    obj.setPose(ZERO_POSE3D);
     m_objects.add(obj);
     SendableRegistry.add(this, "Field");
   }

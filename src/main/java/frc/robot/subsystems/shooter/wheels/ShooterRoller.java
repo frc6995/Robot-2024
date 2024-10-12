@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.util.logging.RevFaults;
 import monologue.Annotations.Log;
 import monologue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -17,6 +18,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 
 public class ShooterRoller implements Subsystem, Logged {
     private CTREShooterRollerIO m_io;
@@ -31,7 +33,8 @@ public class ShooterRoller implements Subsystem, Logged {
     public ShooterRoller(int canId, boolean invert, double kS, double kV, double kA, double kP, String name){
 
         m_io = new CTREShooterRollerIO(canId, invert,
-            new Slot0Configs().withKS(kS).withKV(kV).withKA(kA).withKP(kP)
+            new Slot0Configs().withKS(kS).withKV(kV).withKA(kA).withKP(kP),
+            new Slot1Configs().withKS(10).withKV(0).withKA(0).withKP(10)
             , this);
         m_idRoutine = m_io.sysIdRoutine;
         // if(RobotBase.isReal()) {
@@ -43,13 +46,12 @@ public class ShooterRoller implements Subsystem, Logged {
         this.name = name;
         setDefaultCommand(stopC());
     }
-
-    public double getGoalVelocity() {return desiredSpeed;}
-    public double getVelocity() {return m_io.getVelocity();}
-    public double getPidVolts() {return m_io.getPidVolts();}
-    public double getVolts() {return m_io.getVolts();}
-    public double getCurrent() {return m_io.getCurrent();}
-    public double getPosition() {return m_io.getPosition();}
+    @Log public double getGoalVelocity() {return desiredSpeed;}
+    @Log public double getVelocity() {return m_io.getVelocity();}
+    @Log public double getPidVolts() {return m_io.getPidVolts();}
+    @Log public double getVolts() {return m_io.getVolts();}
+    @Log public double getCurrent() {return m_io.getCurrent();}
+    @Log public double getPosition() {return m_io.getPosition();}
 
     public boolean atGoal() {
         return Math.abs(desiredSpeed - getVelocity()) < 50;

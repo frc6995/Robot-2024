@@ -11,6 +11,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import monologue.Logged;
 import monologue.Annotations.Log;
+import static frc.robot.util.Defaults.*;
 
 public class BlobDetectionCamera implements Logged {
     private PhotonCamera camera;
@@ -33,9 +35,9 @@ public class BlobDetectionCamera implements Logged {
         this.simNotes = simNotes;
         if (RobotBase.isSimulation()) {
             simNotes.setPoses(
-                new Pose2d(1, 1, new Rotation2d()),
-                new Pose2d(1, 2, new Rotation2d()),
-                new Pose2d(1, 3, new Rotation2d()));
+                new Pose2d(1, 1, ZERO_ROTATION2D),
+                new Pose2d(1, 2, ZERO_ROTATION2D),
+                new Pose2d(1, 3, ZERO_ROTATION2D));
         }
         hasTarget = new Trigger(this::hasTarget);
     }
@@ -63,9 +65,16 @@ public class BlobDetectionCamera implements Logged {
         if (result.getBestTarget().getPitch() > 9) return false;
         return true;
     }
+    @Log
     public double getDistance() {
         if (!hasTarget()) return 0;
         return getDistance(result.getBestTarget());
+    }
+
+    @Log
+    public double getDistanceInches() {
+        
+        return Units.metersToInches(getDistance());
     }
 
     public double[][] getThreeTargetAngles() {
@@ -87,7 +96,7 @@ public class BlobDetectionCamera implements Logged {
         return PhotonUtils.calculateDistanceToTargetMeters(
             Constants.cameraHeight,
             Constants.targetHeight,
-            Constants.cameraPitch, Units.degreesToRadians(target.getPitch()))
+            Constants.cameraPitch, Units.degreesToRadians(target.getPitch()))/Math.cos(Units.degreesToRadians(target.getYaw()))
         + Units.inchesToMeters(7);
     }
 
@@ -127,9 +136,11 @@ public class BlobDetectionCamera implements Logged {
     }
     public class Constants {
         public static final String CAMERA_NAME = "OV9782";
-        public static final double cameraHeight = Units.inchesToMeters(21.75-2.5);
+        public static final double cameraHeight = Units.inchesToMeters(19.75);
         public static final double cameraX = Units.inchesToMeters(-0.5);
-        public static final double cameraPitch = Units.degreesToRadians(-15);
+        public static final double cameraPitch = Units.degreesToRadians(-18.75);
         public static final double targetHeight = Units.inchesToMeters(0);
+        public static final double fov_h = Units.degreesToRadians(76.4);
+        public static final double fov_v = Units.degreesToRadians(57.3);
     }
 }

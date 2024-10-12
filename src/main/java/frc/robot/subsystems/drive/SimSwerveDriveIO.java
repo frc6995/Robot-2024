@@ -10,6 +10,7 @@ import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import static frc.robot.util.Defaults.*;
 
 public class SimSwerveDriveIO extends SwerveDriveIO {
 
@@ -62,7 +63,7 @@ public class SimSwerveDriveIO extends SwerveDriveIO {
 
   @Override
   public void resetIMU() {
-    m_simNavx.resetToPose(new Pose2d());
+    m_simNavx.resetToPose(ZERO_POSE2D);
   }
 
   @Override

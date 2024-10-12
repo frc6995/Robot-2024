@@ -1,14 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
@@ -19,26 +16,17 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
-import frc.robot.subsystems.vision.PoseEstimator;
-import frc.robot.subsystems.vision.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.AllianceWrapper;
-import frc.robot.util.AprilTags;
 import monologue.Logged;
-import monologue.Annotations.Log;
 import java.util.function.Consumer;
 
 public class CTREVision implements Logged {
@@ -95,6 +83,7 @@ public class CTREVision implements Logged {
 
     public void periodic() {
         if (RobotBase.isReal()) {
+            
             for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
                 var estimator = pair.getSecond();
                 estimator.setReferencePose(getPose.get());
@@ -106,37 +95,37 @@ public class CTREVision implements Logged {
                 
                 var robotPose = robotPoseOpt.get();
                 if (robotPose.timestampSeconds > Timer.getFPGATimestamp()) {continue;}
-                for (var target : robotPose.targetsUsed) {
-                    if (target.getFiducialId() == 7 || target.getFiducialId() == 4) {
+                // for (var target : robotPose.targetsUsed) {
+                //     if (target.getFiducialId() == 7 || target.getFiducialId() == 4) {
                         
-                        var transform = estimator.getRobotToCameraTransform();
-                        double tgtPitch = 0;
-                        double camPitch = 0;
-                        // 90* roll cam
-                        if (transform.getRotation().getX() < -1) {
-                            tgtPitch = Units.degreesToRadians(target.getYaw());
-                            camPitch = Units.degreesToRadians(-35);
-                        } else {
-                            tgtPitch = Units.degreesToRadians(target.getPitch());
-                            camPitch = transform.getRotation().getY();
-                            //log(pair.getFirst() + "camPitch", camPitch);
-                        }
-                        var distance = PhotonUtils.calculateDistanceToTargetMeters(
-                            estimator.getRobotToCameraTransform().getZ(),
-                            Constants.layout.getTagPose(7).get().getZ(),
-                            -camPitch, tgtPitch);
+                //         var transform = estimator.getRobotToCameraTransform();
+                //         double tgtPitch = 0;
+                //         double camPitch = 0;
+                //         // 90* roll cam
+                //         if (transform.getRotation().getX() < -1) {
+                //             tgtPitch = Units.degreesToRadians(target.getYaw());
+                //             camPitch = Units.degreesToRadians(-35);
+                //         } else {
+                //             tgtPitch = Units.degreesToRadians(target.getPitch());
+                //             camPitch = transform.getRotation().getY();
+                //             //log(pair.getFirst() + "camPitch", camPitch);
+                //         }
+                //         var distance = PhotonUtils.calculateDistanceToTargetMeters(
+                //             estimator.getRobotToCameraTransform().getZ(),
+                //             Constants.layout.getTagPose(7).get().getZ(),
+                //             -camPitch, tgtPitch);
 
-                        if (target.getFiducialId() ==7 ){
-                            //log(pair.getFirst() + "blueSpkrDist", distance);
-                            blueSpeakerDist = distance;
-                            blueSpeakerDistTime = Timer.getFPGATimestamp();
-                        } else if (target.getFiducialId() ==4 ) {
-                            //log(pair.getFirst() + "redSpkrDist", distance);
-                            redSpeakerDist = distance;
-                            redSpeakerDistTime = Timer.getFPGATimestamp();
-                        }
-                    }
-                }
+                //         if (target.getFiducialId() ==7 ){
+                //             //log(pair.getFirst() + "blueSpkrDist", distance);
+                //             blueSpeakerDist = distance;
+                //             blueSpeakerDistTime = Timer.getFPGATimestamp();
+                //         } else if (target.getFiducialId() ==4 ) {
+                //             //log(pair.getFirst() + "redSpkrDist", distance);
+                //             redSpeakerDist = distance;
+                //             redSpeakerDistTime = Timer.getFPGATimestamp();
+                //         }
+                //     }
+                // }
                 if (Math.abs(robotPose.estimatedPose.getZ()) > 0.5) {
                     continue;
                 }
@@ -182,9 +171,9 @@ public class CTREVision implements Logged {
                 //         robotPose.estimatedPose.getX(),
                 //         getPose().getRotation(),
                 //         new Rotation2d(estimator.getRobotToCameraTransform().getRotation().getZ()));
-                // log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
-                // log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
-                
+                log("visionPose3d-"+pair.getFirst(), robotPose.estimatedPose);
+                log("timestamp"+pair.getFirst(), robotPose.timestampSeconds);
+                updateCameraPoses(robotPose.estimatedPose.toPose2d());
                 addVisionMeasurement.accept( new VisionMeasurement(
                         robotPose.estimatedPose.toPose2d(), robotPose.timestampSeconds,
                         VecBuilder.fill(xConfidence, yConfidence, angleConfidence)));
@@ -199,8 +188,8 @@ public class CTREVision implements Logged {
 
     public void updateCameraPoses(Pose2d drivebasePose) {
         for (Pair<String, PhotonPoseEstimator> pair : m_cameras) {
-            // log("cam-"+pair.getFirst(), 
-            //     new Pose3d(drivebasePose).transformBy(pair.getSecond().getRobotToCameraTransform()));
+            log("cam-"+pair.getFirst(), 
+                new Pose3d(drivebasePose).transformBy(pair.getSecond().getRobotToCameraTransform()));
         }
     }
 
@@ -210,10 +199,10 @@ public class CTREVision implements Logged {
          */
         public static final Map<String, Transform3d> cameras= Map.of(
             "Arducam_OV2311_USB_Camera", new Transform3d(
-                Units.inchesToMeters(-12.5+9.1),
+                Units.inchesToMeters(-4.75),
                 Units.inchesToMeters(0),
-                Units.inchesToMeters(23.3),
-                new Rotation3d(Units.degreesToRadians(-90), Units.degreesToRadians(-35), Units.degreesToRadians(180))
+                Units.inchesToMeters(25.25),
+                new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-35), Units.degreesToRadians(180))
             )
             // "OV9281-BR", new Transform3d(
             //     Units.inchesToMeters(-12.5+9.2),

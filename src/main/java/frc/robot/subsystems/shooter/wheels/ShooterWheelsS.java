@@ -8,74 +8,68 @@ import static edu.wpi.first.wpilibj2.command.Commands.parallel;
 
 import java.util.function.DoubleSupplier;
 
-import com.revrobotics.CANSparkFlex;
-import com.revrobotics.CANSparkBase.IdleMode;
-
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.util.sparkmax.SparkDevice;
 import monologue.Logged;
 
 /**The shooter wheels that launch the note */
 public class ShooterWheelsS implements Logged {
-  private ShooterRoller m_topRoller;
-  private ShooterRoller m_bottomRoller;
+  private ShooterRoller m_leftRoller;
+  private ShooterRoller m_rightRoller;
 
-  public final Trigger topAtGoal;
-  public final Trigger bottomAtGoal;
+  public final Trigger leftAtGoal;
+  public final Trigger rightAtGoal;
 
   public final Trigger atGoal;
 
   public class Constants{
-    public static final int TOP_CAN_ID = 35;
-    public static final int BOTTOM_CAN_ID = 36;
+    public static final int LEFT_CAN_ID = 35;
+    public static final int RIGHT_CAN_ID = 36;
 
   }
   /** Creates a new ShooterWheelsS. */
   public ShooterWheelsS() {
-    m_topRoller = new ShooterRoller(Constants.TOP_CAN_ID,  true, 0.05, 12/(9000.0 / 60.0), 0.05, 0, "Top");// kA 0.016432/60.0
-    topSysId = m_topRoller.m_idRoutine;
-    m_bottomRoller = new ShooterRoller(Constants.BOTTOM_CAN_ID, true, 0, 12/(9000.0 / 60.0), 0.05, 0, "Bottom"); //kA 0.017026/60.0
-    bottomSysId = m_bottomRoller.m_idRoutine;
+    m_leftRoller = new ShooterRoller(Constants.LEFT_CAN_ID,  true, 0.05, 12/(5800* (38.0 / 23.0) / 60.0), 0.05, 0.001, "Left");// kA 0.016432/60.0
+    leftSysId = m_leftRoller.m_idRoutine;
+    m_rightRoller = new ShooterRoller(Constants.RIGHT_CAN_ID, false, 0.05, 12/(5800* (38.0 / 23.0) / 60.0), 0.05, 0.001, "Right"); //kA 0.017026/60.0
+    rightSysId = m_rightRoller.m_idRoutine;
 
-    topAtGoal = m_topRoller.atGoal;
-    bottomAtGoal = m_bottomRoller.atGoal;
+    leftAtGoal = m_leftRoller.atGoal;
+    rightAtGoal = m_rightRoller.atGoal;
 
-    atGoal = topAtGoal.and(bottomAtGoal);
+    atGoal = leftAtGoal.and(rightAtGoal);
   }
   /**Stops the shooter motors */
   public Command stopC(){
     return parallel(
-      m_topRoller.stopC(),
-      m_bottomRoller.stopC()
+      m_leftRoller.stopC(),
+      m_rightRoller.stopC()
     );
   }
 
-  public Command spinC(DoubleSupplier topSpeed, DoubleSupplier bottomSpeed){
+  public Command spinC(DoubleSupplier leftSpeed, DoubleSupplier rightSpeed){
     return parallel(
-      m_topRoller.spinC(topSpeed),
-      m_bottomRoller.spinC(bottomSpeed)
+      m_leftRoller.spinC(leftSpeed),
+      m_rightRoller.spinC(rightSpeed)
     );
   }
-  public Command spinVoltageC(DoubleSupplier topVolts, DoubleSupplier bottomVolts){
+  public Command spinVoltageC(DoubleSupplier leftVolts, DoubleSupplier rightVolts){
     return parallel(
-      m_topRoller.voltsC(topVolts),
-      m_bottomRoller.voltsC(bottomVolts)
+      m_leftRoller.voltsC(leftVolts),
+      m_rightRoller.voltsC(rightVolts)
     );
   }
 
-  public final SysIdRoutine topSysId;
-  public final SysIdRoutine bottomSysId;
+  public final SysIdRoutine leftSysId;
+  public final SysIdRoutine rightSysId;
 
   public Command dynamic(Direction direction) {
-    return topSysId.dynamic(direction).alongWith(bottomSysId.dynamic(direction));
+    return leftSysId.dynamic(direction).alongWith(rightSysId.dynamic(direction));
   }
 
   public Command quasistatic(Direction direction) {
-    return topSysId.quasistatic(direction).alongWith(bottomSysId.quasistatic(direction));
+    return leftSysId.quasistatic(direction).alongWith(rightSysId.quasistatic(direction));
   }
 }

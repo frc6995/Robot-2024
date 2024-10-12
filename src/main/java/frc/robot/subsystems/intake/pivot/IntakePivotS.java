@@ -9,6 +9,8 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.function.DoubleSupplier;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -35,6 +37,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.Robot;
+import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.LightStripS.States;
 import monologue.Logged;
 import monologue.Annotations.Log;
 import static edu.wpi.first.units.Units.*;
@@ -108,6 +112,13 @@ public class IntakePivotS extends SubsystemBase implements Logged {
   /*@Log.NT*/ public double getCurrent() {return m_io.getCurrent();}
   public boolean isHomed() {return isHomed.getAsBoolean();}
   public boolean hasHomed() {return hasHomed;};
+  public Command coast() {return 
+    sequence(
+      Commands.runOnce(
+        ()->m_io.setIdleMode(IdleMode.kCoast)),
+      idle()
+    ).ignoringDisable(true).finallyDo(()->{m_io.setIdleMode(IdleMode.kBrake);});
+  }
   public void periodic() {
     // Update our visualization
     INTAKE_PIVOT.setAngle(Units.radiansToDegrees(m_io.getAngle() + Units.degreesToRadians(55-14) ));
