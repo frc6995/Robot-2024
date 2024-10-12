@@ -25,18 +25,7 @@ public class Robot extends TimedRobot {
   private RobotContainer robotContainer;
 
   private Command autonomousCommand;
-
-  private void disableWatchdog() {
-    try {
-    Field f = this.getClass().getSuperclass().getSuperclass().getField("m_watchdog");
-    f.setAccessible(true);
-    Watchdog dog = (Watchdog) f.get(this);
-    dog.close();
-    dog = new Watchdog(10000,()->{});
-    } catch (Exception e) {
-      DriverStation.reportError(e.getMessage(), e.getStackTrace());
-    }
-  }
+  
   @Override
   public void robotInit() {
     Robot.isSimulation = RobotBase.isSimulation();

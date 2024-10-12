@@ -1,7 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import static frc.robot.Constants.DriveConstants.*;
@@ -18,14 +16,11 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.ForwardReference;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.SwerveDriveBrake;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.SysIdSwerveTranslation;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathHolonomic;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.PathPlannerTrajectory;
 
+import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -33,14 +28,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -50,18 +40,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants.ModuleConstants;
-import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.LightStripS;
-import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.vision.CTREVision;
 import frc.robot.subsystems.vision.CTREVision.VisionMeasurement;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
-import frc.robot.util.NomadMathUtil;
-import frc.robot.util.trajectory.PPChasePoseCommand;
 import monologue.Logged;
 import monologue.Annotations.IgnoreLogged;
 import monologue.Annotations.Log;
@@ -139,26 +121,16 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		addVisionMeasurement(
 			measurement.pose(), measurement.timestamp(), measurement.stddevs());
 	}
-	private void configureAutoBuilder() {
-		AutoBuilder.configureHolonomic(
-			() -> getState().Pose,
-			this::seedFieldRelative,
-			() -> m_kinematics.toChassisSpeeds(getState().ModuleStates),
-			(speeds) -> setControl(m_autoRequest.withSpeeds(speeds)),
-			Pathing.m_pathPlannerConfig,
-			AllianceWrapper::isRed,
-			this);
-	}
 
 	public Swerve( SwerveDrivetrainConstants driveTrainConstants, double odometryFreq, SwerveModuleConstants... modules) {
 		super(driveTrainConstants, odometryFreq, modules);
 		this.moduleConstants = modules;
         m_vision = new CTREVision(this::addVisionMeasurement, this::getPose);
-		configureAutoBuilder();
 		if (Utils.isSimulation()) {
 			startSimThread();
 		}
 		m_gyroYawRadsSupplier = () -> Units.degreesToRadians(getPigeon2().getAngle());
+		m_thetaController.enableContinuousInput(0, 2*Math.PI);
 		m_profiledThetaController.enableContinuousInput(0, 2 * Math.PI);
 		m_fieldCentric.ForwardReference = ForwardReference.RedAlliance;
 		m_allianceRelative.ForwardReference = ForwardReference.OperatorPerspective;
@@ -283,15 +255,33 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		return new Pose3d(txr2d.getX(), txr2d.getY(), 0, getRotation3d());
 	}
 
-  public Command resetPoseToBeginningC(PathPlannerTrajectory trajectory) {
+	public void choreoController(Pose2d currentPose, SwerveSample sample) {
+		var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+		  sample.vx + m_xController.calculate(currentPose.getX(), sample.x),
+		  sample.vy + m_yController.calculate(currentPose.getY(), sample.y),
+		  sample.omega + m_thetaController.calculate(currentPose.getRotation().getRadians(), sample.heading),
+		  currentPose.getRotation()
+		);
+		drive(speeds);
+	  }
+
+  public Command resetPoseToBeginningC(Trajectory<SwerveSample> trajectory) {
     return Commands.runOnce(
         () ->
             seedFieldRelative(
-                NomadMathUtil.mirrorPose(
-                    new Pose2d(
-                        trajectory.getInitialState().positionMeters,
-                        trajectory.getInitialState().targetHolonomicRotation),
-                    AllianceWrapper.getAlliance())));
+               trajectory.getInitialPose(AllianceWrapper.isRed())));
+  }
+
+  public Command resetPoseToBeginningC(AutoTrajectory trajectory) {
+    return Commands.runOnce(
+        () -> {
+			var initial = trajectory.getInitialPose();
+			initial.ifPresent((pose)->
+            seedFieldRelative(
+               pose)
+			);
+		}
+);
   }
 
 
@@ -337,43 +327,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
         return getState().speeds;
     }
 
-    public Command chasePoseC(Supplier<Pose2d> targetSupplier) {
-    return new PPChasePoseCommand(
-            targetSupplier,
-            this::getPose,
-            Pathing.m_holonomicDriveController,
-            m_xController,
-            m_yController,
-            m_thetaController,
-            (speeds)->setControl(m_autoRequest.withSpeeds(speeds)),
-            (PathPlannerTrajectory traj) -> {
-              drawTrajectory.accept("align", Pathing.ppTrajectoryToPoseList(traj));
-            },
-            (startPose, endPose) ->
-                Pathing.generateTrajectoryToPose(
-                    startPose,
-                    endPose,
-                    getRobotRelativeChassisSpeeds(),
-                    new PathConstraints(2, 2, 2 * Math.PI, 2 * Math.PI)),
-            this)
-        .deadlineWith(LightStripS.getInstance().stateC(() -> States.Climbing));
-  }
-
-  public Command pathPlannerCommand(PathPlannerPath path) {
-    FollowPathHolonomic command =
-        new FollowPathHolonomic(
-            path,
-            this::getPose,
-            this::getRobotRelativeChassisSpeeds,
-            this::drive,
-            Pathing.m_pathPlannerConfig,
-            AllianceWrapper::isRed,
-            this);
-    return command;
-  }
-  public Command choreoCommand(String choreoTrajectory) {
-    return pathPlannerCommand(PathPlannerPath.fromChoreoTrajectory(choreoTrajectory));
-  }
   public void stop() {
 	setControl(m_autoRequest.withSpeeds(ZERO_CHASSISSPEEDS));
   }
@@ -390,8 +343,8 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 
   private Transform2d shotTransform = 
 	new Transform2d(
-		-10 * Math.cos(Units.degreesToRadians(-6)), 
-		-10* Math.sin(Units.degreesToRadians(-6)), ZERO_ROTATION2D);
+		-10, 
+		-10, ZERO_ROTATION2D);
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
     field.getObject("shot").setPoses(getPose(), getPose().transformBy(

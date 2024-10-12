@@ -42,7 +42,6 @@ import frc.robot.subsystems.amp.AmpRollerS;
 import frc.robot.subsystems.amp.pivot.AmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
-import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
@@ -76,9 +75,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.PathPlannerLogging;
 
 import static frc.robot.util.Defaults.*;
 public class RobotContainer implements Logged {
@@ -189,8 +185,8 @@ public class RobotContainer implements Logged {
         .ignoringDisable(true)
         .schedule();
     DriverStation.reportWarning("Setup Done", false);
-    PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
-    PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
+    // PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
+    // PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
     
   }
 
@@ -462,15 +458,7 @@ public class RobotContainer implements Logged {
 
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
-    m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
-    m_autoSelector.addOption("W1", m_autos.w1());
-    // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
-    m_autoSelector.addOption("C5", m_autos.c5());
-    m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c4c3());
-    m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote(2));
-    m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
-    m_autoSelector.addOption("4Close-c3c4", m_autos.centerFourWingC3C4());
-    m_autoSelector.addOption("Disrupt", m_autos.disruptor());
+    m_autoSelector.addOption("S2-C2",m_autos.s2Toc2());
   }
 
   public Command getAutonomousCommand() {

@@ -1,6 +1,5 @@
 package frc.robot.util;
 
-import com.pathplanner.lib.path.PathPlannerTrajectory;
 import com.revrobotics.REVLibError;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -56,30 +55,6 @@ public class NomadMathUtil {
     } else {
       return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
     }
-  }
-
-  public static PathPlannerTrajectory.State mirrorState(PathPlannerTrajectory.State blueState) {
-    PathPlannerTrajectory.State newState = new PathPlannerTrajectory.State();
-    newState.accelerationMpsSq = blueState.accelerationMpsSq;
-    newState.curvatureRadPerMeter = -blueState.curvatureRadPerMeter;
-    newState.headingAngularVelocityRps = -blueState.headingAngularVelocityRps;
-    newState.targetHolonomicRotation =
-        Rotation2d.fromRadians(Math.PI - blueState.targetHolonomicRotation.getRadians());
-    newState.positionMeters =
-        new Translation2d(
-            FIELD_LENGTH - blueState.positionMeters.getX(), blueState.positionMeters.getY());
-    newState.timeSeconds = blueState.timeSeconds;
-    newState.velocityMps = newState.velocityMps;
-    newState.constraints = blueState.constraints;
-    return newState;
-  }
-
-  public static PathPlannerTrajectory.State mirrorState(
-      PathPlannerTrajectory.State blueState, DriverStation.Alliance alliance) {
-    if (alliance != Alliance.Red) {
-      return blueState;
-    }
-    return mirrorState(blueState);
   }
 
   public static Pose2d mirrorPose(Pose2d bluePose) {
