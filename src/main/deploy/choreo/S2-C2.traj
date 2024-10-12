@@ -20,7 +20,7 @@
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"first", "to":"last", "data":{"type":"KeepInRectangle", "props":{"x":{"exp":"0 m", "val":0.0}, "y":{"exp":"0 m", "val":0.0}, "w":{"exp":"16.54 m", "val":16.54}, "h":{"exp":"8.21 m", "val":8.21}}}, "enabled":true},
-    {"from":1, "to":1, "data":{"type":"PointAt", "props":{"x":{"exp":"0.334 m", "val":0.334}, "y":{"exp":"5.547 m", "val":5.547}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":true}}, "enabled":true}],
+    {"from":1, "to":1, "data":{"type":"PointAt", "props":{"x":{"exp":"SPK.x()", "val":0.334}, "y":{"exp":"SPK.y()", "val":5.547}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":true}}, "enabled":true}],
   "targetDt":{
    "exp":"0.1 s",
    "val":0.1

@@ -99,6 +99,10 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     return run(this::stop);
   }
 
+  public Command stopOnceC(){
+    return runOnce(this::stop);
+  }
+
   public Command runVoltageC(DoubleSupplier volts) {
     return run(()->m_leader.setVoltage(volts.getAsDouble()));
   }

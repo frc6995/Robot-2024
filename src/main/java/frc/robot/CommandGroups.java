@@ -258,10 +258,41 @@ public class CommandGroups {
   /** AUTOS */
 
   public Command s2Toc2() {
+
     var loop = m_autoFactory.newLoop("S2-C2");
     var trajectory = m_autoFactory.trajectory("S2-C2", loop);
     loop.enabled().onTrue(m_drivebaseS.resetPoseToBeginningC(trajectory));
     loop.enabled().onTrue(trajectory.cmd());
+    return loop.cmd();
+  }
+
+  public Command fourNote() {
+
+    var loop = m_autoFactory.newLoop("FourNote");
+    var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var third = m_autoFactory.trajectory("C2-C1", loop);
+    var fourth = m_autoFactory.trajectory("C1-C3", loop);
+    loop.enabled()
+    .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
+    .onTrue(m_intakePivotS.deploy())
+    .whileTrue(spinDistance(this::distanceToSpeaker)).
+    onTrue(first.cmd());
+
+    second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
+    first.done()
+      .onTrue(sequence(
+        feed().withTimeout(0.75),
+        new ScheduleCommand(second.cmd())
+      ));
+    second.done().onTrue(third.cmd());
+    third.done().onTrue(fourth.cmd());
+    fourth.done()
+      .onTrue(m_drivebaseS.stopOnceC())
+      .onTrue(m_intakeRollerS.stopOnceC())
+      
+      .onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
+    
     return loop.cmd();
   }
 

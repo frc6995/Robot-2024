@@ -459,6 +459,7 @@ public class RobotContainer implements Logged {
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
     m_autoSelector.addOption("S2-C2",m_autos.s2Toc2());
+    m_autoSelector.addOption("FourNote", m_autos.fourNote());
   }
 
   public Command getAutonomousCommand() {
