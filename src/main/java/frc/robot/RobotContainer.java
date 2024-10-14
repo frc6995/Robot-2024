@@ -39,7 +39,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
-import frc.robot.subsystems.amp.pivot.AmpPivotS;
+import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -98,7 +98,7 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
-  private final AmpPivotS m_ampPivotS;
+  private final CTREAmpPivotS m_ampPivotS;
   private final AmpRollerS m_ampRollerS;
   private final ClimberS m_leftClimberS;
   private final ClimberS m_rightClimberS;
@@ -145,7 +145,7 @@ public class RobotContainer implements Logged {
     m_lightStripS = LightStripS.getInstance();
     m_leftClimberS = new ClimberS(true);
     m_rightClimberS = new ClimberS(false);
-    m_ampPivotS = new AmpPivotS();
+    m_ampPivotS = new CTREAmpPivotS();
     m_ampRollerS = new AmpRollerS();
     // Mechanism2d setup
     RobotVisualizer.setupVisualizer();
@@ -325,7 +325,7 @@ public class RobotContainer implements Logged {
     ));
     //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
-    m_driverController.back().whileTrue(
+    m_driverController.back().or(m_operatorController.back()).whileTrue(
       parallel(
         m_intakePivotS.resetToRetractedC(),
         m_ampPivotS.resetToRetractedC(),
@@ -351,19 +351,6 @@ public class RobotContainer implements Logged {
     // sticks: climb
     // 
 
-    m_operatorController.a().onTrue(
-      sequence(
-        deadline(
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            m_ampRollerS.outtakeC().withTimeout(0.5),
-            m_ampRollerS.stopC()
-          ),
-          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
-        ),
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
-      ));
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
@@ -389,26 +376,55 @@ public class RobotContainer implements Logged {
     //  // spinup for passing
 
     // amp handoff
-    m_operatorController.rightBumper().whileTrue(
+    Trigger ampIntake = m_operatorController.rightBumper();
+    Trigger ampScore = m_operatorController.a();
+
+    ampScore.onTrue(
+      sequence(
+        deadline(
+          sequence(
+            waitSeconds(0.1),
+            waitUntil(m_ampPivotS.onTarget).withTimeout(1.5),
+            m_ampRollerS.outtakeC().withTimeout(0.5),
+            m_ampRollerS.stopC()
+          ),
+          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE)
+        ),
+        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
+      ));
+    ampIntake.whileTrue(
       sequence(
         parallel(
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
-        ).until(m_ampPivotS.onTarget).withTimeout(4),
+        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT-Units.degreesToRadians(4))
+        ).until(m_ampPivotS.onTarget).withTimeout(1.5),
         parallel(
           m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
-          m_shooterWheelsS.spinC(()->2000, ()->2000),
-          m_shooterFeederS.runVoltageC(()->2),
+          m_shooterWheelsS.spinC(()->3000, ()->3000),
+          m_shooterFeederS.runVoltageC(()->6),
           sequence(
             waitSeconds(0.1),
             waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            m_midtakeS.runVoltage(()->0.6995*2, ()->0.6995*2)
+            m_midtakeS.runVoltage(()->0.6995*6, ()->0.6995*6)
           ),
           m_ampRollerS.intakeC(),
-          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
+          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT)
         ).until(m_ampRollerS.receiveNote),
         parallel(
           new ScheduleCommand(
-            m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+            m_ampRollerS.intakeC().withTimeout(0.4)
+          ),
+          new ScheduleCommand(
+            m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
+          ),
+          new ScheduleCommand(
+            m_intakeRollerS.outtakeC().withTimeout(1)
+          ),
+          new ScheduleCommand(
+            sequence(
+              m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.RETRACTED - Units.degreesToRadians(10)).withTimeout(1),
+              new ScheduleCommand(m_intakePivotS.retract().withTimeout(1))
+            )
+            
           ),
           new ScheduleCommand(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(1))
         )
@@ -433,18 +449,12 @@ public class RobotContainer implements Logged {
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
         // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
-    m_operatorController.back().onTrue(
-      spinDistance(()->3.0).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            ()->Interpolation.PIVOT_MAP.get(3.0),
-            () -> 0)
-     )
-    );
-    //m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->6*rightClimberStick.getAsDouble()));
-    m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT));
+
+    m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->2*rightClimberStick.getAsDouble()));
+    m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
-    m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE));
-    m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT));
+    m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
+    m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));
     //#endregion
   }
 

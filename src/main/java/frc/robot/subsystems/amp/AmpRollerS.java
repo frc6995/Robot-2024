@@ -20,7 +20,7 @@ public class AmpRollerS extends SubsystemBase implements Logged {
     public static final int CAN_ID = 41;
     public static final int CURRENT_LIMIT = 40;
     public static final double OUT_VOLTAGE = -10;
-    public static final double IN_VOLTAGE = 4;
+    public static final double IN_VOLTAGE = 2;
   }
   private CANSparkMax m_motor;
   public final Trigger receiveNote;
@@ -29,9 +29,9 @@ public class AmpRollerS extends SubsystemBase implements Logged {
     m_motor = SparkDevice.getSparkMax(Constants.CAN_ID);
     m_motor.setSmartCurrentLimit(Constants.CURRENT_LIMIT);
     m_motor.setIdleMode(IdleMode.kCoast);
-    m_motor.setInverted(true);
+    m_motor.setInverted(false);
     setDefaultCommand(stopC());
-    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 15).debounce(0.1);
+    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 8).debounce(0.1);
   }
 
   /**sets motor to outtake */
