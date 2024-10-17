@@ -39,6 +39,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
+/*Changed the import name to match the document name change. */
 import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
@@ -98,6 +99,7 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
+  /*Changed the name to match the document name change. */
   private final CTREAmpPivotS m_ampPivotS;
   private final AmpRollerS m_ampRollerS;
   private final ClimberS m_leftClimberS;
@@ -145,6 +147,7 @@ public class RobotContainer implements Logged {
     m_lightStripS = LightStripS.getInstance();
     m_leftClimberS = new ClimberS(true);
     m_rightClimberS = new ClimberS(false);
+    /* Changed the name to match the document name change. */
     m_ampPivotS = new CTREAmpPivotS();
     m_ampRollerS = new AmpRollerS();
     // Mechanism2d setup
@@ -325,6 +328,7 @@ public class RobotContainer implements Logged {
     ));
     //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
+    /* Switched the wording to line up with the name of this system for the new motor */
     m_driverController.back().or(m_operatorController.back()).whileTrue(
       parallel(
         m_intakePivotS.resetToRetractedC(),
@@ -351,6 +355,8 @@ public class RobotContainer implements Logged {
     // sticks: climb
     // 
 
+/* Removed the code from the old motor */
+
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
@@ -375,6 +381,11 @@ public class RobotContainer implements Logged {
     //m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
     //  // spinup for passing
 
+
+    /* Re-added the code identically, with the exception of line 393 where .withTimeout(1.5)
+    was added so that the scoring command doesn't run forever. 
+    Also, we no longer need PID to hold the horizontal position. */
+
     // amp handoff
     Trigger ampIntake = m_operatorController.rightBumper();
     Trigger ampScore = m_operatorController.a();
@@ -395,22 +406,28 @@ public class RobotContainer implements Logged {
     ampIntake.whileTrue(
       sequence(
         parallel(
+          /* Changed the name to match the document name change.
+          Also changed the timeout time and fine-tuned the handoff position with the subtraction from CCW limit. */
         m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT-Units.degreesToRadians(4))
         ).until(m_ampPivotS.onTarget).withTimeout(1.5),
         parallel(
           m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
+          /* A slight change to the RPM */
           m_shooterWheelsS.spinC(()->3000, ()->3000),
           m_shooterFeederS.runVoltageC(()->6),
           sequence(
             waitSeconds(0.1),
             waitUntil(m_ampPivotS.onTarget).withTimeout(4),
+            /* A change in voltage because of the new motors */
             m_midtakeS.runVoltage(()->0.6995*6, ()->0.6995*6)
           ),
           m_ampRollerS.intakeC(),
+          /* Changed the name to match the document name change. */
           m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT)
         ).until(m_ampRollerS.receiveNote),
         parallel(
           new ScheduleCommand(
+            /* Added timeouts and a better sequence in order to rotate to angles more accurately. */
             m_ampRollerS.intakeC().withTimeout(0.4)
           ),
           new ScheduleCommand(
@@ -438,6 +455,7 @@ public class RobotContainer implements Logged {
 
     //  ));
 
+    /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
      m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->12)));
      m_operatorController.leftTrigger().whileTrue(
@@ -453,6 +471,7 @@ public class RobotContainer implements Logged {
     m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->2*rightClimberStick.getAsDouble()));
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
+    /* Changed the name to match the document name change. */
     m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
     m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));
     //#endregion
