@@ -6,6 +6,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 
 import java.util.function.DoubleSupplier;
 
+/* Changed the imports to be compatible */
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -39,7 +40,9 @@ import frc.robot.util.ExponentialProfile.State;
 import monologue.Annotations.Log;
 import monologue.Logged;
 
+/* Changed the name of the title to match the document name change. */
 public class CTREAmpPivotS extends SubsystemBase implements Logged {
+  /* Sets up the first part of SingleJointedArmSim by calling Constants.PLANT. */
   private final SingleJointedArmSim m_pivotSim = new SingleJointedArmSim(
       Constants.PLANT,
       DCMotor.getKrakenX60(1),
@@ -54,6 +57,8 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   /**
    * For visualization.
    */
+
+   /* Initial motor setup and tuning. */
   public final MechanismLigament2d AMP_PIVOT = new MechanismLigament2d(
       "amp", Units.inchesToMeters(6), 0, 4, new Color8Bit(235, 137, 52));
   private TalonFX m_motor = new TalonFX(Constants.CAN_ID);
@@ -63,7 +68,9 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   private double m_setpointRotations;
   public final Trigger onTarget = new Trigger(() -> Math.abs(error()) < Units.degreesToRotations(4));
 
+  /* Changed the name to comply with the document name change. */
   public CTREAmpPivotS() {
+    /* Removed the IO class, and replaced with setting up simulation variables. */
     var config = new TalonFXConfiguration();
     m_motor.getConfigurator().refresh(config);
 
@@ -72,13 +79,18 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
     setDefaultCommand(hold());
   }
 
+/* Removed pid logs */
+
   public void periodic() {
+    /* Added a class that provides operations to retrieve information about a status signal,
+     * along with a refresh feature to the visualization updates. */
     BaseStatusSignal.refreshAll(
         m_angleSig);
     // Update our visualization
     AMP_PIVOT.setAngle(Units.rotationsToDegrees(m_angleSig.getValueAsDouble()));
   }
 
+  /* Added logs for the new control system. */
   @Log
   public boolean onTarget() {
     return onTarget.getAsBoolean();
@@ -94,6 +106,7 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
     return m_setpointRotations - m_angleSig.getValueAsDouble();
   }
 
+  /* Computes the majority of the new simulations. */
   public void simulationPeriodic() {
     for (int i = 0; i < 2; i++) {
       var simState = m_motor.getSimState();
@@ -113,16 +126,19 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
     }
   }
 
+  /* Updated the units to radians */
   public void setAngleRadians(double angle) {
     m_setpointRotations = Units.radiansToRotations(angle);
     m_motor.setControl(m_profileReq.withPosition(m_setpointRotations));
   }
 
   public void resetController() {
+    /* Removed the IO class, and replaced with new simulation code. */
     m_motor.setControl(m_profileReq.withPosition(m_angleSig.getValueAsDouble()));
   }
 
   public Command runVoltage(DoubleSupplier voltage) {
+    /* Removed the IO class, and replaced with new simulation code. */
     return run(() -> m_motor.setControl(m_voltageReq.withOutput(voltage.getAsDouble())));
   }
 
@@ -131,6 +147,7 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   }
 
   public Command deploy() {
+   
     return runOnce(this::resetController).andThen(rotateToAngle(() -> Constants.CW_LIMIT));
   }
 
@@ -139,17 +156,20 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   }
 
   public Command hold() {
+    /* Removed  run(()->setAngle(m_desiredState.position)) and replaced with Commands.idle. */
     return sequence(
         runOnce(() -> setAngleRadians(getAngleRadians())),
         Commands.idle());
   }
 
   @Log
+  /* Added new Log code for the simulation. */
   public double getAngleRotations() {
     return m_angleSig.getValueAsDouble();
   }
 
   @Log
+    /* Added new Log code for the simulation. */
   public double getAngleRadians() {
     return Units.rotationsToRadians(m_angleSig.getValueAsDouble());
   }
@@ -165,8 +185,11 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
               resetController();
             })),
         runVoltage(() -> 0))
+        /* Changed from finallyDo to ingnoringDisable */
         .ignoringDisable(true);
   }
+
+  /* Removed resetToExtendC and homeC */
 
   public class Constants {
     public static final double CCW_LIMIT = Units.degreesToRadians(230);
@@ -178,17 +201,23 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
      */
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 44.0 / 16.0 * 30.0 / 18.0;
     // ks + kg = 0.83
+
+    /* Changed the value of K_G from 0.53 / ( 48.0/44.0 * 11.0/16.0) to 0.60. */
     public static final double K_G = 0.60;
     public static final double K_S = 0.2;
     /**
      * Units: Volts / (Pivot Rotations/sec)
      */
+
+     /* Changed the value of K_V and K_A due to the new code structure. */
     public static final double K_V = 0.55;
     public static final double K_A = 0.13;
     public static final double CG_DIST = Units.inchesToMeters(6);
     public static final LinearSystem<N2, N1, N1> PLANT = LinearSystemId
         .identifyPositionSystem(Units.radiansToRotations(K_V), Units.radiansToRotations(K_A));
 
+
+        /* Added configuration for the new motor. */
     public static TalonFXConfiguration configureMotor(TalonFXConfiguration config) {
       config.MotorOutput
           .withInverted(InvertedValue.Clockwise_Positive)
