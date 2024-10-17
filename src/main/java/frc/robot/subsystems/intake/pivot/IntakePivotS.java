@@ -169,7 +169,8 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     return runOnce(this::resetController).andThen(rotateToAngle(()->Constants.CW_LIMIT));
   }
   public Command retract(){
-    return runOnce(this::resetController).andThen(rotateToAngle(()->1.958960));
+    /* Rotated to Constants.RETRACTED instead of a specified number due to the new structure of the code */
+    return runOnce(this::resetController).andThen(rotateToAngle(()->Constants.RETRACTED));
   }
   public Command hold(){
     return sequence(
@@ -247,6 +248,8 @@ public class IntakePivotS extends SubsystemBase implements Logged {
 
       }, this, "intake"));
   public class Constants {
+    /* Moved the specifed number here so it can be called by RETRACTED */
+    public static final double RETRACTED = 1.958960;
     public static final double CCW_LIMIT = Units.degreesToRadians(90 + 28);
     public static final double CW_LIMIT = -0.3972;
     public static final int CAN_ID = 22;
