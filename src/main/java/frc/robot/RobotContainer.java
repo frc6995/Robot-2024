@@ -39,7 +39,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
-import frc.robot.subsystems.amp.pivot.AmpPivotS;
+/*Changed the import name to match the document name change. */
+import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -98,7 +99,8 @@ public class RobotContainer implements Logged {
   private final IntakePivotS m_intakePivotS;
   private final IntakeRollerS m_intakeRollerS;
   private final MidtakeS m_midtakeS;
-  private final AmpPivotS m_ampPivotS;
+  /*Changed the name to match the document name change. */
+  private final CTREAmpPivotS m_ampPivotS;
   private final AmpRollerS m_ampRollerS;
   private final ClimberS m_leftClimberS;
   private final ClimberS m_rightClimberS;
@@ -145,7 +147,8 @@ public class RobotContainer implements Logged {
     m_lightStripS = LightStripS.getInstance();
     m_leftClimberS = new ClimberS(true);
     m_rightClimberS = new ClimberS(false);
-    m_ampPivotS = new AmpPivotS();
+    /* Changed the name to match the document name change. */
+    m_ampPivotS = new CTREAmpPivotS();
     m_ampRollerS = new AmpRollerS();
     // Mechanism2d setup
     RobotVisualizer.setupVisualizer();
@@ -325,7 +328,8 @@ public class RobotContainer implements Logged {
     ));
     //m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
-    m_driverController.back().whileTrue(
+    /* Switched the wording to line up with the name of this system for the new motor */
+    m_driverController.back().or(m_operatorController.back()).whileTrue(
       parallel(
         m_intakePivotS.resetToRetractedC(),
         m_ampPivotS.resetToRetractedC(),
@@ -351,19 +355,8 @@ public class RobotContainer implements Logged {
     // sticks: climb
     // 
 
-    m_operatorController.a().onTrue(
-      sequence(
-        deadline(
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            m_ampRollerS.outtakeC().withTimeout(0.5),
-            m_ampRollerS.stopC()
-          ),
-          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE)
-        ),
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
-      ));
+/* Removed the code from the old motor */
+
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
@@ -388,27 +381,67 @@ public class RobotContainer implements Logged {
     //m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
     //  // spinup for passing
 
+
+    /* Re-added the code identically, with the exception of line 393 where .withTimeout(1.5)
+    was added so that the scoring command doesn't run forever. 
+    Also, we no longer need PID to hold the horizontal position. */
+
     // amp handoff
-    m_operatorController.rightBumper().whileTrue(
+    Trigger ampIntake = m_operatorController.rightBumper();
+    Trigger ampScore = m_operatorController.a();
+
+    ampScore.onTrue(
+      sequence(
+        deadline(
+          sequence(
+            waitSeconds(0.1),
+            waitUntil(m_ampPivotS.onTarget).withTimeout(1.5),
+            m_ampRollerS.outtakeC().withTimeout(0.5),
+            m_ampRollerS.stopC()
+          ),
+          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE)
+        ),
+        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
+      ));
+    ampIntake.whileTrue(
       sequence(
         parallel(
-        m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
-        ).until(m_ampPivotS.onTarget).withTimeout(4),
+          /* Changed the name to match the document name change.
+          Also changed the timeout time and fine-tuned the handoff position with the subtraction from CCW limit. */
+        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT-Units.degreesToRadians(4))
+        ).until(m_ampPivotS.onTarget).withTimeout(1.5),
         parallel(
           m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
-          m_shooterWheelsS.spinC(()->2000, ()->2000),
-          m_shooterFeederS.runVoltageC(()->2),
+          /* A slight change to the RPM */
+          m_shooterWheelsS.spinC(()->3000, ()->3000),
+          m_shooterFeederS.runVoltageC(()->6),
           sequence(
             waitSeconds(0.1),
             waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            m_midtakeS.runVoltage(()->0.6995*2, ()->0.6995*2)
+            /* A change in voltage because of the new motors */
+            m_midtakeS.runVoltage(()->0.6995*6, ()->0.6995*6)
           ),
           m_ampRollerS.intakeC(),
-          m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT)
+          /* Changed the name to match the document name change. */
+          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT)
         ).until(m_ampRollerS.receiveNote),
         parallel(
           new ScheduleCommand(
-            m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT)
+            /* Added timeouts and a better sequence in order to rotate to angles more accurately. */
+            m_ampRollerS.intakeC().withTimeout(0.4)
+          ),
+          new ScheduleCommand(
+            m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
+          ),
+          new ScheduleCommand(
+            m_intakeRollerS.outtakeC().withTimeout(1)
+          ),
+          new ScheduleCommand(
+            sequence(
+              m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.RETRACTED - Units.degreesToRadians(10)).withTimeout(1),
+              new ScheduleCommand(m_intakePivotS.retract().withTimeout(1))
+            )
+            
           ),
           new ScheduleCommand(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(1))
         )
@@ -422,6 +455,7 @@ public class RobotContainer implements Logged {
 
     //  ));
 
+    /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
      m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->12)));
      m_operatorController.leftTrigger().whileTrue(
@@ -433,18 +467,13 @@ public class RobotContainer implements Logged {
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
         // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
-    m_operatorController.back().onTrue(
-      spinDistance(()->3.0).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            ()->Interpolation.PIVOT_MAP.get(3.0),
-            () -> 0)
-     )
-    );
-    //m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->6*rightClimberStick.getAsDouble()));
-    m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CW_LIMIT));
+
+    m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->2*rightClimberStick.getAsDouble()));
+    m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
-    m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.SCORE_ANGLE));
-    m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->AmpPivotS.Constants.CCW_LIMIT));
+    /* Changed the name to match the document name change. */
+    m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
+    m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));
     //#endregion
   }
 

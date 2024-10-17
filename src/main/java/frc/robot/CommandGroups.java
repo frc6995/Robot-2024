@@ -22,7 +22,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
-import frc.robot.subsystems.amp.pivot.AmpPivotS;
+/*Changed the name of the import to match the document name change. */
+import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
 import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.DrivebaseS;
@@ -55,8 +56,9 @@ public class CommandGroups {
   private Swerve m_drivebaseS;
   private IntakePivotS m_intakePivotS;
   private IntakeRollerS m_intakeRollerS;
+  /*Changed the name to match the document name change. */
   private MidtakeS m_midtakeS;
-  private AmpPivotS m_ampPivotS;
+  private CTREAmpPivotS m_ampPivotS;
   private AmpRollerS m_ampRollerS;
   private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
@@ -72,7 +74,8 @@ public class CommandGroups {
       IntakePivotS intakePivotS,
       IntakeRollerS intakeRollerS,
       MidtakeS midtakeS,
-      AmpPivotS ampPivotS,
+      /*Changed the name to match the document name change. */
+      CTREAmpPivotS ampPivotS,
       AmpRollerS ampRollerS,
       ShooterFeederS shooterFeederS,
       ShooterPivotS shooterPivotS,
