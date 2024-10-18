@@ -298,7 +298,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 	public void periodic() {
 		m_vision.periodic();
 		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
-		if (false) {
+		if (true) {
 		var swerveState = getState();
 
 		
@@ -344,7 +344,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
   private Transform2d shotTransform = 
 	new Transform2d(
 		-10, 
-		-10, ZERO_ROTATION2D);
+		0, ZERO_ROTATION2D);
   public void drawRobotOnField(Field2d field) {
     field.setRobotPose(getPose());
     field.getObject("shot").setPoses(getPose(), getPose().transformBy(

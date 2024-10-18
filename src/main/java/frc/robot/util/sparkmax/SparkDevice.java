@@ -19,7 +19,6 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.util.FaultLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,6 @@ public class SparkDevice {
   public static CANSparkFlex getSparkFlex(int canId, MotorType motorType) {
     var flex = new CANSparkFlex(canId, motorType);
     m_sparkMaxes.add(flex);
-    FaultLogger.register(flex);
     return flex;
   }
   public static CANSparkFlex getSparkFlex(int canId) {
@@ -56,7 +54,6 @@ public class SparkDevice {
   public static CANSparkMax getSparkMax(int canId, MotorType motorType) {
     var max = new CANSparkMax(canId, motorType);
     m_sparkMaxes.add(max);
-    FaultLogger.register(max);
     return max;
   }
   public static CANSparkMax getSparkMax(int canId) {

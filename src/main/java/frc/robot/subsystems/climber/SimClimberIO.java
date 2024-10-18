@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
-import frc.robot.util.FaultLogger.Fault;
 
 public class SimClimberIO extends ClimberIO {
     private double m_pidVolts = 0;

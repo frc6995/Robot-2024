@@ -1,8 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CCW_LIMIT;
-
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -14,7 +12,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -22,26 +19,20 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
-/*Changed the import name to match the document name change. */
 import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
-import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
@@ -57,9 +48,7 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
-import frc.robot.util.logging.PDData;
 import frc.robot.util.sparkmax.SparkDevice;
-import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.Log;
@@ -71,7 +60,6 @@ import java.util.stream.Collectors;
 
 import org.photonvision.PhotonCamera;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -174,7 +162,14 @@ public class RobotContainer implements Logged {
         m_shooterWheelsS,
         // m_climberS,
         m_lightStripS,
-        m_driverController);
+        m_driverController,
+        (traj, starting)->{
+          if (starting) {
+            m_field.getObject("traj").setPoses(traj.getPoses());
+          } else {
+            m_field.getObject("traj").setPoses();
+          }
+        });
     configureDriverDisplay();
     configureButtonBindings();
     addAutoRoutines();
@@ -488,7 +483,9 @@ public class RobotContainer implements Logged {
   public void addAutoRoutines() {
     m_autoSelector.setDefaultOption("Do Nothing", none());
     m_autoSelector.addOption("S2-C2",m_autos.s2Toc2());
-    m_autoSelector.addOption("FourNote", m_autos.fourNote());
+    m_autoSelector.addOption("FourNote", m_autos.O_C213());
+    m_autoSelector.addOption("O-C213-M3", m_autos.O_C213_M3());
+    m_autoSelector.addOption("O-C2-M3-C13", m_autos.O_C2_M3_C13());
   }
 
   public Command getAutonomousCommand() {

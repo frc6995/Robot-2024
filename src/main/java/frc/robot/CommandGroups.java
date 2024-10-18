@@ -1,9 +1,14 @@
 package frc.robot;
 import choreo.Choreo;
+import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
+import choreo.auto.AutoLoop;
+import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
@@ -66,7 +71,8 @@ public class CommandGroups {
       ShooterWheelsS shooterWheelsS,
       // ClimberS climberS,
       LightStripS lightStripS,
-      CommandXboxController driverController) {
+      CommandXboxController driverController,
+      TrajectoryLogger<SwerveSample> trajectoryLogger) {
     m_drivebaseS = drivebaseS;
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
@@ -83,8 +89,12 @@ public class CommandGroups {
       m_drivebaseS,
       m_drivebaseS::getPose,
       m_drivebaseS::choreoController,
+      (interrupted, pose, sample)->{
+        m_drivebaseS.stop();
+      },
       AllianceWrapper::isRed,
-      new AutoFactory.AutoBindings());
+      new AutoFactory.AutoBindings(),
+      trajectoryLogger);
   }
 
 
@@ -269,35 +279,116 @@ public class CommandGroups {
     return loop.cmd();
   }
 
-  public Command fourNote() {
+
+  public void firstMove(AutoLoop loop, AutoTrajectory first) {
+    loop.enabled()
+    .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
+    .onTrue(m_intakePivotS.deploy())
+    .whileTrue(spinDistance(this::distanceToSpeaker)).
+    onTrue(first.cmd());
+  }
+  public void firstShot(AutoTrajectory first, AutoTrajectory second) {
+    first.done()
+    .onTrue(sequence(
+      new ScheduleCommand(m_drivebaseS.stopOnceC()),
+      idle().withTimeout(0.75),
+      new ScheduleCommand(second.cmd())
+    ));
+    first.done().onTrue(feed().withTimeout(0.1));
+  }
+  public Command endAuto() {
+    return parallel(
+      new ScheduleCommand(m_shooterWheelsS.stopC().withTimeout(0.1)),
+      new ScheduleCommand(m_intakePivotS.retract()),
+      new ScheduleCommand(m_intakeRollerS.stopOnceC()),
+      new ScheduleCommand(m_drivebaseS.stopOnceC())
+    );
+  }
+  public Command O_C213() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
     var second = m_autoFactory.trajectory("SH2-C2", loop);
     var third = m_autoFactory.trajectory("C2-C1", loop);
     var fourth = m_autoFactory.trajectory("C1-C3", loop);
-    loop.enabled()
-    .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
-    .onTrue(m_intakePivotS.deploy())
-    .whileTrue(spinDistance(this::distanceToSpeaker)).
-    onTrue(first.cmd());
+    firstMove(loop, first);
+    firstShot(first, second);
 
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    first.done()
-      .onTrue(sequence(
-        feed().withTimeout(0.75),
-        new ScheduleCommand(second.cmd())
-      ));
     second.done().onTrue(third.cmd());
     third.done().onTrue(fourth.cmd());
     fourth.done()
-      .onTrue(m_drivebaseS.stopOnceC())
-      .onTrue(m_intakeRollerS.stopOnceC())
-      
-      .onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
+      .onTrue(m_drivebaseS.stopOnceC());
+    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
+    fourth.done().onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
     
     return loop.cmd();
   }
+  public Command O_C213_M3() {
+
+    var loop = m_autoFactory.newLoop("FourNote");
+    var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var third = m_autoFactory.trajectory("C2-C1", loop);
+    var fourth = m_autoFactory.trajectory("C1-C3", loop);
+    var fifth = m_autoFactory.trajectory("C3-M3", loop);
+    var sixth = m_autoFactory.trajectory("M3-SH3", loop);
+
+
+    firstMove(loop, first);
+    firstShot(first, second);
+    second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
+    second.done().onTrue(third.cmd());
+    third.done().onTrue(fourth.cmd());
+    fourth.done().onTrue(fifth.cmd());
+    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
+    
+    fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
+    fifth.done().onTrue(
+      either(new ScheduleCommand(sixth.cmd()), new ScheduleCommand(endAuto()), new Trigger(m_midtakeS::hasNote).or(Robot::isSimulation))
+    );
+    sixth.atTime(0.3).onTrue(retractStopIntake());
+    sixth.done().onTrue(feed());
+    sixth.done().onTrue(m_drivebaseS.stopOnceC());
+
+    
+    return loop.cmd();
+  }
+
+  public Command O_C2_M3_C13() {
+
+    var loop = m_autoFactory.newLoop("FourNote");
+    var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var SH2C2 = m_autoFactory.trajectory("SH2-C2", loop);
+    var C2M3 = m_autoFactory.trajectory("C2-M3", loop);
+    var M3C1 = m_autoFactory.trajectory("M3-C1", loop);
+    var fifth = m_autoFactory.trajectory("C1-C3", loop);
+
+
+    firstMove(loop, first);
+    firstShot(first, SH2C2);
+    SH2C2.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
+    SH2C2.done().onTrue(C2M3.cmd());
+    C2M3.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
+    C2M3.done().onTrue(M3C1.cmd());
+    M3C1.atTime(0.3).onTrue(retractStopIntake());
+    M3C1.atTime("feed")
+    .onTrue(feed())
+    .onTrue(m_intakePivotS.deploy())
+    .onTrue(m_intakeRollerS.intakeC());
+    M3C1.done()
+    
+    // Go for the center note 
+    .onTrue(fifth.cmd());
+    
+    
+    fifth.done().onTrue(m_drivebaseS.stopOnceC());
+
+    
+    return loop.cmd();
+  }
+
+
 
   // public Command centerWingNote(PathPlannerPath startToPrePickup) {
   //   var path = startToPrePickup.getTrajectory(ZERO_CHASSISSPEEDS, ZERO_ROTATION2D);

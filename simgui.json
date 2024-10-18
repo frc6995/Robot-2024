@@ -72,6 +72,11 @@
           "style": "Line"
         },
         "top": 79,
+        "traj": {
+          "arrowSize": 25,
+          "arrows": false,
+          "style": "Line"
+        },
         "width": 16.541748046875,
         "window": {
           "visible": true
@@ -84,6 +89,9 @@
     }
   },
   "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
     "transitory": {
       "DriverDisplay": {
         "Faults": {
@@ -201,8 +209,7 @@
               "open": true
             },
             "open": true
-          },
-          "open": true
+          }
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
@@ -228,9 +235,13 @@
           }
         },
         "m_shooterWheelsS": {
+          "Right": {
+            "open": true
+          },
           "Top": {
             "open": true
-          }
+          },
+          "open": true
         },
         "open": true,
         "tree": {
