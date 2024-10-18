@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.CommandGroups.AutoRoutine;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LightStripS;
@@ -115,7 +116,7 @@ public class RobotContainer implements Logged {
   private DigitalInput m_button = new DigitalInput(0);
   private Trigger m_coastModeButton = new Trigger(m_button::get).negate();
   @Log
-  SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
+  SendableChooser<AutoRoutine> m_autoSelector = new SendableChooser<>();
   private boolean m_setupDone = false;
 
   public RobotContainer(Consumer<Runnable> addPeriodic) {
@@ -172,7 +173,8 @@ public class RobotContainer implements Logged {
         });
     configureDriverDisplay();
     configureButtonBindings();
-    addAutoRoutines();
+    m_autos.addAutoRoutines(m_autoSelector);
+    m_autoSelector.onChange(this::updateAutoDisplay);
     SignalLogger.setPath("/media/sda1/");
     SignalLogger.start();
     Monologue.setupMonologue(this, "Robot", false, true);
@@ -186,6 +188,11 @@ public class RobotContainer implements Logged {
     // PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
     // PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
     
+  }
+
+  private void updateAutoDisplay(AutoRoutine routine) {
+    m_field.getObject("auto").setPoses(routine.getPoses());
+    log("autoTime", routine.estTime());
   }
 
   @Log
@@ -480,16 +487,8 @@ public class RobotContainer implements Logged {
     });
   }
 
-  public void addAutoRoutines() {
-    m_autoSelector.setDefaultOption("Do Nothing", none());
-    m_autoSelector.addOption("S2-C2",m_autos.s2Toc2());
-    m_autoSelector.addOption("FourNote", m_autos.O_C213());
-    m_autoSelector.addOption("O-C213-M3", m_autos.O_C213_M3());
-    m_autoSelector.addOption("O-C2-M3-C13", m_autos.O_C2_M3_C13());
-  }
-
   public Command getAutonomousCommand() {
-    return m_autoSelector.getSelected();
+    return m_autoSelector.getSelected().cmd();
   }
 
   Pose3d origin = ZERO_POSE3D;

@@ -41,7 +41,8 @@ public class AutoTrajectory {
   private static final double DEFAULT_TOLERANCE_METERS = Units.inchesToMeters(3);
 
   private final String name;
-  private final Trajectory<? extends TrajectorySample<?>> trajectory;
+  public final Trajectory<? extends TrajectorySample<?>> trajectory;
+  public final Trajectory<? extends TrajectorySample<?>> trajectoryFlipped;
   private final TrajectoryLogger<? extends TrajectorySample<?>> trajectoryLogger;
   private final Supplier<Pose2d> poseSupplier;
   private final BiConsumer<Pose2d, ? extends TrajectorySample<?>> controller;
@@ -91,6 +92,7 @@ public class AutoTrajectory {
       AutoBindings bindings) {
     this.name = name;
     this.trajectory = trajectory;
+    this.trajectoryFlipped = trajectory.flipped();
     this.poseSupplier = poseSupplier;
     this.controller = controller;
     this.end = end;

@@ -6,10 +6,12 @@ import choreo.auto.AutoLoop;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -35,7 +37,10 @@ import frc.robot.util.NomadMathUtil;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.function.DoubleSupplier;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.DoubleConsumer;
 
 import static frc.robot.util.Defaults.*;
@@ -269,7 +274,25 @@ public class CommandGroups {
   }
 
   /** AUTOS */
-
+  public record AutoRoutine(Command cmd, Pose2d[] poses, Pose2d[] flippedPoses, double estTime) {
+    Pose2d[] getPoses() {
+      return AllianceWrapper.isRed() ? flippedPoses() : poses();
+    }
+    Optional<Pose2d> getStart() {
+      var poses = getPoses();
+      if (poses.length > 0) {
+        return Optional.of(poses[0]);
+      }
+      return Optional.empty();
+    }
+  }
+  public void addAutoRoutines(SendableChooser<AutoRoutine> chooser) {
+    chooser.setDefaultOption("Do Nothing", new AutoRoutine(none(), new Pose2d[0], new Pose2d[0], 0));
+    chooser.addOption("O-C213", O_C213());
+    chooser.addOption("O-C213-M3", O_C213_M3());
+    chooser.addOption("O-C231-M3", O_C231_M3());
+    chooser.addOption("O-C2-M3-C13", O_C2_M3_C13());
+  }
   public Command s2Toc2() {
 
     var loop = m_autoFactory.newLoop("S2-C2");
@@ -278,7 +301,7 @@ public class CommandGroups {
     loop.enabled().onTrue(trajectory.cmd());
     return loop.cmd();
   }
-
+  private static final double FIRST_SHOT_PAUSE = 0.75;
 
   public void firstMove(AutoLoop loop, AutoTrajectory first) {
     loop.enabled()
@@ -291,10 +314,10 @@ public class CommandGroups {
     first.done()
     .onTrue(sequence(
       new ScheduleCommand(m_drivebaseS.stopOnceC()),
-      idle().withTimeout(0.75),
+      idle().withTimeout(FIRST_SHOT_PAUSE),
       new ScheduleCommand(second.cmd())
     ));
-    first.done().onTrue(feed().withTimeout(0.1));
+    first.done().onTrue(feed());
   }
   public Command endAuto() {
     return parallel(
@@ -304,7 +327,26 @@ public class CommandGroups {
       new ScheduleCommand(m_drivebaseS.stopOnceC())
     );
   }
-  public Command O_C213() {
+  private Pose2d[] poses(boolean flipped, AutoTrajectory... trajectories) {
+    List<Pose2d> poseList = new ArrayList<>();
+    for (AutoTrajectory t: trajectories) {
+      poseList.addAll(Arrays.asList(flipped ? t.trajectoryFlipped.getPoses() : t.trajectory.getPoses()));
+    }
+    return poseList.toArray(new Pose2d[0]);
+  }
+  private AutoRoutine routine(Command command, double extraTime, AutoTrajectory... trajectories) {
+    double time = extraTime;
+    for (AutoTrajectory t: trajectories) {
+      time += t.trajectory.getTotalTime();
+    }
+    return new AutoRoutine(
+      command,
+      poses(false, trajectories),
+      poses(true, trajectories),
+      time
+    );
+  }
+  public AutoRoutine O_C213() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
@@ -322,9 +364,12 @@ public class CommandGroups {
     fourth.done().onTrue(m_intakeRollerS.stopOnceC());
     fourth.done().onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
     
-    return loop.cmd();
+    return routine(
+      loop.cmd(),
+      FIRST_SHOT_PAUSE,
+      first, second, third, fourth);
   }
-  public Command O_C213_M3() {
+  public AutoRoutine O_C213_M3() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
@@ -352,10 +397,66 @@ public class CommandGroups {
     sixth.done().onTrue(m_drivebaseS.stopOnceC());
 
     
-    return loop.cmd();
+    return routine(
+      loop.cmd(),
+      FIRST_SHOT_PAUSE, first, second, third, fourth, fifth, sixth);
+  }
+  public AutoRoutine O_C231() {
+
+    var loop = m_autoFactory.newLoop("FourNote");
+    var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var third = m_autoFactory.trajectory("C2-C3", loop);
+    var fourth = m_autoFactory.trajectory("C3-C1", loop);
+    firstMove(loop, first);
+    firstShot(first, second);
+
+    second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
+    second.done().onTrue(third.cmd());
+    third.done().onTrue(fourth.cmd());
+    fourth.done()
+      .onTrue(m_drivebaseS.stopOnceC());
+    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
+    fourth.done().onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
+    
+    return routine(
+      loop.cmd(),
+      FIRST_SHOT_PAUSE, first, second, third, fourth);
+  }
+  public AutoRoutine O_C231_M3() {
+
+    var loop = m_autoFactory.newLoop("FourNote");
+    var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var third = m_autoFactory.trajectory("C2-C3", loop);
+    var fourth = m_autoFactory.trajectory("C3-C1", loop);
+    var fifth = m_autoFactory.trajectory("C1-M3", loop);
+    var sixth = m_autoFactory.trajectory("M3-SH3", loop);
+
+
+    firstMove(loop, first);
+    firstShot(first, second);
+    second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
+    second.done().onTrue(third.cmd());
+    third.done().onTrue(fourth.cmd());
+    fourth.done().onTrue(fifth.cmd());
+    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
+    
+    fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
+    fifth.done().onTrue(
+      either(new ScheduleCommand(sixth.cmd()), new ScheduleCommand(endAuto()), new Trigger(m_midtakeS::hasNote).or(Robot::isSimulation))
+    );
+    sixth.atTime(0.3).onTrue(retractStopIntake());
+    sixth.done().onTrue(feed());
+    sixth.done().onTrue(m_drivebaseS.stopOnceC());
+
+
+     return routine(
+      loop.cmd(),
+      FIRST_SHOT_PAUSE,first, second, third, fourth, fifth, sixth);
   }
 
-  public Command O_C2_M3_C13() {
+  public AutoRoutine O_C2_M3_C13() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
@@ -385,7 +486,9 @@ public class CommandGroups {
     fifth.done().onTrue(m_drivebaseS.stopOnceC());
 
     
-    return loop.cmd();
+    return routine(
+      loop.cmd(),
+      FIRST_SHOT_PAUSE, first, SH2C2, C2M3, M3C1, fifth);
   }
 
 
