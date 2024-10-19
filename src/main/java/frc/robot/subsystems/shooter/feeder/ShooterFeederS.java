@@ -10,7 +10,10 @@ import java.util.function.DoubleSupplier;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.sparkmax.SparkDevice;
@@ -33,7 +36,8 @@ public class ShooterFeederS extends SubsystemBase {
     };
   }
   private CANSparkMax m_motor;
-
+      public final MechanismLigament2d FEEDER_ROLLER = new MechanismLigament2d(
+    "feeder-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(0, 255,0));
   /** Creates a new IntakeDirectorS. */
   public ShooterFeederS() {
     m_motor = new SparkBaseConfig(Constants.config).applyMax(
@@ -73,5 +77,6 @@ public class ShooterFeederS extends SubsystemBase {
         if (DriverStation.isDisabled()) {
             stop();
         }
+        FEEDER_ROLLER.setAngle(FEEDER_ROLLER.getAngle() - m_motor.getAppliedOutput());
     }
 }

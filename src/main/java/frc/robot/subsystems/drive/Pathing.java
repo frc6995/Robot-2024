@@ -59,4 +59,14 @@ public class Pathing {
     }
   }
 
+  public static final Pose2d BLUE_PREAMP = new Pose2d(1.759, 7.3, new Rotation2d(-Math.PI/2));
+  public static final Pose2d RED_PREAMP = new Pose2d(14.665, 7.3, new Rotation2d(-Math.PI/2));
+  public static Pose2d getOwnPreAmp() {
+    if (AllianceWrapper.isRed()) {
+      return RED_PREAMP;
+    } else {
+      return BLUE_PREAMP;
+    }
+  }
+
 }

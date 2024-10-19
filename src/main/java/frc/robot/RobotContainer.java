@@ -140,7 +140,9 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
+    RobotVisualizer.addMidtake(m_shooterFeederS.FEEDER_ROLLER);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
+    
     RobotVisualizer.addAmpPivot(m_ampPivotS.AMP_PIVOT);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
@@ -314,17 +316,9 @@ public class RobotContainer implements Logged {
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
 
     // face amp
-    // m_driverController.leftTrigger().whileTrue(
-    //   m_drivebaseS.chasePoseC(Pathing::getOwnAmp));
-      //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
+    m_driverController.leftTrigger().whileTrue(m_autos.driveToPreAmp());
     // face speaker
-    m_driverController.leftTrigger().whileTrue(
-      spinDistance(this::distanceToSpeaker).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0)
-    ));
-    //m_driverController.rightTrigger().whileTrue(faceSpeaker());
+    m_driverController.rightTrigger().whileTrue(faceSpeaker());
 
     /* Switched the wording to line up with the name of this system for the new motor */
     m_driverController.back().or(m_operatorController.back()).whileTrue(

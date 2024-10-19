@@ -111,6 +111,12 @@
       "Robot": {
         "MECH_VISUALIZER": {
           "shooter-pivot-base": {
+            "feeder-roller": {
+              "open": true
+            },
+            "midtake-roller": {
+              "open": true
+            },
             "open": true,
             "shooter": {
               "open": true

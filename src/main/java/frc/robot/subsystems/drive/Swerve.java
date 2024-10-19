@@ -284,6 +284,22 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 );
   }
 
+  public Command driveToPoseC(Supplier<Pose2d> poseSupplier) {
+	return runOnce(
+		() -> {
+		  m_profiledThetaController.reset(getPoseHeading().getRadians());
+		}).andThen(run(()->{
+		var pose = poseSupplier.get();
+		var curr = getPose();
+		driveFieldRelative(
+			new ChassisSpeeds(
+				m_xController.calculate(curr.getX(), pose.getX()),
+				m_yController.calculate(curr.getY(), pose.getY()),
+				m_profiledThetaController.calculate(curr.getRotation().getRadians(), pose.getRotation().getRadians()))
+		);
+	}));
+  }
+
 
 	public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
 		return m_sysId.quasistatic(direction);
