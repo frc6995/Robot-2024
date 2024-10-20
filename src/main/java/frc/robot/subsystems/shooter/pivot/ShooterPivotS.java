@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
@@ -155,6 +156,9 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
   public Command rotateToAngle(DoubleSupplier angleSupplier) {
     return run(()->setAngle(angleSupplier.getAsDouble()));
   }
+  public Command handoffAngle() {
+    return rotateToAngle(() -> ShooterPivotS.Constants.AMP_ANGLE);
+  }
 
   public Command rotateWithVelocity(DoubleSupplier angleSupplier, DoubleSupplier velocitySupplier) {
     return run(()->setAngle(angleSupplier.getAsDouble(), velocitySupplier.getAsDouble()));
@@ -193,11 +197,13 @@ public class ShooterPivotS extends SubsystemBase implements Logged {
     ).ignoringDisable(true).finallyDo(()->{m_io.setIdleMode(IdleMode.kBrake);});
   }
 
+  public final Trigger atAmpAngle = new Trigger(()->Math.abs(getAngle() - Constants.AMP_ANGLE) < Units.degreesToRadians(4));
   public class Constants {
     private static final double OLD_LOWER_STOP = Units.degreesToRadians(180-19+0.75+0.4);
     private static final double NEW_LOWER_STOP = Units.degreesToRadians(161.38);
     public static final double CCW_LIMIT = NEW_LOWER_STOP;
     public static final double CW_LIMIT = Units.degreesToRadians(180-53);
+    public static final double AMP_ANGLE = ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4);
     public static final int CAN_ID = 40;
     /**
      * Also equivalent to motor radians per pivot radian

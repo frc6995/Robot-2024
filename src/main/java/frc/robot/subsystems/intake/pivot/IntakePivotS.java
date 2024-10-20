@@ -103,13 +103,13 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
-  /*@Log.NT*/ public double getGoal() {return m_desiredState.position;}
-  /*@Log.NT*/ public double getGoalVelocity() {return m_desiredState.velocity;}
-  /*@Log.NT*/ public double getAngle() {return m_io.getAngle();}
-  /*@Log.NT*/ public double getVelocity() {return m_io.getVelocity();}
-  /*@Log.NT*/ public double getPidVolts() {return m_io.getPidVolts();}
-  /*@Log.NT*/ public double getVolts() {return m_io.getVolts();}
-  /*@Log.NT*/ public double getCurrent() {return m_io.getCurrent();}
+  @Log public double getGoal() {return m_desiredState.position;}
+  @Log public double getGoalVelocity() {return m_desiredState.velocity;}
+  @Log public double getAngle() {return m_io.getAngle();}
+  @Log public double getVelocity() {return m_io.getVelocity();}
+  @Log public double getPidVolts() {return m_io.getPidVolts();}
+  @Log public double getVolts() {return m_io.getVolts();}
+  @Log public double getCurrent() {return m_io.getCurrent();}
   public boolean isHomed() {return isHomed.getAsBoolean();}
   public boolean hasHomed() {return hasHomed;};
   public Command coast() {return 

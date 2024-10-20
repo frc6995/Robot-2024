@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -28,7 +29,6 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.Interpolation;
-import frc.robot.subsystems.shooter.feeder.ShooterFeederS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
 
 import static frc.robot.util.Defaults.*;
@@ -55,7 +56,6 @@ public class CommandGroups {
   private MidtakeS m_midtakeS;
   private CTREAmpPivotS m_ampPivotS;
   private AmpRollerS m_ampRollerS;
-  private ShooterFeederS m_shooterFeederS;
   private ShooterPivotS m_shooterPivotS;
   private ShooterWheelsS m_shooterWheelsS;
   // private ClimberS m_climberS;
@@ -74,7 +74,6 @@ public class CommandGroups {
       /* Changed the name to match the document name change. */
       CTREAmpPivotS ampPivotS,
       AmpRollerS ampRollerS,
-      ShooterFeederS shooterFeederS,
       ShooterPivotS shooterPivotS,
       ShooterWheelsS shooterWheelsS,
       // ClimberS climberS,
@@ -85,7 +84,6 @@ public class CommandGroups {
     m_intakePivotS = intakePivotS;
     m_intakeRollerS = intakeRollerS;
     m_midtakeS = midtakeS;
-    m_shooterFeederS = shooterFeederS;
     m_shooterPivotS = shooterPivotS;
     m_shooterWheelsS = shooterWheelsS;
     m_ampPivotS = ampPivotS;
@@ -105,6 +103,41 @@ public class CommandGroups {
         trajectoryLogger);
   }
 
+  public Command loadAmp(BooleanSupplier cancel, DoubleSupplier finalAmpPosition) {
+    Trigger shooterPivotThere = m_shooterPivotS.atAmpAngle;
+    Trigger ampPivotThere = m_ampPivotS.atHandoffAngle;
+    Trigger bothThere = shooterPivotThere.and(ampPivotThere);
+    Trigger ampPivotUp = m_ampPivotS.outOfShooter;
+    Trigger ampHasNote = m_ampRollerS.receiveNote;
+    return
+    // shooter pivot
+    new ScheduleCommand(
+        sequence(
+            m_shooterPivotS.rotateToAngle(() -> ShooterPivotS.Constants.AMP_ANGLE).until(ampHasNote),
+            m_shooterPivotS.rotateToAngle(() -> ShooterPivotS.Constants.AMP_ANGLE).until(ampPivotUp)).until(cancel),
+        sequence(
+            m_ampPivotS.rotateToAngle(() -> CTREAmpPivotS.Constants.HANDOFF_ANGLE).until(ampHasNote),
+            m_ampPivotS.rotateToAngle(finalAmpPosition).withTimeout(1.5)
+        ).until(cancel),
+        sequence(
+          sequence(
+            m_ampRollerS.intakeC().until(ampHasNote),
+            m_ampRollerS.intakeC().withTimeout(0.4)
+          ).until(cancel)
+        ),
+        waitUntil(bothThere).andThen(
+            new ScheduleCommand(
+                race(
+                    sequence(
+                      m_shooterWheelsS.spinC(() -> 3000, () -> 3000).until(ampHasNote),
+                      m_shooterWheelsS.spinC(()->1500, ()->1500).withTimeout(1)
+                    )
+                    .until(cancel).asProxy(),
+                    sequence(
+                        m_midtakeS.outtakeC().until(ampHasNote.or(cancel))).asProxy()))
+          ).until(cancel));
+  }
+
   /**
    * This command deploys the intake, runs the intake rollers, and prepares to
    * receive the
@@ -114,60 +147,49 @@ public class CommandGroups {
    */
   public Command deployRunIntake(Trigger overrideTOF) {
     Trigger hasNote = m_midtakeS.hasNote;
-    return parallel(
+    return new ScheduleCommand(
+        // intake pivot
         sequence(
-            parallel(
-                m_shooterFeederS.runVoltageC(() -> 0),
-                m_intakePivotS.deploy(),
-                waitSeconds(0.2).andThen(m_intakeRollerS.intakeC()),
-                waitSeconds(0.1).andThen(
-                    // m_midtakeS.intakeC()
-                    m_midtakeS.runVoltage(() -> MidtakeS.Constants.IN_VOLTAGE, () -> MidtakeS.Constants.IN_VOLTAGE)))
+            m_intakePivotS.deploy()
                 .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
-
-            parallel(
-                new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
-                new ScheduleCommand(m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)
-                    .andThen(m_lightStripS.stateC(() -> States.HasNote).withTimeout(1.5))),
-                sequence(waitSeconds(0.5), m_intakePivotS.retract()),
-                m_intakeRollerS.slowInC(),
-                m_midtakeS.runVoltage(() -> 6, () -> 6),
-                m_shooterFeederS.runVoltageC(() -> 0))
-                .withTimeout(1)
-                .until(hasNote.negate())
-                .onlyIf(hasNote),
-            // intentionally interrupt the current command to fragment the group
-            parallel(
-                new ScheduleCommand(m_intakeRollerS.slowInC().withTimeout(1).andThen(m_intakeRollerS.stopC())),
-                new ScheduleCommand(m_intakePivotS.retract()),
+            waitSeconds(0.5),
+            new ScheduleCommand(
+                m_intakePivotS.retract())),
+        // intake roller
+        sequence(
+            m_intakeRollerS.intakeC()
+                .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
+            either(
                 new ScheduleCommand(
-                    parallel(
-                        m_midtakeS.runVoltage(() -> -1, () -> -1),
-                        m_shooterFeederS.backupC())
+                    sequence(
+                        m_intakeRollerS.slowInC()
+                            .withTimeout(1)
+                            .until(hasNote.negate()),
+                        m_intakeRollerS.slowInC().withTimeout(1))),
+                none(), hasNote)),
+        // midtakeS
+        sequence(
 
+            m_midtakeS.stopC().withTimeout(0.1),
+            m_midtakeS.intakeC().until(m_midtakeS.hasNote.and(overrideTOF.negate()))
+            .until(()->m_intakePivotS.getGoal() > 0)
+            ,
+            either(
+                sequence(
+                    parallel(
+                        new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
+                        new ScheduleCommand(m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)
+                            .andThen(m_lightStripS.stateC(() -> States.HasNote).withTimeout(1.5))),
+                        m_midtakeS.intakeC().until(hasNote.negate()).withTimeout(6)),
+                    m_midtakeS.reverseC()
                         .withTimeout(3)
-                        .until(hasNote)
-                        .andThen(parallel(
-                            m_midtakeS.stopOnceC(), m_shooterFeederS.stopC())))))
-    )
-    // .or(m_midtakeS.recvNote.and(m_midtakeS.isRunning)))
+                        .until(hasNote)),
+                none(),
+                ()->m_intakePivotS.getGoal() <= 0)
+        )
+      )
+
     ;
-    // .andThen(
-    // parallel(
-    // sequence(
-    // m_midtakeS.stopC(),
-    // waitSeconds(0.5),
-    // m_midtakeS.outtakeC().withTimeout(0.3),
-    // m_midtakeS.stopC()),
-    // waitSeconds(0.5).andThen(retractStopIntake())
-    // )
-    // );
-    // .andThen(
-    // parallel(
-    // m_intakeRollerS.slowInC(),
-    // m_midtakeS.outtakeC()
-    // ).withTimeout(0.3)
-    // );
   }
 
   public Command retractStopIntake() {
@@ -267,9 +289,7 @@ public class CommandGroups {
   }
 
   public Command feed() {
-    return parallel(
-        m_midtakeS.intakeC(),
-        m_shooterFeederS.feedC());
+    return m_midtakeS.outtakeC();
   }
 
   /** AUTOS */
@@ -314,7 +334,7 @@ public class CommandGroups {
   public void firstMove(AutoLoop loop, AutoTrajectory first) {
     loop.enabled()
         .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
-    
+
         .onTrue(first.cmd());
     first.atTime(0.1).onTrue(m_intakePivotS.deploy());
     first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
@@ -323,8 +343,7 @@ public class CommandGroups {
   public void firstShot(AutoTrajectory first, AutoTrajectory second) {
     first.done()
         .onTrue(sequence(
-            new ScheduleCommand(m_drivebaseS.stopOnceC()),
-            idle().withTimeout(FIRST_SHOT_PAUSE),
+            new ScheduleCommand(m_drivebaseS.stopC().withTimeout(FIRST_SHOT_PAUSE)),
             new ScheduleCommand(second.cmd())));
     first.done().onTrue(feed());
   }
@@ -368,12 +387,9 @@ public class CommandGroups {
     firstShot(first, second);
 
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(third.cmd());
-    third.done().onTrue(fourth.cmd());
-    fourth.done()
-        .onTrue(m_drivebaseS.stopOnceC());
-    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
-    fourth.done().onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
+    second.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(third.cmd()));
+    third.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(fourth.cmd()));
+    fourth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -423,12 +439,9 @@ public class CommandGroups {
     firstShot(first, second);
 
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(third.cmd());
-    third.done().onTrue(fourth.cmd());
-    fourth.done()
-        .onTrue(m_drivebaseS.stopOnceC());
-    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
-    fourth.done().onTrue(m_shooterWheelsS.stopC().withTimeout(0.0));
+    second.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(third.cmd()));
+    third.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(fourth.cmd()));
+    fourth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -481,7 +494,7 @@ public class CommandGroups {
     // Go towards C2 with intake down, rollers going, shooter feeding
     SH2C2.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
     SH2C2.done().onTrue(C2M3.cmd());
-    // Go to 
+    // Go to
     C2M3.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
     C2M3.done().onTrue(M3C1.cmd());
     M3C1.atTime(0.3).onTrue(retractStopIntake());
@@ -539,16 +552,16 @@ public class CommandGroups {
     var D1SH4 = m_autoFactory.trajectory("D1-SH4", loop);
 
     loop.enabled()
-      .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
-      .onTrue(first.cmd())
-      .onTrue(m_intakePivotS.deploy());
+        .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
+        .onTrue(first.cmd())
+        .onTrue(m_intakePivotS.deploy());
 
     // First path: drop onboard at wingline, intake M1
-    first.atTime("drop").onTrue(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(0.7));
+    first.atTime("drop").onTrue(m_shooterWheelsS.spinC(() -> 2000, () -> 2000).withTimeout(0.7));
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
     first.done().onTrue(M1SH4.cmd());
 
-    // Shoot M1 
+    // Shoot M1
     M1SH4.atTime("feed")
         .onTrue(feed().withTimeout(1));
     M1SH4.done().onTrue(SH4M2.cmd());
@@ -562,7 +575,7 @@ public class CommandGroups {
     M2SH4.done().onTrue(SH4D1.cmd());
     // Pickup D1
     SH4D1.done().onTrue(D1SH4.cmd());
-    SH4D1.atTime("intake").onTrue(deployRunIntake(new Trigger(()->false)));
+    SH4D1.atTime("intake").onTrue(deployRunIntake(new Trigger(() -> false)));
     D1SH4.atTime("feed")
         .onTrue(feed().withTimeout(1));
     D1SH4.done().onTrue(m_drivebaseS.stopOnceC());
@@ -573,11 +586,13 @@ public class CommandGroups {
   }
 
   public Command driveToPreAmp() {
-    return m_drivebaseS.driveToPoseC(()->Pathing.getOwnPreAmp());
+    return m_drivebaseS.driveToPoseC(() -> Pathing.getOwnPreAmp());
   }
+
   public Command driveToAmp() {
-    return m_drivebaseS.driveToPoseC(()->Pathing.getOwnAmp());
+    return m_drivebaseS.driveToPoseC(() -> Pathing.getOwnAmp());
   }
+
   public Command spinDistance(DoubleSupplier distance) {
     return m_shooterWheelsS.spinC(() -> Interpolation.LEFT_MAP.get(distance.getAsDouble()),
         () -> Interpolation.RIGHT_MAP.get(distance.getAsDouble()));

@@ -50,7 +50,7 @@ import monologue.Annotations.Log;
 import java.util.List;
 
 import java.util.function.BiConsumer;
-import static frc.robot.generated.TunerConstants.kDriveRadius;
+import static frc.robot.generated.TunerConstants.kDriveRadiusMeters;
 import static frc.robot.generated.TunerConstants.kDriveRotationsPerMeter;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.Defaults.*;
@@ -184,15 +184,22 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 					.withRotationalRate(m_omegaLimiter.calculate(m_characterisationSpeed * omegaDirection)));
 				accumGyroYawRads += MathUtil.angleModulus(m_gyroYawRadsSupplier.getAsDouble() - lastGyroYawRads);
 				lastGyroYawRads = m_gyroYawRadsSupplier.getAsDouble();
-				double averageWheelPosition = 0;
-				double[] wheelPositions = new double[4];
+				double averageWheelPositionRotations = 0;
+				double[] wheelPositionRotationss = new double[4];
 				for (int i = 0; i < Modules.length; i++) {
 					var pos = Modules[i].getPosition(true);
-					wheelPositions[i] = pos.distanceMeters * kDriveRotationsPerMeter;
-					averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
+					log("pos"+i, pos.distanceMeters);
+					wheelPositionRotationss[i] = pos.distanceMeters * kDriveRotationsPerMeter;
+					averageWheelPositionRotations += Math.abs(wheelPositionRotationss[i] - startWheelPositions[i]);
 				}
-				averageWheelPosition /= 4.0;
-				currentEffectiveWheelRadius = (accumGyroYawRads * kDriveRadius) / averageWheelPosition;
+				averageWheelPositionRotations /= 4.0;
+				log("wheelPos", wheelPositionRotationss);
+				log("avgWheelPos", averageWheelPositionRotations);
+				log("accumGyroYawRads", accumGyroYawRads);
+				
+				// arc length meters / wheel rotations = wheel circumference
+				currentEffectiveWheelRadius = (accumGyroYawRads * kDriveRadiusMeters) / averageWheelPositionRotations;
+				log("currWheelRad", currentEffectiveWheelRadius / (2*Math.PI));
 				// log_lastGyro.accept(lastGyroYawRads);
 				// log_avgWheelPos.accept(averageWheelPosition);
 				// log_accumGyro.accept(accumGyroYawRads);

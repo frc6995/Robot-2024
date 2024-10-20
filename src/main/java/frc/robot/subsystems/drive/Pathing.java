@@ -19,7 +19,7 @@ public class Pathing {
   }
   public static double velocityTorwardsSpeaker(
     Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
-       return -speakerRelativeSpeeds(currentPose, fieldRelativeSpeeds, 
+       return speakerRelativeSpeeds(currentPose, fieldRelativeSpeeds, 
       targetTranslation
     ).vxMetersPerSecond;
     }

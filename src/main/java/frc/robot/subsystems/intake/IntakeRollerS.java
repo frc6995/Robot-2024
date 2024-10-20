@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
 import monologue.Logged;
@@ -47,7 +48,8 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
     };
   }
   private CANSparkMax m_leader;
-
+  @Log public boolean intaking() {return intaking.getAsBoolean();}
+  public final Trigger intaking = new Trigger(()->getVolts() < 0);
     public final MechanismLigament2d INTAKE_ROLLER = new MechanismLigament2d(
     "intake-roller", Units.inchesToMeters(1), 0, 4, new Color8Bit(255, 255, 255));
 
@@ -115,5 +117,8 @@ public class IntakeRollerS extends SubsystemBase implements Logged {
   }
   @Log public double getCurrent() {
     return m_leader.getOutputCurrent();
+  }
+  @Log public double getVolts() {
+    return m_leader.getAppliedOutput() * (Robot.isReal() ? 12 : 1);
   }
 }

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.amp;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -37,6 +39,9 @@ public class AmpRollerS extends SubsystemBase implements Logged {
     receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 8).debounce(0.1);
   }
 
+  public Command runVoltage(DoubleSupplier voltage){
+    return run(()->m_motor.setVoltage(voltage.getAsDouble()));
+  }
   /**sets motor to outtake */
   public void outtake () {
     m_motor.setVoltage(Constants.OUT_VOLTAGE);

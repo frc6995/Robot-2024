@@ -145,6 +145,15 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   public Command rotateToAngle(DoubleSupplier angleSupplier) {
     return run(() -> setAngleRadians(angleSupplier.getAsDouble()));
   }
+  public Command handoffAngle() {
+    return rotateToAngle(()->Constants.HANDOFF_ANGLE);
+  }
+  public Command stow() {
+    return rotateToAngle(()->Constants.CW_LIMIT);
+  }
+  public Command score() {
+    return rotateToAngle(()->Constants.SCORE_ANGLE);
+  }
 
   public Command deploy() {
    
@@ -189,13 +198,29 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
         .ignoringDisable(true);
   }
 
+  private final Trigger at(double angleRadians) {
+    return at(angleRadians, Units.degreesToRadians(4));
+  }
+  private final Trigger at(double angleRadians, double tolerance) {
+    return new Trigger(
+      ()->Math.abs(
+        getAngleRadians() - angleRadians
+      ) < tolerance);
+  }
+  public final Trigger atHandoffAngle = at(Constants.HANDOFF_ANGLE);
+  public final Trigger atStow = at(Constants.CW_LIMIT);
+  public final Trigger outOfShooter = new Trigger(
+    ()->
+      getAngleRadians() < Math.PI
+    );
   /* Removed resetToExtendC and homeC */
 
   public class Constants {
     public static final double CCW_LIMIT = Units.degreesToRadians(230);
     public static final double CW_LIMIT = Units.degreesToRadians(0);
-    public static final double SCORE_ANGLE = 2 * Math.PI / 3.0;
+    public static final double SCORE_ANGLE = 2* Math.PI / 3.0 - Units.degreesToRadians(5);
     public static final int CAN_ID = 42;
+    public static final double HANDOFF_ANGLE = CTREAmpPivotS.Constants.CCW_LIMIT;
     /**
      * Also equivalent to motor radians per pivot radian
      */

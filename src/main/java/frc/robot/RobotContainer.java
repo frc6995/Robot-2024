@@ -40,7 +40,6 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
 import frc.robot.subsystems.shooter.Interpolation;
-import frc.robot.subsystems.shooter.feeder.ShooterFeederS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
@@ -78,7 +77,6 @@ public class RobotContainer implements Logged {
 
   @Log
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
-  private final ShooterFeederS m_shooterFeederS;
   private final ShooterPivotS m_shooterPivotS;
   private final ShooterWheelsS m_shooterWheelsS;
   private final IntakePivotS m_intakePivotS;
@@ -123,7 +121,6 @@ public class RobotContainer implements Logged {
     if (true || RobotBase.isSimulation()) {
       PhotonCamera.setVersionCheckEnabled(false);
     }
-    m_shooterFeederS = new ShooterFeederS();
     m_shooterPivotS = new ShooterPivotS();
     m_shooterWheelsS = new ShooterWheelsS();
     m_midtakeS = new MidtakeS();
@@ -140,7 +137,7 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
-    RobotVisualizer.addMidtake(m_shooterFeederS.FEEDER_ROLLER);
+    RobotVisualizer.addMidtake(m_midtakeS.FEEDER_ROLLER);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
     
     RobotVisualizer.addAmpPivot(m_ampPivotS.AMP_PIVOT);
@@ -160,7 +157,6 @@ public class RobotContainer implements Logged {
         m_midtakeS,
         m_ampPivotS,
         m_ampRollerS,
-        m_shooterFeederS,
         m_shooterPivotS,
         m_shooterWheelsS,
         // m_climberS,
@@ -294,11 +290,12 @@ public class RobotContainer implements Logged {
     m_shooterPivotS.setDefaultCommand(
         m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
-            () -> 0
-        // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
-        // -Pathing.velocityTorwardsSpeaker(
-        // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
-        // speaker())
+        ()-> {
+          var towardsSpkr = Pathing.velocityTorwardsSpeaker(
+            m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+            speaker());
+          log("velTowardsSpkr", towardsSpkr);
+          return Interpolation.dThetadX(distanceToSpeaker()) * -towardsSpkr;}
         ));
     //#region driver controller
 
@@ -327,7 +324,9 @@ public class RobotContainer implements Logged {
         m_ampPivotS.resetToRetractedC(),
         runOnce(m_shooterPivotS::resetAngleUp).ignoringDisable(true)
       ));
-    m_driverController.start().onTrue(runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
+    m_driverController.start().whileTrue(
+      m_drivebaseS.wheelRadiusCharacterisation(1)
+    );
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
     //#endregion
@@ -353,15 +352,16 @@ public class RobotContainer implements Logged {
      //intake spit out
      m_operatorController.x().whileTrue(
       parallel(
-      m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2)),
-      m_shooterFeederS.runVoltageC(()-> -0.6995),
-      m_intakeRollerS.runVoltageC(()->0.6995*2)));
+      m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2), ()-> -0.6995),
+      m_intakeRollerS.runVoltageC(()->0.6995*2),
+      m_ampRollerS.runVoltage(()->0.6995)
+      ));
      // intake move 
      m_operatorController.y().whileTrue(
       parallel(
-      m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2),
-      m_shooterFeederS.runVoltageC(()-> 0.6995),
-      m_intakeRollerS.runVoltageC(()->-0.6995*2)
+      m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2, ()-> 0.6995),
+      m_intakeRollerS.runVoltageC(()->-0.6995*2),
+      m_ampRollerS.runVoltage(()->-0.6995)
      ));
     //  // spinup for amp
     //  ampMode.whileTrue(
@@ -395,50 +395,8 @@ public class RobotContainer implements Logged {
         ),
         m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
       ));
-    ampIntake.whileTrue(
-      sequence(
-        parallel(
-          /* Changed the name to match the document name change.
-          Also changed the timeout time and fine-tuned the handoff position with the subtraction from CCW limit. */
-        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT-Units.degreesToRadians(4))
-        ).until(m_ampPivotS.onTarget).withTimeout(1.5),
-        parallel(
-          m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
-          /* A slight change to the RPM */
-          m_shooterWheelsS.spinC(()->3000, ()->3000),
-          m_shooterFeederS.runVoltageC(()->6),
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            /* A change in voltage because of the new motors */
-            m_midtakeS.runVoltage(()->0.6995*6, ()->0.6995*6)
-          ),
-          m_ampRollerS.intakeC(),
-          /* Changed the name to match the document name change. */
-          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT)
-        ).until(m_ampRollerS.receiveNote),
-        parallel(
-          new ScheduleCommand(
-            /* Added timeouts and a better sequence in order to rotate to angles more accurately. */
-            m_ampRollerS.intakeC().withTimeout(0.4)
-          ),
-          new ScheduleCommand(
-            m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
-          ),
-          new ScheduleCommand(
-            m_intakeRollerS.outtakeC().withTimeout(1)
-          ),
-          new ScheduleCommand(
-            sequence(
-              m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.RETRACTED - Units.degreesToRadians(10)).withTimeout(1),
-              new ScheduleCommand(m_intakePivotS.retract().withTimeout(1))
-            )
-            
-          ),
-          new ScheduleCommand(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(1))
-        )
-
-      )
+    ampIntake.onTrue(
+      m_autos.loadAmp(ampIntake.negate(), ()->CTREAmpPivotS.Constants.CW_LIMIT)
     );
     //   spinDistance(this::xDistToSpeaker),
     //   m_shooterPivotS.rotateWithVelocity(
@@ -449,7 +407,7 @@ public class RobotContainer implements Logged {
 
     /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
-     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->12)));
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5, ()->12));
      m_operatorController.leftTrigger().whileTrue(
       spinDistance(this::distanceToSpeaker).alongWith(
       m_shooterPivotS.rotateWithVelocity(
