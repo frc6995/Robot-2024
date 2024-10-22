@@ -209,6 +209,7 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   }
   public final Trigger atHandoffAngle = at(Constants.HANDOFF_ANGLE);
   public final Trigger atStow = at(Constants.CW_LIMIT);
+  public final Trigger atScore = at(Constants.SCORE_ANGLE);
   public final Trigger outOfShooter = new Trigger(
     ()->
       getAngleRadians() < Math.PI

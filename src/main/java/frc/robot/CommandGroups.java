@@ -39,11 +39,14 @@ import frc.robot.util.NomadMathUtil;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
 import static frc.robot.util.Defaults.*;
@@ -101,41 +104,145 @@ public class CommandGroups {
         AllianceWrapper::isRed,
         new AutoFactory.AutoBindings(),
         trajectoryLogger);
+
+    // Triggers
+    pivotsHandoffReady = m_shooterPivotS.atAmpAngle.and(m_ampPivotS.atHandoffAngle);
+    ampReceivesNote = m_ampRollerS.receiveNote;
+    ampPivotUp = m_ampPivotS.outOfShooter;
   }
 
+  public final Trigger pivotsHandoffReady,
+      ampPivotUp,
+      ampReceivesNote;
+
+  /**
+   * Requires: None
+   * Schedules: Shooter Pivot, Amp Pivot, Amp Roller
+   * Schedules After Pivots Ready: Shooter Wheels, Midtake
+   */
   public Command loadAmp(BooleanSupplier cancel, DoubleSupplier finalAmpPosition) {
-    Trigger shooterPivotThere = m_shooterPivotS.atAmpAngle;
-    Trigger ampPivotThere = m_ampPivotS.atHandoffAngle;
-    Trigger bothThere = shooterPivotThere.and(ampPivotThere);
-    Trigger ampPivotUp = m_ampPivotS.outOfShooter;
-    Trigger ampHasNote = m_ampRollerS.receiveNote;
     return
     // shooter pivot
     new ScheduleCommand(
         sequence(
-            m_shooterPivotS.rotateToAngle(() -> ShooterPivotS.Constants.AMP_ANGLE).until(ampHasNote),
-            m_shooterPivotS.rotateToAngle(() -> ShooterPivotS.Constants.AMP_ANGLE).until(ampPivotUp)).until(cancel),
+            m_shooterPivotS.handoffAngle().until(ampReceivesNote),
+            m_shooterPivotS.handoffAngle().until(ampPivotUp)).until(cancel),
         sequence(
-            m_ampPivotS.rotateToAngle(() -> CTREAmpPivotS.Constants.HANDOFF_ANGLE).until(ampHasNote),
-            m_ampPivotS.rotateToAngle(finalAmpPosition).withTimeout(1.5)
-        ).until(cancel),
+            m_ampPivotS.handoffAngle().until(ampReceivesNote),
+            m_ampPivotS.rotateToAngle(finalAmpPosition).withTimeout(1.5))
+            .until(cancel),
         sequence(
-          sequence(
-            m_ampRollerS.intakeC().until(ampHasNote),
-            m_ampRollerS.intakeC().withTimeout(0.4)
-          ).until(cancel)
-        ),
-        waitUntil(bothThere).andThen(
+            m_ampRollerS.intakeC().until(ampReceivesNote),
+            m_ampRollerS.intakeC().withTimeout(0.4)).until(cancel),
+        waitUntil(pivotsHandoffReady).andThen(
             new ScheduleCommand(
-                race(
-                    sequence(
-                      m_shooterWheelsS.spinC(() -> 3000, () -> 3000).until(ampHasNote),
-                      m_shooterWheelsS.spinC(()->1500, ()->1500).withTimeout(1)
-                    )
-                    .until(cancel).asProxy(),
-                    sequence(
-                        m_midtakeS.outtakeC().until(ampHasNote.or(cancel))).asProxy()))
-          ).until(cancel));
+                sequence(
+                    m_shooterWheelsS.spinC(() -> 3000, () -> 3000).until(ampReceivesNote),
+                    m_shooterWheelsS.spinC(() -> 1500, () -> 1500).withTimeout(1)).until(cancel),
+
+                sequence(
+                    m_midtakeS.outtakeC().until(ampReceivesNote)).until(cancel)))
+            .until(cancel));
+  }
+
+  /**
+   * Requires: Amp Roller, Amp Pivot
+   * @return
+   */
+  public Command scoreAmp() {
+    return sequence(
+        deadline(
+            sequence(
+                m_ampRollerS.stopC().until(m_ampPivotS.atScore).withTimeout(1.5),
+                m_ampRollerS.outtakeC().withTimeout(0.5),
+                m_ampRollerS.stopC()),
+            m_ampPivotS.score()),
+        m_ampPivotS.stow().withTimeout(1.5));
+  }
+
+  /**
+   * Requires: None
+   * @param cancel
+   * @param finalAmpPosition
+   * @param overrideTOF
+   * @return
+   */
+  public Command intakeLoadAmp(BooleanSupplier cancel, DoubleSupplier finalAmpPosition, Trigger overrideTOF) {
+    return new ScheduleCommand(
+        loadAmp(cancel, finalAmpPosition),
+        // This will likely get interrupted by the loadAmp
+        midtakeReceiveNote(overrideTOF),
+        deployRunIntakeOnly(overrideTOF).until(cancel).andThen(retractStopIntake()));
+  }
+
+  /**
+   * Requires: Intake Pivot
+   */
+  public Command deployIntakeUntilNote(Trigger hasNote) {
+    return sequence(
+        m_intakePivotS.deploy().until(hasNote),
+        m_intakePivotS.deploy().withTimeout(0.5)
+      );
+  }
+
+  /**
+   * Requires: IntakeRoller
+   */
+  public Command runIntakeUntilNote(Trigger hasNote) {
+    return sequence(
+        m_intakeRollerS.intakeC().until(hasNote),
+        sequence(
+            m_intakeRollerS.slowInC()
+                .withTimeout(1)
+                .until(hasNote.negate()),
+            m_intakeRollerS.slowInC().withTimeout(1)).onlyIf(hasNote)
+      );
+  }
+
+  /** 
+   * Requires: IntakeRoller, Intake Pivot
+  */
+  public Command deployRunIntakeOnly(Trigger overrideTOF) {
+    Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
+    return parallel(
+        // intake pivot
+        deployIntakeUntilNote(hasNote).asProxy(),
+        // intake roller
+        waitUntil(()->m_intakePivotS.getAngle() < 0).andThen(runIntakeUntilNote(hasNote).asProxy()));
+  }
+
+  /**
+   * Requires: None
+   * @return
+   */
+  public Command intakeNoteFeedback() {
+    return new ScheduleCommand(
+        rumbleDriver(0.7).withTimeout(0.75),
+        m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)
+            .andThen(m_lightStripS.stateC(() -> States.HasNote).withTimeout(1.5)));
+  }
+
+  /**
+   * Requires: Midtake
+   * @param overrideTOF
+   * @return
+   */
+  public Command midtakeReceiveNote(Trigger overrideTOF) {
+    Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
+    Trigger intakeDown = new Trigger(() -> m_intakePivotS.getGoal() <= 0);
+    return sequence(
+        m_midtakeS.intakeC().until(hasNote)
+            .until(intakeDown.negate()),
+        either(
+            sequence(
+                parallel(
+                    intakeNoteFeedback(),
+                    m_midtakeS.intakeC().until(hasNote.negate()).withTimeout(6)),
+                m_midtakeS.reverseC()
+                    .withTimeout(3)
+                    .until(hasNote)),
+            none(),
+            intakeDown));
   }
 
   /**
@@ -146,56 +253,19 @@ public class CommandGroups {
    * End: When note is in midtake
    */
   public Command deployRunIntake(Trigger overrideTOF) {
-    Trigger hasNote = m_midtakeS.hasNote;
-    return new ScheduleCommand(
-        // intake pivot
-        sequence(
-            m_intakePivotS.deploy()
-                .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
-            waitSeconds(0.5),
-            new ScheduleCommand(
-                m_intakePivotS.retract())),
-        // intake roller
-        sequence(
-            m_intakeRollerS.intakeC()
-                .until(m_midtakeS.hasNote.and(overrideTOF.negate())),
-            either(
-                new ScheduleCommand(
-                    sequence(
-                        m_intakeRollerS.slowInC()
-                            .withTimeout(1)
-                            .until(hasNote.negate()),
-                        m_intakeRollerS.slowInC().withTimeout(1))),
-                none(), hasNote)),
-        // midtakeS
-        sequence(
-
-            m_midtakeS.stopC().withTimeout(0.1),
-            m_midtakeS.intakeC().until(m_midtakeS.hasNote.and(overrideTOF.negate()))
-            .until(()->m_intakePivotS.getGoal() > 0)
-            ,
-            either(
-                sequence(
-                    parallel(
-                        new ScheduleCommand(rumbleDriver(0.7).withTimeout(0.75)),
-                        new ScheduleCommand(m_lightStripS.stateC(() -> States.IntakedNote).withTimeout(0.75)
-                            .andThen(m_lightStripS.stateC(() -> States.HasNote).withTimeout(1.5))),
-                        m_midtakeS.intakeC().until(hasNote.negate()).withTimeout(6)),
-                    m_midtakeS.reverseC()
-                        .withTimeout(3)
-                        .until(hasNote)),
-                none(),
-                ()->m_intakePivotS.getGoal() <= 0)
-        )
-      )
-
+    return parallel(
+        deployRunIntakeOnly(overrideTOF),
+        waitSeconds(0.1).andThen(midtakeReceiveNote(overrideTOF)))
     ;
   }
 
   public Command retractStopIntake() {
     return parallel(
-        m_intakePivotS.retract(),
-        m_intakeRollerS.stopC());
+        m_intakePivotS.runOnce(()->{}).asProxy(),
+        either(waitSeconds(0.5), none(), m_midtakeS.hasNote).andThen(
+          m_intakeRollerS.runOnce(()->{}).asProxy()
+        )
+       );
   }
 
   // public Command autoPickupC() {

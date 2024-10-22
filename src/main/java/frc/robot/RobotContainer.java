@@ -324,9 +324,9 @@ public class RobotContainer implements Logged {
         m_ampPivotS.resetToRetractedC(),
         runOnce(m_shooterPivotS::resetAngleUp).ignoringDisable(true)
       ));
-    m_driverController.start().whileTrue(
-      m_drivebaseS.wheelRadiusCharacterisation(1)
-    );
+    // m_driverController.start().whileTrue(
+    //   m_drivebaseS.wheelRadiusCharacterisation(1)
+    // );
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
     //#endregion
@@ -379,24 +379,13 @@ public class RobotContainer implements Logged {
     Also, we no longer need PID to hold the horizontal position. */
 
     // amp handoff
-    Trigger ampIntake = m_operatorController.rightBumper();
+    Trigger ampLoad = m_operatorController.rightBumper();
     Trigger ampScore = m_operatorController.a();
 
-    ampScore.onTrue(
-      sequence(
-        deadline(
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(1.5),
-            m_ampRollerS.outtakeC().withTimeout(0.5),
-            m_ampRollerS.stopC()
-          ),
-          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE)
-        ),
-        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
-      ));
-    ampIntake.onTrue(
-      m_autos.loadAmp(ampIntake.negate(), ()->CTREAmpPivotS.Constants.CW_LIMIT)
+    ampScore.onTrue(m_autos.scoreAmp());
+      
+    ampLoad.onTrue(
+      m_autos.loadAmp(ampScore, ()->CTREAmpPivotS.Constants.CW_LIMIT)
     );
     //   spinDistance(this::xDistToSpeaker),
     //   m_shooterPivotS.rotateWithVelocity(
@@ -408,17 +397,12 @@ public class RobotContainer implements Logged {
     /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
      m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5, ()->12));
-     m_operatorController.leftTrigger().whileTrue(
-      spinDistance(this::distanceToSpeaker).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0)
-     ));
+     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker));
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
         // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
         // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
 
-    m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->2*rightClimberStick.getAsDouble()));
+    m_ampPivotS.setDefaultCommand(m_ampPivotS.hold());
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
     /* Changed the name to match the document name change. */
@@ -479,8 +463,8 @@ public class RobotContainer implements Logged {
     m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
     List<Pose2d> poses = m_noteCamera.getTargets((time)->Optional.of(m_drivebaseS.getPose()));
     m_field.getObject("note").setPoses(poses);
-    List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
-    notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
+    // List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
+    // notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
     //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
 
   }

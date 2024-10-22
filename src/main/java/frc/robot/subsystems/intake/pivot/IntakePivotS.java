@@ -100,7 +100,12 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
 
-    setDefaultCommand(hold()); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
+    setDefaultCommand(
+      sequence(
+        hold().until(this::hasHomed).unless(this::hasHomed),
+        retract()
+      )
+    ); //either(hold(), homeC().andThen(hold()), ()->hasHomed));
   }
   @Log.Once public double[] ff = new double[] {Constants.K_S, Constants.K_V, Constants.K_A, Constants.K_G};
   @Log public double getGoal() {return m_desiredState.position;}
