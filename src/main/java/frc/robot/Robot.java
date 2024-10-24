@@ -61,9 +61,6 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
     robotContainer.onEnabled();
-    autonomousCommand = robotContainer.getAutonomousCommand();
-
-    if (autonomousCommand != null) autonomousCommand.schedule();
   }
 
   @Override
@@ -71,7 +68,6 @@ public class Robot extends TimedRobot {
 
     AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
     robotContainer.onEnabled();
-    if (autonomousCommand != null) autonomousCommand.cancel();
   }
 
   @Override

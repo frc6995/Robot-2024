@@ -48,6 +48,9 @@ public class ShooterWheelsS implements Logged {
       m_rightRoller.stopC()
     );
   }
+  public Command stopOnceC(){
+    return stopC().until(()->true);
+  }
 
   public Command spinC(DoubleSupplier leftSpeed, DoubleSupplier rightSpeed){
     return parallel(

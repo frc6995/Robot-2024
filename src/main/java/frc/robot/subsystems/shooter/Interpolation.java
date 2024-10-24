@@ -48,8 +48,11 @@ public class Interpolation {
         entry(3.7, 2.6+Units.degreesToRadians(2), 7500, 7500-2000);
         entry(4, 2.6+Units.degreesToRadians(4), 8000, 8000-2000);
         entry(4.5, 2.63+Units.degreesToRadians(4), 9000, 9000-2500);
-        entry(5, 2.65+Units.degreesToRadians(4), 10000, 9000-3500);
-        entry(5.447, 2.66+Units.degreesToRadians(4), 10000, 9000-3500);
+        // passing shot
+        entry(4.51, Units.degreesToRadians(180 - 45), 6000, 6000);
+        entry(18, Units.degreesToRadians(180 - 45), 6000, 6000);
+        // entry(5, 2.65+Units.degreesToRadians(4), 10000, 9000-3500);
+        // entry(5.447, 2.66+Units.degreesToRadians(4), 10000, 9000-3500);
     }
 
     public static final double dThetadX(double x) {

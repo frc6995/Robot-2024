@@ -30,9 +30,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -291,21 +294,49 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 );
   }
 
+  private TrapezoidProfile driveToPoseProfile = new TrapezoidProfile(new Constraints(3, 6));
+  private class Capture<T> {
+	public T inner;
+	public Capture(T inner) {
+		this.inner = inner;
+	}
+  }
+  private TrapezoidProfile.State driveToPoseState = new State(0, 0);
   public Command driveToPoseC(Supplier<Pose2d> poseSupplier) {
+	TrapezoidProfile.State state = new State(0, 0);
+	Capture<Pose2d> start = new Capture<Pose2d>(new Pose2d());
+	Capture<Pose2d> end = new Capture<Pose2d>(new Pose2d());
+	Capture<Double> dist = new Capture<Double>(1.0);
+	Timer time = new Timer();
 	return runOnce(
 		() -> {
 		  m_profiledThetaController.reset(getPoseHeading().getRadians());
+		  start.inner = getPose();
+		  end.inner = poseSupplier.get();
+		  dist.inner = end.inner.getTranslation().getDistance(start.inner.getTranslation());
+		  state.position = dist.inner;
+		  state.velocity = Math.min(0, -Pathing.velocityTowards(start.inner, getFieldRelativeLinearSpeedsMPS(), end.inner.getTranslation()));
+		  time.reset();
+		  time.start();
 		}).andThen(run(()->{
-		var pose = poseSupplier.get();
+		var setpoint = driveToPoseProfile.calculate(time.get(), state, driveToPoseState);
+		var pose = end.inner;
 		var curr = getPose();
+		var startPose = start.inner;
+		var poseTrans = pose.getTranslation();
+		var currTrans = curr.getTranslation();
+		
+		var interp = end.inner.getTranslation().interpolate(startPose.getTranslation(), setpoint.position/dist.inner);
 		driveFieldRelative(
 			new ChassisSpeeds(
-				m_xController.calculate(curr.getX(), pose.getX()),
-				m_yController.calculate(curr.getY(), pose.getY()),
+				m_xController.calculate(curr.getX(), interp.getX()),
+				m_yController.calculate(curr.getY(), interp.getY()),
 				m_profiledThetaController.calculate(curr.getRotation().getRadians(), pose.getRotation().getRadians()))
 		);
-	}));
+	})).finallyDo(time::stop);
   }
+
+
 
 
 	public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -318,6 +349,15 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 
 	private static final Rotation2d BLUE_PERSPECTIVE = ZERO_ROTATION2D;
 	private static final Rotation2d RED_PERSPECTIVE = new Rotation2d(Math.PI);
+	public Pose2d getTargetPose() {
+		return new Pose2d(
+			m_xController.getSetpoint(),
+			m_yController.getSetpoint(),
+			new Rotation2d(
+			m_thetaController.getSetpoint()
+			)
+		);
+	}
 	public void periodic() {
 		m_vision.periodic();
 		setOperatorPerspectiveForward(AllianceWrapper.isRed() ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
@@ -451,7 +491,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		return getPose().getRotation();
 	  }
   public Command manualFieldHeadingDriveC(
-	InputAxis fwdXAxis, InputAxis fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
+	DoubleSupplier fwdXAxis, DoubleSupplier fwdYAxis, DoubleSupplier headingFieldRelative, DoubleSupplier headingFF) {
   return runOnce(
 		  () -> {
 			m_profiledThetaController.reset(getPoseHeading().getRadians());
@@ -464,13 +504,10 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 				 * output from -1 to 1, we multiply the outputs by the max speed Otherwise, our
 				 * max speed would be 1 meter per second and 1 radian per second
 				 */
-				double fwdX = fwdXAxis.getAsDouble();
-				double fwdY = fwdYAxis.getAsDouble();
-				double driveDirectionRadians = Math.atan2(fwdY, fwdX);
-				double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
-				fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
-				fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
-
+				double fwdX = fwdXAxis.getAsDouble() * MAX_LINEAR_SPEED;
+				double fwdY = fwdYAxis.getAsDouble() * MAX_LINEAR_SPEED;
+				double speed = MathUtil.applyDeadband(Math.hypot(fwdX, fwdY), 0.05) * MAX_LINEAR_SPEED;
+				double angle = Math.atan2(fwdY, fwdX);
 				double rot;
 
 				rot =
@@ -480,7 +517,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 				// log("thetaSetpt", m_profiledThetaController.getSetpoint().position);
 				// log("thetaReal", getPoseHeading().getRadians());
 				rot += headingFF.getAsDouble();
-				driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
+				driveAllianceRelative(new ChassisSpeeds(speed * Math.cos(angle), speed* Math.sin(angle), rot));
 			  }));
 			}
 }

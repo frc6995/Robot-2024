@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CommandGroups.AutoRoutine;
 import frc.robot.Constants.DriveConstants;
@@ -255,29 +256,6 @@ public class RobotContainer implements Logged {
       ()->Interpolation.RIGHT_MAP.get(distance.getAsDouble()) );
   }
 
-  public Command faceSpeaker() {
-    return m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
-        this::directionToSpeaker,
-        () -> Pathing.aimingFFVelocity(
-            m_drivebaseS.getPose(),
-            m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
-                Constants.Poses.SPEAKER,
-                AllianceWrapper.getAlliance())))
-        .alongWith(
-        run(()->{
-          var error  = m_drivebaseS.getPoseHeading().minus(new Rotation2d(this.directionToSpeaker())).getRadians();
-          if (error >= Units.degreesToRadians(1)) {
-            // drivetrain is too far ccw, light the left third of the bar
-            LightStripS.getInstance().requestState(States.LeftThird);
-          } else if (error <= Units.degreesToRadians(-1)) {
-            LightStripS.getInstance().requestState(States.RightThird);
-          } else {
-            LightStripS.getInstance().requestState(States.CenterThird);
-          }
-        })        
-        );
-  }
-
   public Command faceNote() {
     return m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis,
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
@@ -291,7 +269,7 @@ public class RobotContainer implements Logged {
         m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
         ()-> {
-          var towardsSpkr = Pathing.velocityTorwardsSpeaker(
+          var towardsSpkr = Pathing.velocityTowards(
             m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
             speaker());
           log("velTowardsSpkr", towardsSpkr);
@@ -304,9 +282,7 @@ public class RobotContainer implements Logged {
     // m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
     // m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
 
-    // face note
-    m_driverController.a().whileTrue(faceNote());
-    m_driverController.y().whileTrue(faceSpeaker());
+    m_driverController.y().whileTrue(m_autos.faceSpeaker(m_fwdXAxis, m_fwdYAxis));
 
     // intaking
     m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
@@ -315,7 +291,7 @@ public class RobotContainer implements Logged {
     // face amp
     m_driverController.leftTrigger().whileTrue(m_autos.driveToPreAmp());
     // face speaker
-    m_driverController.rightTrigger().whileTrue(faceSpeaker());
+    m_driverController.rightTrigger().whileTrue(m_autos.faceSpeaker(m_fwdXAxis, m_fwdYAxis));
 
     /* Switched the wording to line up with the name of this system for the new motor */
     m_driverController.back().or(m_operatorController.back()).whileTrue(
@@ -335,19 +311,6 @@ public class RobotContainer implements Logged {
 
     //#region operator controller start
 
-    // RT: shoot
-    // LT: spinup 
-    // A: lock drive rotation for driveby
-    // B: intake spit
-    // X: midtake spit
-    // Y: midtake move in
-    // LB: spin for amp
-    // RB: spin for passing
-    // sticks: climb
-    // 
-
-/* Removed the code from the old motor */
-
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
@@ -363,16 +326,6 @@ public class RobotContainer implements Logged {
       m_intakeRollerS.runVoltageC(()->-0.6995*2),
       m_ampRollerS.runVoltage(()->-0.6995)
      ));
-    //  // spinup for amp
-    //  ampMode.whileTrue(
-    //   parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
-    //   m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
-    //   m_bounceBarS.upC()
-    //   )
-    // );
-    //m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
-    //  // spinup for passing
-
 
     /* Re-added the code identically, with the exception of line 393 where .withTimeout(1.5)
     was added so that the scoring command doesn't run forever. 
@@ -387,20 +340,14 @@ public class RobotContainer implements Logged {
     ampLoad.onTrue(
       m_autos.loadAmp(ampScore, ()->CTREAmpPivotS.Constants.CW_LIMIT)
     );
-    //   spinDistance(this::xDistToSpeaker),
-    //   m_shooterPivotS.rotateWithVelocity(
-    //         ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
-    //         () -> 0)
-
-    //  ));
 
     /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
      m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5, ()->12));
      m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker));
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
-        // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
-        // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
+    m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
+    m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
 
     m_ampPivotS.setDefaultCommand(m_ampPivotS.hold());
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
@@ -409,6 +356,10 @@ public class RobotContainer implements Logged {
     m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
     m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));
     //#endregion
+
+    RobotModeTriggers.autonomous().whileTrue(deferredProxy(this::getAutonomousCommand)).onFalse(
+      m_autos.endAuto().until(()->false)
+    );
   }
 
   public Command driveIntakeRelativePOV() {
@@ -465,7 +416,7 @@ public class RobotContainer implements Logged {
     m_field.getObject("note").setPoses(poses);
     // List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
     // notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
-    //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+    m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
 
   }
 

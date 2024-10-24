@@ -92,6 +92,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     if (Robot.isSimulation()) {
       m_io = new SimIntakePivotIO();
       isHomed = new Trigger(()-> true );
+      hasHomed = true;
     }
     else {
       m_io = new RealIntakePivotIO();
@@ -99,7 +100,6 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     }
     m_profile = new ExponentialProfile(Constants.CONSTRAINTS);
     INTAKE_PIVOT.append(INTAKE_BEND);
-
     setDefaultCommand(
       sequence(
         hold().until(this::hasHomed).unless(this::hasHomed),
@@ -285,7 +285,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     /**
      * radians per second, rad/s^2
      */
-    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(12-K_G, K_V, K_A);
+    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(6-K_G, K_V, K_A);
   }
 
 }

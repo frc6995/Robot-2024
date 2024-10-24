@@ -8,6 +8,7 @@ import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -139,7 +140,6 @@ public class CommandGroups {
                 sequence(
                     m_shooterWheelsS.spinC(() -> 3000, () -> 3000).until(ampReceivesNote),
                     m_shooterWheelsS.spinC(() -> 1500, () -> 1500).withTimeout(1)).until(cancel),
-
                 sequence(
                     m_midtakeS.outtakeC().until(ampReceivesNote)).until(cancel)))
             .until(cancel));
@@ -362,6 +362,29 @@ public class CommandGroups {
     return m_midtakeS.outtakeC();
   }
 
+  public Command faceSpeaker(DoubleSupplier fwdX, DoubleSupplier fwdY) {
+  return m_drivebaseS.manualFieldHeadingDriveC(fwdX, fwdY,
+      this::directionToSpeaker,
+      () -> Pathing.aimingFFVelocity(
+          m_drivebaseS.getPose(),
+          m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
+              Constants.Poses.SPEAKER,
+              AllianceWrapper.getAlliance())))
+      .alongWith(
+      run(()->{
+        var error  = m_drivebaseS.getPoseHeading().minus(new Rotation2d(this.directionToSpeaker())).getRadians();
+        if (error >= Units.degreesToRadians(1)) {
+          // drivetrain is too far ccw, light the left third of the bar
+          LightStripS.getInstance().requestState(States.LeftThird);
+        } else if (error <= Units.degreesToRadians(-1)) {
+          LightStripS.getInstance().requestState(States.RightThird);
+        } else {
+          LightStripS.getInstance().requestState(States.CenterThird);
+        }
+      })        
+      );
+  }
+
   /** AUTOS */
   public record AutoRoutine(Command cmd, Pose2d[] poses, Pose2d[] flippedPoses, double estTime) {
     Pose2d[] getPoses() {
@@ -376,6 +399,8 @@ public class CommandGroups {
       return Optional.empty();
     }
   }
+
+
 
   public final Trigger notAtMidline = new Trigger(this::notAtMidline);
 
@@ -403,26 +428,21 @@ public class CommandGroups {
 
   public void firstMove(AutoLoop loop, AutoTrajectory first) {
     loop.enabled()
-        .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
-
-        .onTrue(first.cmd());
+        .onTrue(m_drivebaseS.resetPoseToBeginningC(first));
     first.atTime(0.1).onTrue(m_intakePivotS.deploy());
     first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
   }
 
-  public void firstShot(AutoTrajectory first, AutoTrajectory second) {
-    first.done()
-        .onTrue(sequence(
-            new ScheduleCommand(m_drivebaseS.stopC().withTimeout(FIRST_SHOT_PAUSE)),
-            new ScheduleCommand(second.cmd())));
+  public void firstShot(AutoTrajectory first) {
     first.done().onTrue(feed());
   }
 
   public Command endAuto() {
     return parallel(
-        new ScheduleCommand(m_shooterWheelsS.stopC().withTimeout(0.1)),
-        new ScheduleCommand(m_intakePivotS.retract()),
+        new ScheduleCommand(m_shooterWheelsS.stopOnceC()),
+        new ScheduleCommand(m_intakePivotS.runOnce(()->{})),
         new ScheduleCommand(m_intakeRollerS.stopOnceC()),
+        new ScheduleCommand(m_midtakeS.stopOnceC()),
         new ScheduleCommand(m_drivebaseS.stopOnceC()));
   }
 
@@ -446,6 +466,9 @@ public class CommandGroups {
         time);
   }
 
+  public Command shotPause() {
+    return faceSpeaker(()->0, ()->0);
+  }
   public AutoRoutine O_C213() {
 
     var loop = m_autoFactory.newLoop("FourNote");
@@ -454,12 +477,20 @@ public class CommandGroups {
     var third = m_autoFactory.trajectory("C2-C1", loop);
     var fourth = m_autoFactory.trajectory("C1-C3", loop);
     firstMove(loop, first);
-    firstShot(first, second);
-
+    firstShot(first);
+    loop.enabled().onTrue(
+      sequence(
+        first.cmd(),
+        shotPause().withTimeout(FIRST_SHOT_PAUSE),
+        second.cmd(),
+        shotPause().withTimeout(0.75),
+        third.cmd(),
+        shotPause().withTimeout(0.75),
+        fourth.cmd(),
+        shotPause().withTimeout(8)
+      )
+    );
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(third.cmd()));
-    third.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(fourth.cmd()));
-    fourth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -471,20 +502,33 @@ public class CommandGroups {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var SH2_pause = FIRST_SHOT_PAUSE;
     var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var C2_pause = 0.75;
     var third = m_autoFactory.trajectory("C2-C1", loop);
+    var C1_pause = 0.75;
     var fourth = m_autoFactory.trajectory("C1-C3", loop);
+    var C3_pause = 0.75;
     var fifth = m_autoFactory.trajectory("C3-M3", loop);
     var sixth = m_autoFactory.trajectory("M3-SH3", loop);
 
     firstMove(loop, first);
-    firstShot(first, second);
+    firstShot(first);
+    
+    loop.enabled().onTrue(
+      sequence(
+        first.cmd(),
+        shotPause().withTimeout(SH2_pause),
+        second.cmd(),
+        shotPause().withTimeout(C2_pause),
+        third.cmd(),
+        shotPause().withTimeout(C1_pause),
+        fourth.cmd(),
+        shotPause().withTimeout(C3_pause),
+        fifth.cmd()
+      )
+    );
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(third.cmd());
-    third.done().onTrue(fourth.cmd());
-    fourth.done().onTrue(fifth.cmd());
-    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
-
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
     fifth.done().onTrue(
         either(new ScheduleCommand(sixth.cmd()), new ScheduleCommand(endAuto()),
@@ -495,23 +539,35 @@ public class CommandGroups {
 
     return routine(
         loop.cmd(),
-        FIRST_SHOT_PAUSE, first, second, third, fourth, fifth, sixth);
+        C1_pause + C2_pause + C3_pause + SH2_pause,
+        first, second, third, fourth, fifth, sixth);
   }
 
   public AutoRoutine O_C231() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var SH2_pause = FIRST_SHOT_PAUSE;
     var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var C2_pause = 0.75;
     var third = m_autoFactory.trajectory("C2-C3", loop);
+    var C3_pause = 0.75;
     var fourth = m_autoFactory.trajectory("C3-C1", loop);
     firstMove(loop, first);
-    firstShot(first, second);
-
+    firstShot(first);
+    loop.enabled().onTrue(
+      sequence(
+        first.cmd(),
+        shotPause().withTimeout(SH2_pause),
+        second.cmd(),
+        shotPause().withTimeout(C2_pause),
+        third.cmd(),
+        shotPause().withTimeout(C3_pause),
+        fourth.cmd(),
+        shotPause().withTimeout(8)
+      )
+    );
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(third.cmd()));
-    third.done().onTrue(m_drivebaseS.stopC().withTimeout(0.75).andThen(fourth.cmd()));
-    fourth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -522,19 +578,32 @@ public class CommandGroups {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S2-SH2", loop);
+    var SH2_pause = FIRST_SHOT_PAUSE;
     var second = m_autoFactory.trajectory("SH2-C2", loop);
+    var C2_pause = 0.75;
     var third = m_autoFactory.trajectory("C2-C3", loop);
+    var C3_pause = 0.75;
     var fourth = m_autoFactory.trajectory("C3-C1", loop);
+    var C1_pause = 0.75;
     var fifth = m_autoFactory.trajectory("C1-M3", loop);
     var sixth = m_autoFactory.trajectory("M3-SH3", loop);
 
     firstMove(loop, first);
-    firstShot(first, second);
+    firstShot(first);
+    loop.enabled().onTrue(
+      sequence(
+        first.cmd(),
+        shotPause().withTimeout(SH2_pause),
+        second.cmd(),
+        shotPause().withTimeout(C2_pause),
+        third.cmd(),
+        shotPause().withTimeout(C3_pause),
+        fourth.cmd(),
+        shotPause().withTimeout(C1_pause),
+        fifth.cmd()
+      )
+    );
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    second.done().onTrue(third.cmd());
-    third.done().onTrue(fourth.cmd());
-    fourth.done().onTrue(fifth.cmd());
-    fourth.done().onTrue(m_intakeRollerS.stopOnceC());
 
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
     fifth.done().onTrue(
@@ -560,24 +629,27 @@ public class CommandGroups {
 
     // Shoot O
     firstMove(loop, first);
-    firstShot(first, SH2C2);
+    firstShot(first);
+    loop.enabled().onTrue(
+      sequence(
+        SH2C2.cmd(),
+        shotPause().withTimeout(FIRST_SHOT_PAUSE),
+        C2M3.cmd(),
+        M3C1.cmd(),
+        shotPause().withTimeout(0.75),
+        fifth.cmd(),
+        shotPause().withTimeout(8)
+      )
+    );
     // Go towards C2 with intake down, rollers going, shooter feeding
     SH2C2.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-    SH2C2.done().onTrue(C2M3.cmd());
     // Go to
     C2M3.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
-    C2M3.done().onTrue(M3C1.cmd());
     M3C1.atTime(0.3).onTrue(retractStopIntake());
     M3C1.atTime("feed")
         .onTrue(feed())
         .onTrue(m_intakePivotS.deploy())
         .onTrue(m_intakeRollerS.intakeC());
-    M3C1.done()
-
-        // Go for the center note
-        .onTrue(fifth.cmd());
-
-    fifth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -593,18 +665,24 @@ public class CommandGroups {
     var C3C1 = m_autoFactory.trajectory("C3-C1", loop);
 
     firstMove(loop, first);
-
+    loop.enabled().onTrue(
+      sequence(
+      first.cmd(),
+      M3C2.cmd(),
+      shotPause().withTimeout(0.75),
+      C2C3.cmd(),
+      shotPause().withTimeout(0.75),
+      C3C1.cmd(),
+      shotPause().withTimeout(8)
+      )
+    );
     first.atTime("feed").onTrue(feed());
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
-    first.done().onTrue(M3C2.cmd());
 
     M3C2.atTime("feed")
         .onTrue(feed())
         .onTrue(m_intakePivotS.deploy())
         .onTrue(m_intakeRollerS.intakeC());
-    M3C2.done().onTrue(C2C3.cmd());
-    C2C3.done().onTrue(C3C1.cmd());
-    C3C1.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),
@@ -623,32 +701,39 @@ public class CommandGroups {
 
     loop.enabled()
         .onTrue(m_drivebaseS.resetPoseToBeginningC(first))
-        .onTrue(first.cmd())
-        .onTrue(m_intakePivotS.deploy());
+        
+        .onTrue(m_intakePivotS.deploy())
+        .onTrue(
+          sequence(
+            first.cmd(),
+            M1SH4.cmd(),
+            shotPause().withTimeout(0.75),
+            SH4M2.cmd(),
+            M2SH4.cmd(),
+            shotPause().withTimeout(0.75),
+            SH4D1.cmd(),
+            D1SH4.cmd(),
+            shotPause().withTimeout(8)
+          )
+        );
 
     // First path: drop onboard at wingline, intake M1
-    first.atTime("drop").onTrue(m_shooterWheelsS.spinC(() -> 2000, () -> 2000).withTimeout(0.7));
+    first.atTime("drop").onTrue(m_shooterWheelsS.spinC(() -> 2000, () -> 2000).withTimeout(0.7)
+      .andThen(spinDistance(this::distanceToSpeaker)));
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
-    first.done().onTrue(M1SH4.cmd());
 
     // Shoot M1
     M1SH4.atTime("feed")
         .onTrue(feed().withTimeout(1));
-    M1SH4.done().onTrue(SH4M2.cmd());
     // Pickup M2
     // offset startup of shooter wheels
-    SH4M2.atTime(0.3).onTrue(spinDistance(this::distanceToSpeaker));
     SH4M2.atTime("intake").onTrue(deployRunIntake(notAtMidline));
-    SH4M2.done().onTrue(M2SH4.cmd());
     // Shoot M2
     M2SH4.atTime("feed").onTrue(feed().withTimeout(1));
-    M2SH4.done().onTrue(SH4D1.cmd());
     // Pickup D1
-    SH4D1.done().onTrue(D1SH4.cmd());
     SH4D1.atTime("intake").onTrue(deployRunIntake(new Trigger(() -> false)));
     D1SH4.atTime("feed")
         .onTrue(feed().withTimeout(1));
-    D1SH4.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),

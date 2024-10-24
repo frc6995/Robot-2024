@@ -17,7 +17,7 @@ public class Pathing {
     ).vyMetersPerSecond
       / speakerDistance(currentPose, targetTranslation);
   }
-  public static double velocityTorwardsSpeaker(
+  public static double velocityTowards(
     Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
        return speakerRelativeSpeeds(currentPose, fieldRelativeSpeeds, 
       targetTranslation
