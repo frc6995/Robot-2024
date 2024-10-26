@@ -43,6 +43,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.led.LightStripS;
+import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.subsystems.vision.CTREVision;
 import frc.robot.subsystems.vision.CTREVision.VisionMeasurement;
 import frc.robot.util.AllianceWrapper;
@@ -333,7 +335,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 				m_yController.calculate(curr.getY(), interp.getY()),
 				m_profiledThetaController.calculate(curr.getRotation().getRadians(), pose.getRotation().getRadians()))
 		);
-	})).finallyDo(time::stop);
+	})).finallyDo(time::stop).alongWith(LightStripS.getInstance().stateC(()->States.AutoAlign));
   }
 
 
@@ -357,6 +359,9 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			m_thetaController.getSetpoint()
 			)
 		);
+	}
+	public boolean hasTarget() {
+		return m_vision.hasTarget();
 	}
 	public void periodic() {
 		m_vision.periodic();
@@ -506,7 +511,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 				 */
 				double fwdX = fwdXAxis.getAsDouble() * MAX_LINEAR_SPEED;
 				double fwdY = fwdYAxis.getAsDouble() * MAX_LINEAR_SPEED;
-				double speed = MathUtil.applyDeadband(Math.hypot(fwdX, fwdY), 0.05) * MAX_LINEAR_SPEED;
+				double speed = MathUtil.applyDeadband(Math.hypot(fwdX, fwdY), 0.05);
 				double angle = Math.atan2(fwdY, fwdX);
 				double rot;
 

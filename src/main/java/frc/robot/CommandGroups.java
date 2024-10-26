@@ -20,8 +20,6 @@ import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.LightStripS;
-import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
 /*Changed the name of the import to match the document name change. */
 import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
@@ -29,6 +27,8 @@ import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.led.LightStripS;
+import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.subsystems.shooter.Interpolation;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
@@ -135,12 +135,13 @@ public class CommandGroups {
         sequence(
             m_ampRollerS.intakeC().until(ampReceivesNote),
             m_ampRollerS.intakeC().withTimeout(0.4)).until(cancel),
-        waitUntil(pivotsHandoffReady).andThen(
+        parallel(waitUntil(pivotsHandoffReady), waitSeconds(0.1)).andThen(
             new ScheduleCommand(
                 sequence(
                     m_shooterWheelsS.spinC(() -> 3000, () -> 3000).until(ampReceivesNote),
                     m_shooterWheelsS.spinC(() -> 1500, () -> 1500).withTimeout(1)).until(cancel),
                 sequence(
+                    waitSeconds(0.1),
                     m_midtakeS.outtakeC().until(ampReceivesNote)).until(cancel)))
             .until(cancel));
   }
@@ -155,7 +156,7 @@ public class CommandGroups {
             sequence(
                 m_ampRollerS.stopC().until(m_ampPivotS.atScore).withTimeout(1.5),
                 m_ampRollerS.outtakeC().withTimeout(0.5),
-                m_ampRollerS.stopC()),
+                m_ampRollerS.stopOnceC()),
             m_ampPivotS.score()),
         m_ampPivotS.stow().withTimeout(1.5));
   }
@@ -168,11 +169,14 @@ public class CommandGroups {
    * @return
    */
   public Command intakeLoadAmp(BooleanSupplier cancel, DoubleSupplier finalAmpPosition, Trigger overrideTOF) {
-    return new ScheduleCommand(
+    return either(
+      new ScheduleCommand(loadAmp(cancel, finalAmpPosition)),
+      parallel(
         loadAmp(cancel, finalAmpPosition),
         // This will likely get interrupted by the loadAmp
-        midtakeReceiveNote(overrideTOF),
-        deployRunIntakeOnly(overrideTOF).until(cancel).andThen(retractStopIntake()));
+        new ScheduleCommand(midtakeReceiveNote(overrideTOF).until(cancel)),
+        deployRunIntakeOnly(overrideTOF).until(cancel).andThen(retractStopIntake()))
+      , m_midtakeS.hasNote);
   }
 
   /**
@@ -237,10 +241,10 @@ public class CommandGroups {
             sequence(
                 parallel(
                     intakeNoteFeedback(),
-                    m_midtakeS.intakeC().until(hasNote.negate()).withTimeout(6)),
+                    m_midtakeS.intakeC().until(hasNote.negate()).withTimeout(1)),
                 m_midtakeS.reverseC()
-                    .withTimeout(3)
-                    .until(hasNote)),
+                    .withTimeout(1)
+                    .until(m_midtakeS.hasNote).finallyDo(m_midtakeS::stop)),
             none(),
             intakeDown));
   }
@@ -255,7 +259,7 @@ public class CommandGroups {
   public Command deployRunIntake(Trigger overrideTOF) {
     return parallel(
         deployRunIntakeOnly(overrideTOF),
-        waitSeconds(0.1).andThen(midtakeReceiveNote(overrideTOF)))
+        midtakeReceiveNote(overrideTOF))
     ;
   }
 
@@ -632,6 +636,8 @@ public class CommandGroups {
     firstShot(first);
     loop.enabled().onTrue(
       sequence(
+        first.cmd(),
+        shotPause().withTimeout(FIRST_SHOT_PAUSE),
         SH2C2.cmd(),
         shotPause().withTimeout(FIRST_SHOT_PAUSE),
         C2M3.cmd(),

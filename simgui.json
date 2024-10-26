@@ -2,7 +2,8 @@
   "HALProvider": {
     "Addressable LEDs": {
       "0": {
-        "columns": 39,
+        "columns": 22,
+        "serpentine": true,
         "start": 2
       },
       "window": {
@@ -252,7 +253,8 @@
         "m_shooterPivotS": {
           "m_io": {
             "open": true
-          }
+          },
+          "open": true
         },
         "m_shooterWheelsS": {
           "Left": {

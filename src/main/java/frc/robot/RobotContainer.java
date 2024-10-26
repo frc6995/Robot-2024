@@ -31,8 +31,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CommandGroups.AutoRoutine;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.LightStripS;
-import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
 import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
 import frc.robot.subsystems.climber.ClimberS;
@@ -40,6 +38,8 @@ import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.led.LightStripS;
+import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.subsystems.shooter.Interpolation;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
@@ -172,6 +172,12 @@ public class RobotContainer implements Logged {
         });
     configureDriverDisplay();
     configureButtonBindings();
+    LightStripS.getInstance().setShooterLeftSpeedPercent(m_shooterWheelsS::leftPercent);
+    LightStripS.getInstance().setShooterRightSpeedPercent(m_shooterWheelsS::rightPercent);
+    LightStripS.getInstance().setCenterPattern(
+      DriverStation::isEnabled,
+      m_midtakeS::hasNote,
+      m_intakePivotS::hasHomed, m_drivebaseS::hasTarget);
     m_autos.addAutoRoutines(m_autoSelector);
     m_autoSelector.onChange(this::updateAutoDisplay);
     SignalLogger.setPath("/media/sda1/");
@@ -183,10 +189,7 @@ public class RobotContainer implements Logged {
     Commands.sequence(waitSeconds(2), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
-    DriverStation.reportWarning("Setup Done", false);
-    // PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
-    // PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
-    
+    DriverStation.reportWarning("Setup Done", false);   
   }
 
   private void updateAutoDisplay(AutoRoutine routine) {
@@ -282,8 +285,7 @@ public class RobotContainer implements Logged {
     // m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
     // m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
 
-    m_driverController.y().whileTrue(m_autos.faceSpeaker(m_fwdXAxis, m_fwdYAxis));
-
+    m_driverController.a().onTrue(m_autos.intakeLoadAmp(m_driverController.leftBumper(), ()-> 0, m_driverController.a()));
     // intaking
     m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
@@ -338,7 +340,7 @@ public class RobotContainer implements Logged {
     ampScore.onTrue(m_autos.scoreAmp());
       
     ampLoad.onTrue(
-      m_autos.loadAmp(ampScore, ()->CTREAmpPivotS.Constants.CW_LIMIT)
+      m_autos.loadAmp(ampScore.or(m_operatorController.povCenter().negate()), ()->CTREAmpPivotS.Constants.CW_LIMIT)
     );
 
     /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
@@ -349,7 +351,6 @@ public class RobotContainer implements Logged {
     m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
     m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
 
-    m_ampPivotS.setDefaultCommand(m_ampPivotS.hold());
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
     /* Changed the name to match the document name change. */

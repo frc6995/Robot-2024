@@ -18,8 +18,8 @@ import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkBase.SoftLimitDirection;
 
-import frc.robot.subsystems.LightStripS;
-import frc.robot.subsystems.LightStripS.States;
+import frc.robot.subsystems.led.LightStripS;
+import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.util.sparkmax.SparkDevice;
 import lib.sparkmax.SparkBaseConfig;
 import lib.sparkmax.PIDControllerConfig.FeedbackDevice;

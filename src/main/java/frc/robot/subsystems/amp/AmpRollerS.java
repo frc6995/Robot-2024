@@ -36,7 +36,7 @@ public class AmpRollerS extends SubsystemBase implements Logged {
     m_motor.setInverted(false);
     setDefaultCommand(stopC());
     /* Lowered the output current for the new motor */
-    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 8).debounce(0.1);
+    receiveNote = new Trigger(()->m_motor.getOutputCurrent() > 10).debounce(0.1);
   }
 
   public Command runVoltage(DoubleSupplier voltage){
@@ -64,6 +64,9 @@ public class AmpRollerS extends SubsystemBase implements Logged {
   }
   /**returns the command to stop the intake */
   public Command stopC(){
+    return run(this::stop);
+  }
+  public Command stopOnceC(){
     return runOnce(this::stop);
   }
   @Log

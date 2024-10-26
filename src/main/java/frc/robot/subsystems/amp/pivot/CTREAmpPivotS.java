@@ -76,7 +76,7 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
 
     m_motor.getConfigurator().apply(Constants.configureMotor(config));
     m_motor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
-    setDefaultCommand(hold());
+    setDefaultCommand(rotateToAngle(()->Units.rotationsToRadians(m_setpointRotations)));
   }
 
 /* Removed pid logs */
@@ -129,7 +129,12 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   /* Updated the units to radians */
   public void setAngleRadians(double angle) {
     m_setpointRotations = Units.radiansToRotations(angle);
-    m_motor.setControl(m_profileReq.withPosition(m_setpointRotations));
+    
+    if(m_setpointRotations < Units.degreesToRotations(2) && getAngleRotations() < Units.degreesToRotations(10)){
+      m_motor.setControl(m_voltageReq.withOutput(0));
+    } else {
+      m_motor.setControl(m_profileReq.withPosition(m_setpointRotations));
+    }
   }
 
   public void resetController() {
@@ -210,6 +215,7 @@ public class CTREAmpPivotS extends SubsystemBase implements Logged {
   public final Trigger atHandoffAngle = at(Constants.HANDOFF_ANGLE);
   public final Trigger atStow = at(Constants.CW_LIMIT);
   public final Trigger atScore = at(Constants.SCORE_ANGLE);
+  @Log public boolean atScore() {return atScore.getAsBoolean();}
   public final Trigger outOfShooter = new Trigger(
     ()->
       getAngleRadians() < Math.PI
