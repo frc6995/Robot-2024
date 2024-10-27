@@ -185,7 +185,7 @@ public class CommandGroups {
   public Command deployIntakeUntilNote(Trigger hasNote) {
     return sequence(
         m_intakePivotS.deploy().until(hasNote),
-        m_intakePivotS.deploy().withTimeout(0.5)
+        m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.CW_LIMIT + Units.degreesToRadians(5)).withTimeout(1)
       );
   }
 
@@ -210,9 +210,9 @@ public class CommandGroups {
     Trigger hasNote = m_midtakeS.hasNote.and(overrideTOF.negate());
     return parallel(
         // intake pivot
-        deployIntakeUntilNote(hasNote).asProxy(),
+        deployIntakeUntilNote(hasNote),
         // intake roller
-        waitUntil(()->m_intakePivotS.getAngle() < 0).andThen(runIntakeUntilNote(hasNote).asProxy()));
+        waitUntil(()->m_intakePivotS.getAngle() < 0).andThen(runIntakeUntilNote(hasNote)));
   }
 
   /**
@@ -665,34 +665,39 @@ public class CommandGroups {
   public AutoRoutine O_M3_C231() {
 
     var loop = m_autoFactory.newLoop("FourNote");
-    var first = m_autoFactory.trajectory("S2-M3", loop);
-    var M3C2 = m_autoFactory.trajectory("M3-C2-Dodge", loop);
-    var C2C3 = m_autoFactory.trajectory("C2-C3", loop);
-    var C3C1 = m_autoFactory.trajectory("C3-C1", loop);
+    var first = m_autoFactory.trajectory("S4-M3", loop);
+    var M3SH5 = m_autoFactory.trajectory("M3-SH5", loop);
+    var SH5C3 = m_autoFactory.trajectory("SH5-C3", loop);
+    var C3C2 = m_autoFactory.trajectory("C3-C2", loop);
+    var C2C1 = m_autoFactory.trajectory("C2-C1", loop);
 
-    firstMove(loop, first);
+    loop.enabled()
+    .onTrue(m_drivebaseS.resetPoseToBeginningC(first));first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
+    first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
+    first.atTime("feed").onTrue(feed());
+    first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
     loop.enabled().onTrue(
       sequence(
       first.cmd(),
-      M3C2.cmd(),
+      M3SH5.cmd(),
       shotPause().withTimeout(0.75),
-      C2C3.cmd(),
+      SH5C3.cmd(),
       shotPause().withTimeout(0.75),
-      C3C1.cmd(),
+      C3C2.cmd(),
+      shotPause().withTimeout(0.75),
+      C2C1.cmd(),
       shotPause().withTimeout(8)
       )
     );
-    first.atTime("feed").onTrue(feed());
-    first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
-
-    M3C2.atTime("feed")
-        .onTrue(feed())
-        .onTrue(m_intakePivotS.deploy())
-        .onTrue(m_intakeRollerS.intakeC());
+    first.done().onTrue(feed());
+    
+    M3SH5.done().onTrue(m_intakePivotS.deploy());
+    M3SH5.done().onTrue(feed());
+    M3SH5.done().onTrue(m_intakeRollerS.intakeC());
 
     return routine(
         loop.cmd(),
-        0, first, M3C2, C2C3, C3C1);
+        0.75 * 3, first, M3SH5, SH5C3, C3C2, C2C1);
   }
 
   public AutoRoutine D_M12_P() {

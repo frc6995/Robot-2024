@@ -264,8 +264,8 @@ public class RobotContainer implements Logged {
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
   }
   public void configureButtonBindings() {
-    InputAxis leftClimberStick = new InputAxis("LClimb", m_operatorController::getLeftY).withDeadband(0.2);
-        InputAxis rightClimberStick = new InputAxis("RClimb", m_operatorController::getRightY).withDeadband(0.2);
+    InputAxis leftClimberStick = new InputAxis("LClimb", m_operatorController::getRightY).withDeadband(0.2);
+        InputAxis rightClimberStick = new InputAxis("RClimb", m_operatorController::getLeftY).withDeadband(0.2);
     m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     m_shooterPivotS.setDefaultCommand(
@@ -285,7 +285,7 @@ public class RobotContainer implements Logged {
     // m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
     // m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
 
-    m_driverController.a().onTrue(m_autos.intakeLoadAmp(m_driverController.leftBumper(), ()-> 0, m_driverController.a()));
+    m_driverController.a().onTrue(m_autos.intakeLoadAmp(m_driverController.leftBumper(), ()-> CTREAmpPivotS.Constants.SCORE_ANGLE, m_driverController.a()));
     // intaking
     m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
@@ -352,7 +352,7 @@ public class RobotContainer implements Logged {
     m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
 
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
-    m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
+    m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     /* Changed the name to match the document name change. */
     m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
     m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));

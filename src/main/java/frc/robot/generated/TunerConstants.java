@@ -49,7 +49,7 @@ public class TunerConstants {
 
     private static final double kDriveGearRatio = 5.357142857142857;
     private static final double kSteerGearRatio = 21.428571428571427;
-    private static final double kWheelRadiusInches = Units.metersToInches(0.0489);
+    private static final double kWheelRadiusInches = Units.metersToInches(0.0481);
 
     public static final double kSpeedAt12VoltsRps = 
          // motor rev / wheel rev
