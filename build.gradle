@@ -83,6 +83,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'com.github.shueja:Monologue:v1.0.0-beta6'
+    implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 

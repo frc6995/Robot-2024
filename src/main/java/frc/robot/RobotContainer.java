@@ -1,8 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CCW_LIMIT;
-
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -14,7 +12,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -22,34 +19,28 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.CommandGroups.AutoRoutine;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.LightStripS;
-import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.amp.AmpRollerS;
-/*Changed the import name to match the document name change. */
 import frc.robot.subsystems.amp.pivot.CTREAmpPivotS;
-import frc.robot.subsystems.bounceBar.BounceBarS;
 import frc.robot.subsystems.climber.ClimberS;
-import frc.robot.subsystems.drive.DrivebaseS;
 import frc.robot.subsystems.drive.Pathing;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.IntakeRollerS;
 import frc.robot.subsystems.intake.pivot.IntakePivotS;
+import frc.robot.subsystems.led.LightStripS;
+import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.subsystems.shooter.Interpolation;
-import frc.robot.subsystems.shooter.feeder.ShooterFeederS;
 import frc.robot.subsystems.shooter.midtake.MidtakeS;
 import frc.robot.subsystems.shooter.pivot.ShooterPivotS;
 import frc.robot.subsystems.shooter.wheels.ShooterWheelsS;
@@ -58,9 +49,7 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
-import frc.robot.util.logging.PDData;
 import frc.robot.util.sparkmax.SparkDevice;
-import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.Log;
@@ -72,14 +61,10 @@ import java.util.stream.Collectors;
 
 import org.photonvision.PhotonCamera;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.PathPlannerLogging;
 
 import static frc.robot.util.Defaults.*;
 public class RobotContainer implements Logged {
@@ -93,7 +78,6 @@ public class RobotContainer implements Logged {
 
   @Log
   private final Mechanism2d MECH_VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
-  private final ShooterFeederS m_shooterFeederS;
   private final ShooterPivotS m_shooterPivotS;
   private final ShooterWheelsS m_shooterWheelsS;
   private final IntakePivotS m_intakePivotS;
@@ -131,14 +115,13 @@ public class RobotContainer implements Logged {
   private DigitalInput m_button = new DigitalInput(0);
   private Trigger m_coastModeButton = new Trigger(m_button::get).negate();
   @Log
-  SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
+  SendableChooser<AutoRoutine> m_autoSelector = new SendableChooser<>();
   private boolean m_setupDone = false;
 
   public RobotContainer(Consumer<Runnable> addPeriodic) {
     if (true || RobotBase.isSimulation()) {
       PhotonCamera.setVersionCheckEnabled(false);
     }
-    m_shooterFeederS = new ShooterFeederS();
     m_shooterPivotS = new ShooterPivotS();
     m_shooterWheelsS = new ShooterWheelsS();
     m_midtakeS = new MidtakeS();
@@ -155,7 +138,9 @@ public class RobotContainer implements Logged {
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_TEST_PIVOT);
     RobotVisualizer.addShooter(m_shooterPivotS.SHOOTER_GOAL_PIVOT);
+    RobotVisualizer.addMidtake(m_midtakeS.FEEDER_ROLLER);
     RobotVisualizer.addMidtake(m_midtakeS.MIDTAKE_ROLLER);
+    
     RobotVisualizer.addAmpPivot(m_ampPivotS.AMP_PIVOT);
     m_intakePivotS.INTAKE_BEND.append(m_intakeRollerS.INTAKE_ROLLER);
     RobotVisualizer.addIntake(m_intakePivotS.INTAKE_PIVOT);
@@ -173,15 +158,28 @@ public class RobotContainer implements Logged {
         m_midtakeS,
         m_ampPivotS,
         m_ampRollerS,
-        m_shooterFeederS,
         m_shooterPivotS,
         m_shooterWheelsS,
         // m_climberS,
         m_lightStripS,
-        m_driverController);
+        m_driverController,
+        (traj, starting)->{
+          if (starting) {
+            m_field.getObject("traj").setPoses(traj.getPoses());
+          } else {
+            m_field.getObject("traj").setPoses();
+          }
+        });
     configureDriverDisplay();
     configureButtonBindings();
-    addAutoRoutines();
+    LightStripS.getInstance().setShooterLeftSpeedPercent(m_shooterWheelsS::leftPercent);
+    LightStripS.getInstance().setShooterRightSpeedPercent(m_shooterWheelsS::rightPercent);
+    LightStripS.getInstance().setCenterPattern(
+      DriverStation::isEnabled,
+      m_midtakeS::hasNote,
+      m_intakePivotS::hasHomed, m_drivebaseS::hasTarget);
+    m_autos.addAutoRoutines(m_autoSelector);
+    m_autoSelector.onChange(this::updateAutoDisplay);
     SignalLogger.setPath("/media/sda1/");
     SignalLogger.start();
     Monologue.setupMonologue(this, "Robot", false, true);
@@ -191,10 +189,12 @@ public class RobotContainer implements Logged {
     Commands.sequence(waitSeconds(2), runOnce(() -> m_setupDone = true))
         .ignoringDisable(true)
         .schedule();
-    DriverStation.reportWarning("Setup Done", false);
-    PathPlannerLogging.setLogActivePathCallback((poses) -> m_field.getObject("pathplanner").setPoses(poses));
-    PathPlannerLogging.setLogTargetPoseCallback(pose -> m_field.getObject("ppTarget").setPose(pose));
-    
+    DriverStation.reportWarning("Setup Done", false);   
+  }
+
+  private void updateAutoDisplay(AutoRoutine routine) {
+    m_field.getObject("auto").setPoses(routine.getPoses());
+    log("autoTime", routine.estTime());
   }
 
   @Log
@@ -259,46 +259,24 @@ public class RobotContainer implements Logged {
       ()->Interpolation.RIGHT_MAP.get(distance.getAsDouble()) );
   }
 
-  public Command faceSpeaker() {
-    return m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis,
-        this::directionToSpeaker,
-        () -> Pathing.aimingFFVelocity(
-            m_drivebaseS.getPose(),
-            m_drivebaseS.getFieldRelativeLinearSpeedsMPS(), NomadMathUtil.mirrorTranslation(
-                Constants.Poses.SPEAKER,
-                AllianceWrapper.getAlliance())))
-        .alongWith(
-        run(()->{
-          var error  = m_drivebaseS.getPoseHeading().minus(new Rotation2d(this.directionToSpeaker())).getRadians();
-          if (error >= Units.degreesToRadians(1)) {
-            // drivetrain is too far ccw, light the left third of the bar
-            LightStripS.getInstance().requestState(States.LeftThird);
-          } else if (error <= Units.degreesToRadians(-1)) {
-            LightStripS.getInstance().requestState(States.RightThird);
-          } else {
-            LightStripS.getInstance().requestState(States.CenterThird);
-          }
-        })        
-        );
-  }
-
   public Command faceNote() {
     return m_autos.faceNoteC(m_fwdXAxis, m_fwdYAxis,
                 rumble -> m_driverController.getHID().setRumble(RumbleType.kBothRumble, rumble));
   }
   public void configureButtonBindings() {
-    InputAxis leftClimberStick = new InputAxis("LClimb", m_operatorController::getLeftY).withDeadband(0.2);
-        InputAxis rightClimberStick = new InputAxis("RClimb", m_operatorController::getRightY).withDeadband(0.2);
+    InputAxis leftClimberStick = new InputAxis("LClimb", m_operatorController::getRightY).withDeadband(0.2);
+        InputAxis rightClimberStick = new InputAxis("RClimb", m_operatorController::getLeftY).withDeadband(0.2);
     m_leftClimberS.isRaised.or(m_rightClimberS.isRaised).whileTrue(m_lightStripS.stateC(()-> States.Climbing));
     m_drivebaseS.setDefaultCommand(m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis));
     m_shooterPivotS.setDefaultCommand(
         m_shooterPivotS.rotateWithVelocity(
             this::pivotAngle,
-            () -> 0
-        // ()-> Interpolation.dThetadX(distanceToSpeaker()) *
-        // -Pathing.velocityTorwardsSpeaker(
-        // m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
-        // speaker())
+        ()-> {
+          var towardsSpkr = Pathing.velocityTowards(
+            m_drivebaseS.getPose(), m_drivebaseS.getFieldRelativeLinearSpeedsMPS(),
+            speaker());
+          log("velTowardsSpkr", towardsSpkr);
+          return Interpolation.dThetadX(distanceToSpeaker()) * -towardsSpkr;}
         ));
     //#region driver controller
 
@@ -307,26 +285,15 @@ public class RobotContainer implements Logged {
     // m_driverController.x().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> -Math.PI/3.0));
     // m_driverController.y().whileTrue(m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI));
 
-    // face note
-    m_driverController.a().whileTrue(faceNote());
-    m_driverController.y().whileTrue(faceSpeaker());
-
+    m_driverController.a().onTrue(m_autos.intakeLoadAmp(m_driverController.leftBumper(), ()-> CTREAmpPivotS.Constants.SCORE_ANGLE, m_driverController.a()));
     // intaking
     m_driverController.leftBumper().onTrue(m_autos.retractStopIntake());
     m_driverController.rightBumper().onTrue(m_autos.deployRunIntake(m_driverController.rightBumper()));
 
     // face amp
-    // m_driverController.leftTrigger().whileTrue(
-    //   m_drivebaseS.chasePoseC(Pathing::getOwnAmp));
-      //m_drivebaseS.manualFieldHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()-> Math.PI/2, ()-> 0));
+    m_driverController.leftTrigger().whileTrue(m_autos.driveToPreAmp());
     // face speaker
-    m_driverController.leftTrigger().whileTrue(
-      spinDistance(this::distanceToSpeaker).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0)
-    ));
-    //m_driverController.rightTrigger().whileTrue(faceSpeaker());
+    m_driverController.rightTrigger().whileTrue(m_autos.faceSpeaker(m_fwdXAxis, m_fwdYAxis));
 
     /* Switched the wording to line up with the name of this system for the new motor */
     m_driverController.back().or(m_operatorController.back()).whileTrue(
@@ -335,146 +302,69 @@ public class RobotContainer implements Logged {
         m_ampPivotS.resetToRetractedC(),
         runOnce(m_shooterPivotS::resetAngleUp).ignoringDisable(true)
       ));
-    m_driverController.start().onTrue(runOnce(m_shooterPivotS::resetAngleDown).ignoringDisable(true));
+    // m_driverController.start().whileTrue(
+    //   m_drivebaseS.wheelRadiusCharacterisation(1)
+    // );
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
     //#endregion
 
-    m_coastModeButton.whileTrue(m_shooterPivotS.coast()).whileTrue(m_intakePivotS.coast());
+    m_coastModeButton
+      .whileTrue(m_shooterPivotS.coast())
+      .whileTrue(m_intakePivotS.coast())
+      .whileTrue(m_leftClimberS.coast())
+      .whileTrue(m_rightClimberS.coast());
 
     //#region operator controller start
-
-    // RT: shoot
-    // LT: spinup 
-    // A: lock drive rotation for driveby
-    // B: intake spit
-    // X: midtake spit
-    // Y: midtake move in
-    // LB: spin for amp
-    // RB: spin for passing
-    // sticks: climb
-    // 
-
-/* Removed the code from the old motor */
 
      m_operatorController.b().whileTrue(m_intakeRollerS.outtakeC());
      //intake spit out
      m_operatorController.x().whileTrue(
       parallel(
-      m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2)),
-      m_shooterFeederS.runVoltageC(()-> -0.6995),
-      m_intakeRollerS.runVoltageC(()->0.6995*2)));
+      m_midtakeS.runVoltage(()-> (-0.6995 * 2),()-> (-0.6995 * 2), ()-> -0.6995),
+      m_intakeRollerS.runVoltageC(()->0.6995*2),
+      m_ampRollerS.runVoltage(()->0.6995)
+      ));
      // intake move 
      m_operatorController.y().whileTrue(
       parallel(
-      m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2),
-      m_shooterFeederS.runVoltageC(()-> 0.6995),
-      m_intakeRollerS.runVoltageC(()->-0.6995*2)
+      m_midtakeS.runVoltage(()-> 0.6995 * 2,()-> 0.6995 * 2, ()-> 0.6995),
+      m_intakeRollerS.runVoltageC(()->-0.6995*2),
+      m_ampRollerS.runVoltage(()->-0.6995)
      ));
-    //  // spinup for amp
-    //  ampMode.whileTrue(
-    //   parallel(m_shooterWheelsS.spinC(()->5000, ()->5000),
-    //   m_shooterPivotS.rotateToAngle(()->Interpolation.AMP_PIVOT),
-    //   m_bounceBarS.upC()
-    //   )
-    // );
-    //m_operatorController.start().onTrue(m_bounceBarS.downC().withTimeout(1));
-    //  // spinup for passing
-
 
     /* Re-added the code identically, with the exception of line 393 where .withTimeout(1.5)
     was added so that the scoring command doesn't run forever. 
     Also, we no longer need PID to hold the horizontal position. */
 
     // amp handoff
-    Trigger ampIntake = m_operatorController.rightBumper();
+    Trigger ampLoad = m_operatorController.rightBumper();
     Trigger ampScore = m_operatorController.a();
 
-    ampScore.onTrue(
-      sequence(
-        deadline(
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(1.5),
-            m_ampRollerS.outtakeC().withTimeout(0.5),
-            m_ampRollerS.stopC()
-          ),
-          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE)
-        ),
-        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
-      ));
-    ampIntake.whileTrue(
-      sequence(
-        parallel(
-          /* Changed the name to match the document name change.
-          Also changed the timeout time and fine-tuned the handoff position with the subtraction from CCW limit. */
-        m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT-Units.degreesToRadians(4))
-        ).until(m_ampPivotS.onTarget).withTimeout(1.5),
-        parallel(
-          m_shooterPivotS.rotateToAngle(()->ShooterPivotS.Constants.CCW_LIMIT - Units.degreesToRadians(4)),
-          /* A slight change to the RPM */
-          m_shooterWheelsS.spinC(()->3000, ()->3000),
-          m_shooterFeederS.runVoltageC(()->6),
-          sequence(
-            waitSeconds(0.1),
-            waitUntil(m_ampPivotS.onTarget).withTimeout(4),
-            /* A change in voltage because of the new motors */
-            m_midtakeS.runVoltage(()->0.6995*6, ()->0.6995*6)
-          ),
-          m_ampRollerS.intakeC(),
-          /* Changed the name to match the document name change. */
-          m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT)
-        ).until(m_ampRollerS.receiveNote),
-        parallel(
-          new ScheduleCommand(
-            /* Added timeouts and a better sequence in order to rotate to angles more accurately. */
-            m_ampRollerS.intakeC().withTimeout(0.4)
-          ),
-          new ScheduleCommand(
-            m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT).withTimeout(1.5)
-          ),
-          new ScheduleCommand(
-            m_intakeRollerS.outtakeC().withTimeout(1)
-          ),
-          new ScheduleCommand(
-            sequence(
-              m_intakePivotS.rotateToAngle(()->IntakePivotS.Constants.RETRACTED - Units.degreesToRadians(10)).withTimeout(1),
-              new ScheduleCommand(m_intakePivotS.retract().withTimeout(1))
-            )
-            
-          ),
-          new ScheduleCommand(m_shooterWheelsS.spinC(()->2000, ()->2000).withTimeout(1))
-        )
-
-      )
+    ampScore.onTrue(m_autos.scoreAmp());
+      
+    ampLoad.onTrue(
+      m_autos.loadAmp(ampScore.or(m_operatorController.povCenter().negate()), ()->CTREAmpPivotS.Constants.CW_LIMIT)
     );
-    //   spinDistance(this::xDistToSpeaker),
-    //   m_shooterPivotS.rotateWithVelocity(
-    //         ()->Interpolation.PIVOT_MAP.get(xDistToSpeaker()),
-    //         () -> 0)
-
-    //  ));
 
     /* Deleted code that controls the old motor to replace below with code that is more appropriate for the new motor. */
 
-     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5).alongWith(m_shooterFeederS.runVoltageC(()->12)));
-     m_operatorController.leftTrigger().whileTrue(
-      spinDistance(this::distanceToSpeaker).alongWith(
-      m_shooterPivotS.rotateWithVelocity(
-            this::pivotAngle,
-            () -> 0)
-     ));
+     m_operatorController.rightTrigger().whileTrue(m_midtakeS.runVoltage(()->10.5, ()->10.5, ()->12));
+     m_operatorController.leftTrigger().whileTrue(spinDistance(this::distanceToSpeaker));
     //m_operatorController.start().onTrue(runOnce(m_drivebaseS.m_vision::captureImages).ignoringDisable(true));
-        // m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
-        // m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
+    m_leftClimberS.setDefaultCommand(m_leftClimberS.runVoltage(()->-12* leftClimberStick.getAsDouble()));
+    m_rightClimberS.setDefaultCommand(m_rightClimberS.runVoltage(()->-12* rightClimberStick.getAsDouble()));
 
-    m_ampPivotS.setDefaultCommand(m_ampPivotS.runVoltage(()->2*rightClimberStick.getAsDouble()));
     m_operatorController.povLeft().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
-    m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->Math.PI/2));
+    m_operatorController.povUp().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CW_LIMIT));
     /* Changed the name to match the document name change. */
     m_operatorController.povRight().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.SCORE_ANGLE));
     m_operatorController.povDown().whileTrue(m_ampPivotS.rotateToAngle(()->CTREAmpPivotS.Constants.CCW_LIMIT));
     //#endregion
+
+    RobotModeTriggers.autonomous().whileTrue(deferredProxy(this::getAutonomousCommand)).onFalse(
+      m_autos.endAuto().until(()->false)
+    );
   }
 
   public Command driveIntakeRelativePOV() {
@@ -489,21 +379,8 @@ public class RobotContainer implements Logged {
     });
   }
 
-  public void addAutoRoutines() {
-    m_autoSelector.setDefaultOption("Do Nothing", none());
-    m_autoSelector.addOption("W2", m_autos.centerWingNote(PathPlannerPath.fromChoreoTrajectory("W2.1")));
-    m_autoSelector.addOption("W1", m_autos.w1());
-    // m_autoSelector.addOption("W3-W2", m_autos.w3w2());
-    m_autoSelector.addOption("C5", m_autos.c5());
-    m_autoSelector.addOption("Pre+3Mid(Stage)", m_autos.c4c3());
-    m_autoSelector.addOption("4NoteClose", m_autos.centerFourWingNote(2));
-    m_autoSelector.addOption("4NoteClose+Out", m_autos.centerFourWingMidline());
-    m_autoSelector.addOption("4Close-c3c4", m_autos.centerFourWingC3C4());
-    m_autoSelector.addOption("Disrupt", m_autos.disruptor());
-  }
-
   public Command getAutonomousCommand() {
-    return m_autoSelector.getSelected();
+    return m_autoSelector.getSelected().cmd();
   }
 
   Pose3d origin = ZERO_POSE3D;
@@ -520,6 +397,10 @@ public class RobotContainer implements Logged {
         LightStripS.getInstance().requestState(States.SetupDone);
       } else {
         LightStripS.getInstance().requestState(States.Disabled);
+      }
+    } else {
+      if (m_autos.distanceToSpeaker() > Interpolation.PASSING_DISTANCE) {
+        LightStripS.getInstance().requestState(States.Passing);
       }
     }
     TimingTracer.update();
@@ -542,9 +423,9 @@ public class RobotContainer implements Logged {
     m_driverField.getRobotObject().setPose(m_drivebaseS.getPose());
     List<Pose2d> poses = m_noteCamera.getTargets((time)->Optional.of(m_drivebaseS.getPose()));
     m_field.getObject("note").setPoses(poses);
-    List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
-    notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
-    //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+    // List<Pose3d> p3ds = poses.stream().map(p2->new Pose3d(p2).transformBy(noteTransform)).collect(Collectors.toList());
+    // notePosePub.accept(p3ds.toArray(new Pose3d[p3ds.size()]));
+    m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
 
   }
 

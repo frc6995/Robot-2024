@@ -39,7 +39,7 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final double kSlipCurrentA = 180.0;
+    private static final double kSlipCurrentA = 80.0;
 
 
 
@@ -49,7 +49,7 @@ public class TunerConstants {
 
     private static final double kDriveGearRatio = 5.357142857142857;
     private static final double kSteerGearRatio = 21.428571428571427;
-    private static final double kWheelRadiusInches = 3.85/2.0;
+    private static final double kWheelRadiusInches = Units.metersToInches(0.0481);
 
     public static final double kSpeedAt12VoltsRps = 
          // motor rev / wheel rev
@@ -64,7 +64,7 @@ public class TunerConstants {
 //         .withKP(0.3).withKI(0).withKD(0)
 //         .withKS(0.1).withKV(12.0/kSpeedAt12VoltsRps).withKA(0.05);
       new Slot0Configs()
-        .withKP(4).withKI(0).withKD(0)
+        .withKP(6).withKI(0).withKD(0)
         .withKS(0.0).withKV(/*12.0/kSpeedAt12VoltsRps*/0).withKA(0.0);
     private static final boolean kSteerMotorReversed = true;
     private static final boolean kInvertLeftSide = false;
@@ -81,8 +81,8 @@ public class TunerConstants {
     private static final double kSteerFrictionVoltage = 0;
     private static final double kDriveFrictionVoltage = 0.01;
 
-    public static final double kDriveRotationsPerMeter = 2 * Math.PI / Units.inchesToMeters(kWheelRadiusInches);
-    public static final double kDriveRadius = Units.inchesToMeters(kWheelRadiusInches);
+    public static final double kDriveRotationsPerMeter = 1 / (2*Math.PI*Units.inchesToMeters(kWheelRadiusInches));
+    
     private static final SwerveDrivetrainConstants DrivetrainConstants = new SwerveDrivetrainConstants()
             .withPigeon2Id(kPigeonId)
             .withCANbusName(kCANbusName);
@@ -115,6 +115,7 @@ public class TunerConstants {
     private static final double kFrontLeftXPosInches = 10.25;
     private static final double kFrontLeftYPosInches = 10.25;
 
+    public static final double kDriveRadiusMeters = Units.inchesToMeters(Math.hypot(kFrontLeftXPosInches, kFrontLeftYPosInches));
     // Front Right
     private static final int kFrontRightDriveMotorId = 12;
     private static final int kFrontRightSteerMotorId = 11;

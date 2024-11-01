@@ -2,7 +2,8 @@
   "HALProvider": {
     "Addressable LEDs": {
       "0": {
-        "columns": 39,
+        "columns": 22,
+        "serpentine": true,
         "start": 2
       },
       "window": {
@@ -59,7 +60,21 @@
         "alignTarget2": {
           "width": 0.800000011920929
         },
+        "auto": {
+          "arrows": false,
+          "style": "Line"
+        },
         "bottom": 1476,
+        "driveTarget": {
+          "color": [
+            0.0,
+            32.278507232666016,
+            255.0,
+            255.0
+          ],
+          "length": 0.7300000190734863,
+          "width": 0.7300000190734863
+        },
         "height": 8.210550308227539,
         "left": 150,
         "pathplanner": {
@@ -72,6 +87,11 @@
           "style": "Line"
         },
         "top": 79,
+        "traj": {
+          "arrowSize": 25,
+          "arrows": false,
+          "style": "Line"
+        },
         "width": 16.541748046875,
         "window": {
           "visible": true
@@ -84,6 +104,9 @@
     }
   },
   "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
     "transitory": {
       "DriverDisplay": {
         "Faults": {
@@ -99,6 +122,12 @@
       "Robot": {
         "MECH_VISUALIZER": {
           "shooter-pivot-base": {
+            "feeder-roller": {
+              "open": true
+            },
+            "midtake-roller": {
+              "open": true
+            },
             "open": true,
             "shooter": {
               "open": true
@@ -201,8 +230,7 @@
               "open": true
             },
             "open": true
-          },
-          "open": true
+          }
         },
         "m_field": {
           "double[]##v_/Robot/m_field/Robot": {
@@ -225,12 +253,20 @@
         "m_shooterPivotS": {
           "m_io": {
             "open": true
-          }
+          },
+          "open": true
         },
         "m_shooterWheelsS": {
+          "Left": {
+            "open": true
+          },
+          "Right": {
+            "open": true
+          },
           "Top": {
             "open": true
-          }
+          },
+          "open": true
         },
         "open": true,
         "tree": {
@@ -354,23 +390,53 @@
     "Plot <2>": {
       "plots": [
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
           "backgroundColor": [
             0.0,
             0.0,
             0.0,
             0.8500000238418579
           ],
-          "height": 517
+          "height": 407,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterWheelsS/Left/getGoalVelocity"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterWheelsS/Left/getVelocity"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterWheelsS/Right/getGoalVelocity"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Robot/m_shooterWheelsS/Right/getVelocity"
+            }
+          ]
         }
-      ],
-      "window": {
-        "visible": false
-      }
+      ]
     },
     "Plot <3>": {
       "plots": [

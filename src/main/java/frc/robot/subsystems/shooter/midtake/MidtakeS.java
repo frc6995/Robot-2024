@@ -4,6 +4,10 @@
 
 package frc.robot.subsystems.shooter.midtake;
 
+import static frc.robot.subsystems.intake.pivot.IntakePivotS.Constants.CAN_ID;
+import static frc.robot.subsystems.intake.pivot.RealIntakePivotIO.Constants.CURRENT_LIMIT;
+import static frc.robot.subsystems.intake.pivot.RealIntakePivotIO.Constants.config;
+
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
@@ -32,7 +36,7 @@ public class MidtakeS extends SubsystemBase implements Logged {
     public static final int FRONT_CAN_ID = 32;
     public static final int BACK_CAN_ID = 30;
     public static final int CURRENT_LIMIT = 15;
-    public static final double OUT_VOLTAGE = 2;
+    public static final double OUT_VOLTAGE = 6;
     public static final double IN_VOLTAGE = 6;
     public static final Consumer<SparkBaseConfig> config = c->{
       c.
@@ -48,10 +52,27 @@ public class MidtakeS extends SubsystemBase implements Logged {
         .status0(15)
       ;
     };
+
+    public static final int FEEDER_CAN_ID = 33;
+    public static final int FEEDER_CURRENT_LIMIT = 15;
+    public static final double FEEDER_OUT_VOLTAGE = 10;
+    public static final double FEEDER_THROUGH_VOLTAGE = -3;
+    public static final Consumer<SparkBaseConfig> feederConfig = c->{
+      c.freeLimit(CURRENT_LIMIT).idleMode(IdleMode.kCoast)
+      .status6(32767)
+      .status5(32767)
+      .status4(32767)
+      .status3(32767)
+      .status2(32767)
+      .status0(15);
+    };
   }
   private CANSparkMax m_front;
   private CANSparkMax m_back;
   private TimeOfFlight m_tof;
+  private CANSparkMax m_feeder;
+  public final MechanismLigament2d FEEDER_ROLLER = new MechanismLigament2d(
+"feeder-roller", Units.inchesToMeters(2), 0, 4, new Color8Bit(0, 255,0));
   public final Trigger hasNote;
   public final Trigger recvNote;
   public final Trigger isRunning;
@@ -73,6 +94,8 @@ public class MidtakeS extends SubsystemBase implements Logged {
                 .applyMax(
                   SparkDevice.getSparkMax(Constants.BACK_CAN_ID), true
                 );
+    m_feeder = new SparkBaseConfig(Constants.feederConfig)
+                .applyMax(SparkDevice.getSparkMax(Constants.FEEDER_CAN_ID), true);
     m_tof = new TimeOfFlight(32);
     m_tof.setRangingMode(RangingMode.Short, 24);
     m_tof.setRangeOfInterest(8, 8,12,12);
@@ -93,35 +116,40 @@ public class MidtakeS extends SubsystemBase implements Logged {
         if (DriverStation.isDisabled()) {
             stop();
         }
-      //MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() + m_front.getAppliedOutput());
+      MIDTAKE_ROLLER.setAngle(MIDTAKE_ROLLER.getAngle() - m_front.getAppliedOutput());
+      FEEDER_ROLLER.setAngle(FEEDER_ROLLER.getAngle() - m_feeder.getAppliedOutput());
   }
 
   /**sets motor to outtake */
   public void feed () {
     m_front.setVoltage(Constants.OUT_VOLTAGE);
     m_back.setVoltage(Constants.OUT_VOLTAGE);
-
+    m_feeder.setVoltage(Constants.FEEDER_OUT_VOLTAGE);
   }
   /**sets motor to intake */
   public void intake () {
-    m_front.setVoltage(Constants.IN_VOLTAGE);
-    m_back.setVoltage(Constants.IN_VOLTAGE);
+    setVoltage(Constants.IN_VOLTAGE, Constants.IN_VOLTAGE, 0);
+  }
+  public void reverse() {
+    setVoltage(-1, -1, -3);
   }
   /**stops the intake motor */
   public void stop() {
     m_front.setVoltage(0);
     m_back.setVoltage(0);
+    m_feeder.setVoltage(0);
   }
 
-  public void setVoltage(double frontVolts, double backVolts) {
+  public void setVoltage(double frontVolts, double backVolts, double feederVolts) {
     m_front.setVoltage(frontVolts);
     m_back.setVoltage(backVolts);
+    m_feeder.setVoltage(feederVolts);
   }
   public void setVoltage(double volts) {
-    setVoltage(volts, volts);
+    setVoltage(volts, volts, volts);
   }
-  public Command runVoltage(DoubleSupplier frontVolts, DoubleSupplier backVolts) {
-    return run(()->setVoltage(frontVolts.getAsDouble(), backVolts.getAsDouble()));
+  public Command runVoltage(DoubleSupplier frontVolts, DoubleSupplier backVolts, DoubleSupplier feederVolts) {
+    return run(()->setVoltage(frontVolts.getAsDouble(), backVolts.getAsDouble(), feederVolts.getAsDouble()));
   }
   /**returns the command of the outtake */
   public Command outtakeC() {
@@ -130,6 +158,9 @@ public class MidtakeS extends SubsystemBase implements Logged {
   /**returns the command of the intake */
   public Command intakeC() {
     return run(this::intake);
+  }
+  public Command reverseC() {
+    return run(this::reverse);
   }
   /**returns the command to stop the intake */
   public Command stopC(){

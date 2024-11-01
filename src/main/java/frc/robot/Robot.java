@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.AllianceWrapper;
-import frc.robot.util.FaultLogger;
 import monologue.Monologue;
 
 public class Robot extends TimedRobot {
@@ -25,18 +24,7 @@ public class Robot extends TimedRobot {
   private RobotContainer robotContainer;
 
   private Command autonomousCommand;
-
-  private void disableWatchdog() {
-    try {
-    Field f = this.getClass().getSuperclass().getSuperclass().getField("m_watchdog");
-    f.setAccessible(true);
-    Watchdog dog = (Watchdog) f.get(this);
-    dog.close();
-    dog = new Watchdog(10000,()->{});
-    } catch (Exception e) {
-      DriverStation.reportError(e.getMessage(), e.getStackTrace());
-    }
-  }
+  
   @Override
   public void robotInit() {
     Robot.isSimulation = RobotBase.isSimulation();
@@ -73,9 +61,6 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
     robotContainer.onEnabled();
-    autonomousCommand = robotContainer.getAutonomousCommand();
-
-    if (autonomousCommand != null) autonomousCommand.schedule();
   }
 
   @Override
@@ -83,7 +68,6 @@ public class Robot extends TimedRobot {
 
     AllianceWrapper.setAlliance(DriverStation.getAlliance().orElse(Alliance.Red));
     robotContainer.onEnabled();
-    if (autonomousCommand != null) autonomousCommand.cancel();
   }
 
   @Override
