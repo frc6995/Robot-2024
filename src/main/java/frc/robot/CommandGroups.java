@@ -245,7 +245,7 @@ public class CommandGroups {
                 m_midtakeS.reverseC()
                     .withTimeout(1)
                     .until(m_midtakeS.hasNote).finallyDo(m_midtakeS::stop)),
-            none(),
+            m_midtakeS.stopOnceC(), 
             intakeDown));
   }
 
@@ -410,13 +410,13 @@ public class CommandGroups {
 
   public void addAutoRoutines(SendableChooser<AutoRoutine> chooser) {
     chooser.setDefaultOption("Do Nothing", new AutoRoutine(none(), new Pose2d[0], new Pose2d[0], 0));
-    chooser.addOption("O-C213", O_C213());
-    chooser.addOption("O-C231", O_C231());
-    chooser.addOption("O-C213-M3", O_C213_M3());
-    chooser.addOption("O-C231-M3", O_C231_M3());
-    chooser.addOption("O-C2-M3-C13", O_C2_M3_C13());
-    chooser.addOption("O-M3-C231", O_M3_C231());
-    chooser.addOption("D-M12-P", D_M12_P());
+    //chooser.addOption("O-C213", O_C213());
+    chooser.addOption("4Note", O_C231());
+    // chooser.addOption("O-C213-M3", O_C213_M3());
+    chooser.addOption("4Note-Mid", O_C231_M3());
+    // chooser.addOption("O-C2-M3-C13", O_C2_M3_C13());
+    chooser.addOption("Mid-4Note", O_M3_C321());
+    // chooser.addOption("D-M12-P", D_M12_P());
   }
 
   public Command s2Toc2() {
@@ -662,7 +662,7 @@ public class CommandGroups {
         FIRST_SHOT_PAUSE, first, SH2C2, C2M3, M3C1, fifth);
   }
 
-  public AutoRoutine O_M3_C231() {
+  public AutoRoutine O_M3_C321() {
 
     var loop = m_autoFactory.newLoop("FourNote");
     var first = m_autoFactory.trajectory("S4-M3", loop);

@@ -309,7 +309,11 @@ public class RobotContainer implements Logged {
 
     //#endregion
 
-    m_coastModeButton.whileTrue(m_shooterPivotS.coast()).whileTrue(m_intakePivotS.coast());
+    m_coastModeButton
+      .whileTrue(m_shooterPivotS.coast())
+      .whileTrue(m_intakePivotS.coast())
+      .whileTrue(m_leftClimberS.coast())
+      .whileTrue(m_rightClimberS.coast());
 
     //#region operator controller start
 

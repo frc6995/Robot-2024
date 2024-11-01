@@ -4,9 +4,13 @@
 
 package frc.robot.subsystems.climber;
 
+import static edu.wpi.first.wpilibj2.command.Commands.idle;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.robot.subsystems.climber.ClimberS.Constants.LOWER_LIMIT;
 
 import java.util.function.DoubleSupplier;
+
+import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -22,6 +26,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -134,6 +139,18 @@ public class ClimberS extends SubsystemBase implements Logged {
 
   public Command moveToLengthC(DoubleSupplier lengthSupplier) {
     return run(()->setLength(lengthSupplier.getAsDouble()));
+  }
+
+  public Command coast() {return 
+    sequence(
+      Commands.runOnce(
+        ()->m_io.setIdleMode(IdleMode.kCoast)),
+      idle()
+    ).ignoringDisable(true).finallyDo(()->{m_io.setIdleMode(IdleMode.kBrake);});
+  }
+
+  public Command reset() {
+    return Commands.runOnce(()->m_io.resetLength(LOWER_LIMIT)).ignoringDisable(true);
   }
 
   /**

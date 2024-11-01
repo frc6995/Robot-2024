@@ -1,5 +1,7 @@
 package frc.robot.subsystems.climber;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import monologue.Logged;
 
 public abstract class ClimberIO implements Logged {
@@ -12,4 +14,5 @@ public abstract class ClimberIO implements Logged {
     public abstract double getVolts();
     public abstract double getPidVolts();
     public abstract short getFaults();
+    public abstract void setIdleMode(IdleMode mode);
 }

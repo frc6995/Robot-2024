@@ -48,6 +48,10 @@ public class SimClimberIO extends ClimberIO {
     public void resetLength(double length) {
         m_elevatorSim.setState(length, 0);
     }
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        
+    }
 
     private final ElevatorSim m_elevatorSim = new ElevatorSim(
         Constants.PLANT,

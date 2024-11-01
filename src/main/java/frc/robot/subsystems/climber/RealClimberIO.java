@@ -58,6 +58,11 @@ public class RealClimberIO extends ClimberIO {
     }
 
     @Override
+    public void setIdleMode(IdleMode mode) {
+        m_leader.setIdleMode(mode);
+    }
+
+    @Override
     public void setVolts(double volts) {
         m_leader.setVoltage(volts);
     }
