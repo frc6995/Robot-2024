@@ -53,7 +53,8 @@ public class CTREVision implements Logged {
                             Constants.layout,
                             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam,
                             entry.getValue());
-                            estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+                            estimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_CAMERA_HEIGHT);
+                            
             m_actualCameras.add(cam);
             m_cameras.add(new Pair<String, PhotonPoseEstimator>(entry.getKey(), estimator));
         });
@@ -89,6 +90,7 @@ public class CTREVision implements Logged {
                 estimator.setReferencePose(getPose.get());
                 var robotPoseOpt = estimator.update();
                 if (robotPoseOpt.isEmpty()) {
+
                     continue;
                 }
 
@@ -126,9 +128,9 @@ public class CTREVision implements Logged {
                 //         }
                 //     }
                 // }
-                if (Math.abs(robotPose.estimatedPose.getZ()) > 0.5) {
-                    continue;
-                }
+                // if (Math.abs(robotPose.estimatedPose.getZ()) > 0.5) {
+                //     continue;
+                // }
                 double xConfidence;
                 double yConfidence;
                 double angleConfidence;
@@ -153,7 +155,7 @@ public class CTREVision implements Logged {
                 }
                 if (ignore) {continue;}
                 double distance = avgDistance / robotPose.targetsUsed.size();
-                //log("avgDist-"+pair.getFirst(), distance);
+                log("avgDist-"+pair.getFirst(), distance);
                 if (closeEnoughTgts ==0) {
                     continue;
                 }

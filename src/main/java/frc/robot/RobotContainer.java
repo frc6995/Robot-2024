@@ -398,6 +398,10 @@ public class RobotContainer implements Logged {
       } else {
         LightStripS.getInstance().requestState(States.Disabled);
       }
+    } else {
+      if (m_autos.distanceToSpeaker() > Interpolation.PASSING_DISTANCE) {
+        LightStripS.getInstance().requestState(States.Passing);
+      }
     }
     TimingTracer.update();
     loopTime = loopTimeAverage.calculate(TimingTracer.getLoopTime());

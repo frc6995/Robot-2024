@@ -13,6 +13,7 @@ public class Interpolation {
     public static final InterpolatingDoubleTreeMap PIVOT_MAP = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap LEFT_MAP = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap RIGHT_MAP = new InterpolatingDoubleTreeMap();
+    public static final double PASSING_DISTANCE = 4.5;
     public static final void entry (double distance, double pivot, double left, double right) {
         PIVOT_MAP.put(distance, pivot);
         LEFT_MAP.put(distance, left*0.95);
@@ -39,17 +40,17 @@ public class Interpolation {
         //cw limit 2.216
         entry(1.45, CW_LIMIT, 7000,7000-1000);      
         entry(1.5, CW_LIMIT, 7000, 7000-1000);
-        entry(1.75, 2.336+Units.degreesToRadians(2), 7000, 7000-0);
-        entry(2, 2.4+Units.degreesToRadians(2), 7000, 7000-000);
-        entry(2.5, 2.48+Units.degreesToRadians(1), 7000, 7000-2000);
+        entry(1.75, 2.336+Units.degreesToRadians(1.5), 7000, 7000-0);
+        entry(2, 2.4+Units.degreesToRadians(1.5), 7000, 7000-000);
+        entry(2.5, 2.48+Units.degreesToRadians(0), 7000, 7000-2000);
         entry(2.75, 2.51+Units.degreesToRadians(0), 7000, 7000-1000);
-        entry(3.1, 2.56+Units.degreesToRadians(0), 7000, 7000-2000);
-        entry(3.5, 2.6+Units.degreesToRadians(2), 7500, 7500-2000);
-        entry(3.7, 2.6+Units.degreesToRadians(2), 7500, 7500-2000);
-        entry(4, 2.6+Units.degreesToRadians(4), 8000, 8000-2000);
-        entry(4.5, 2.63+Units.degreesToRadians(4), 9000, 9000-2500);
+        entry(3.1, 2.56+Units.degreesToRadians(1), 7000, 7000-2000);
+        entry(3.5, 2.6+Units.degreesToRadians(1), 7500, 7500-2000);
+        entry(3.7, 2.6+Units.degreesToRadians(0), 7500, 7500-2000);
+        entry(4, 2.6+Units.degreesToRadians(3), 8000, 8000-2000);
+        entry(PASSING_DISTANCE, 2.63+Units.degreesToRadians(3), 9000, 9000-2500);
         // passing shot
-        entry(4.51, Units.degreesToRadians(180 - 45), 2000, 2000);
+        entry(PASSING_DISTANCE+0.01, Units.degreesToRadians(180 - 45), 2000, 2000);
         entry(9, Units.degreesToRadians(180 - 45), 5000, 5000);
         // entry(5, 2.65+Units.degreesToRadians(4), 10000, 9000-3500);
         // entry(5.447, 2.66+Units.degreesToRadians(4), 10000, 9000-3500);

@@ -99,6 +99,7 @@ public class LightStripS {
    */
   public static enum States {
     CoastMode(solid(Color.kBlue).atBrightness(Value.of(0.25))),
+    
     SetupDone(solid(Color.kGreen).atBrightness(Value.of(0.25))), // set in robotPeriodic
     Disabled(solid(Color.kRed).atBrightness(Value.of(0.25))), // set in robotPeriodic
     Error(solid(Color.kRed).blink(Seconds.of(0.125))),
@@ -110,6 +111,7 @@ public class LightStripS {
     IntakedNote(solid(new Color(245, 224, 66)).blink(Seconds.of(0.125))),
     Scoring(solid(Color.kBlue)),
     AutoAlign(rainbow(255, 255)),
+    Passing(solid(Color.kYellow).atBrightness(Value.of(0.25))),
       Default(
         solid(Color.kGreen).atBrightness(Value.of(0.25))
       );
