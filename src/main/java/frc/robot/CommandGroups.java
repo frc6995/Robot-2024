@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -420,6 +421,7 @@ public class CommandGroups {
     // chooser.addOption("O-C2-M3-C13", O_C2_M3_C13());
     chooser.addOption("Mid-4Note", O_M3_C321());
     // chooser.addOption("D-M12-P", D_M12_P());
+    chooser.addOption("AmpSide Rush", O_M21());
   }
 
   public Command s2Toc2() {
@@ -671,7 +673,7 @@ public class CommandGroups {
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
     first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
     first.atTime("feed").onTrue(feed());
-    first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
+    first.atTime("intake").onTrue(deployRunIntake(notAtMidline)).onTrue(midtakeReceiveNote(new Trigger(()->false)));
     loop.enabled().onTrue(
         sequence(
             first.cmd(),
@@ -694,6 +696,43 @@ public class CommandGroups {
         0.75 * 3, first, M3SH5, SH5C3, C3C2, C2C1);
   }
 
+  public static Trigger always (EventLoop loop) {
+    return new Trigger(loop, ()->true);
+  }
+  public static Trigger never (EventLoop loop) {
+    return new Trigger(loop, ()->false);
+  }
+  public AutoRoutine O_M21() {
+    var loop = m_autoFactory.newLoop("O_M213");
+    var first = m_autoFactory.trajectory("E1-M2R-LateShot", loop);
+    var M2RSH4 = m_autoFactory.trajectory("M2R-SH4", loop);
+    var SH4M1 = m_autoFactory.trajectory("SH4-M1", loop);
+    var M1SH4 = m_autoFactory.trajectory("M1-SH4", loop);
+    final double spinupTime = 0;
+    loop.enabled()
+      .onTrue(sequence(
+        m_drivebaseS.resetPoseToBeginningC(first),
+        waitSeconds(spinupTime),
+        first.cmd(),
+        M2RSH4.cmd(),
+        shotPause().withTimeout(0.5),
+        SH4M1.cmd(),
+        M1SH4.cmd(),
+        shotPause()
+    ))
+    .onTrue(
+      spinDistance(this::distanceToSpeaker)
+    );
+    first.atTime("intake").or(SH4M1.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
+      deployRunIntakeOnly(notAtMidline)
+    );
+    first.atTime("feed").onTrue(feed());
+    M2RSH4.done().onTrue(feed());
+    M1SH4.done().onTrue(feed());
+
+    return routine(
+      loop.cmd(), 0.5+spinupTime, first, M2RSH4, SH4M1, M1SH4, SH4M1);
+  }
   public AutoRoutine D_M12_P() {
 
     var loop = m_autoFactory.newLoop("FourNote");

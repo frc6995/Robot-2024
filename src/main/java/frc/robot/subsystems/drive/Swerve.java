@@ -295,7 +295,6 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 		}
 );
   }
-
   private TrapezoidProfile driveToPoseProfile = new TrapezoidProfile(new Constraints(3, 6));
   private class Capture<T> {
 	public T inner;

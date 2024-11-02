@@ -302,9 +302,9 @@ public class RobotContainer implements Logged {
         m_ampPivotS.resetToRetractedC(),
         runOnce(m_shooterPivotS::resetAngleUp).ignoringDisable(true)
       ));
-    // m_driverController.start().whileTrue(
-    //   m_drivebaseS.wheelRadiusCharacterisation(1)
-    // );
+    m_driverController.start().whileTrue(
+      m_drivebaseS.wheelRadiusCharacterisation(1)
+    );
     m_driverController.povCenter().negate().whileTrue(driveIntakeRelativePOV());
 
     //#endregion
