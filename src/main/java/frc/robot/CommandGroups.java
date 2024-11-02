@@ -421,7 +421,8 @@ public class CommandGroups {
     // chooser.addOption("O-C2-M3-C13", O_C2_M3_C13());
     chooser.addOption("Mid-4Note", O_M3_C321());
     // chooser.addOption("D-M12-P", D_M12_P());
-    chooser.addOption("AmpSide Rush", O_M21());
+    chooser.addOption("AmpRush-Wall", O_M21());
+    chooser.addOption("AmpRush-Center", O_M23());
   }
 
   public Command s2Toc2() {
@@ -732,6 +733,38 @@ public class CommandGroups {
 
     return routine(
       loop.cmd(), 0.5+spinupTime, first, M2RSH4, SH4M1, M1SH4, SH4M1);
+  }
+
+  public AutoRoutine O_M23() {
+    var loop = m_autoFactory.newLoop("O_M213");
+    var first = m_autoFactory.trajectory("E1-M2R-LateShot", loop);
+    var M2RSH4 = m_autoFactory.trajectory("M2R-SH4", loop);
+    var SH4M3 = m_autoFactory.trajectory("SH4-M3", loop);
+    var M3SH6 = m_autoFactory.trajectory("M3-SH6", loop);
+    final double spinupTime = 0;
+    loop.enabled()
+      .onTrue(sequence(
+        m_drivebaseS.resetPoseToBeginningC(first),
+        waitSeconds(spinupTime),
+        first.cmd(),
+        M2RSH4.cmd(),
+        shotPause().withTimeout(0.5),
+        SH4M3.cmd(),
+        M3SH6.cmd(),
+        shotPause()
+    ))
+    .onTrue(
+      spinDistance(this::distanceToSpeaker)
+    );
+    first.atTime("intake").or(SH4M3.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
+      deployRunIntakeOnly(notAtMidline)
+    );
+    first.atTime("feed").onTrue(feed());
+    M2RSH4.done().onTrue(feed());
+    M3SH6.done().onTrue(feed());
+
+    return routine(
+      loop.cmd(), 0.5+spinupTime, first, M2RSH4, SH4M3, M3SH6, SH4M3);
   }
   public AutoRoutine D_M12_P() {
 
