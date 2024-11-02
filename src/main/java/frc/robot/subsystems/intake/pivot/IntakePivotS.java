@@ -285,7 +285,7 @@ public class IntakePivotS extends SubsystemBase implements Logged {
     /**
      * radians per second, rad/s^2
      */
-    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(6-K_G, K_V, K_A);
+    public static final Constraints CONSTRAINTS = Constraints.fromCharacteristics(9-K_G, K_V, K_A);
   }
 
 }

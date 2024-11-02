@@ -365,6 +365,10 @@ public class CommandGroups {
         speaker());
   }
 
+  public double autoDistanceToSpeaker() {
+    return Math.min(distanceToSpeaker(), Interpolation.PASSING_DISTANCE - 0.05);
+  }
+
   public double pivotAngle() {
     return Interpolation.PIVOT_MAP.get(distanceToSpeaker());
   }
@@ -440,7 +444,7 @@ public class CommandGroups {
     loop.enabled()
         .onTrue(m_drivebaseS.resetPoseToBeginningC(first));
     first.atTime(0.1).onTrue(m_intakePivotS.deploy());
-    first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
+    first.atTime(0).onTrue(spinDistance(this::autoDistanceToSpeaker));
   }
 
   public void firstShot(AutoTrajectory first) {
@@ -538,10 +542,8 @@ public class CommandGroups {
             fifth.cmd()));
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
-    fifth.done().onTrue(
-        either(new ScheduleCommand(sixth.cmd()), new ScheduleCommand(endAuto()),
-            new Trigger(m_midtakeS::hasNote).or(Robot::isSimulation)));
-    sixth.atTime(0.3).onTrue(retractStopIntake());
+    fifth.done().onTrue(sixth.cmd());
+    sixth.atTime(0.9).onTrue(retractStopIntake());
     sixth.done().onTrue(feed());
     sixth.done().onTrue(m_drivebaseS.stopOnceC());
 
@@ -610,10 +612,8 @@ public class CommandGroups {
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
 
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
-    fifth.done().onTrue(
-        either(new ScheduleCommand(sixth.cmd()), new ScheduleCommand(endAuto()),
-            new Trigger(m_midtakeS::hasNote).or(Robot::isSimulation)));
-    sixth.atTime(0.3).onTrue(retractStopIntake());
+    fifth.done().onTrue(sixth.cmd());
+    sixth.atTime(1.2).onTrue(retractStopIntake());
     sixth.done().onTrue(feed());
     sixth.done().onTrue(m_drivebaseS.stopOnceC());
 
@@ -672,7 +672,7 @@ public class CommandGroups {
     loop.enabled()
         .onTrue(m_drivebaseS.resetPoseToBeginningC(first));
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
-    first.atTime(0).onTrue(spinDistance(this::distanceToSpeaker));
+    first.atTime(0).onTrue(spinDistance(this::autoDistanceToSpeaker));
     first.atTime("feed").onTrue(feed());
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline)).onTrue(midtakeReceiveNote(new Trigger(()->false)));
     loop.enabled().onTrue(
@@ -722,7 +722,7 @@ public class CommandGroups {
         shotPause()
     ))
     .onTrue(
-      spinDistance(this::distanceToSpeaker)
+      spinDistance(this::autoDistanceToSpeaker)
     );
     first.atTime("intake").or(SH4M1.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
       deployRunIntakeOnly(notAtMidline)
@@ -754,7 +754,7 @@ public class CommandGroups {
         shotPause()
     ))
     .onTrue(
-      spinDistance(this::distanceToSpeaker)
+      spinDistance(this::autoDistanceToSpeaker)
     );
     first.atTime("intake").or(SH4M3.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
       deployRunIntakeOnly(notAtMidline)
@@ -794,7 +794,7 @@ public class CommandGroups {
 
     // First path: drop onboard at wingline, intake M1
     first.atTime("drop").onTrue(m_shooterWheelsS.spinC(() -> 2000, () -> 2000).withTimeout(0.7)
-        .andThen(spinDistance(this::distanceToSpeaker)));
+        .andThen(spinDistance(this::autoDistanceToSpeaker)));
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
 
     // Shoot M1
