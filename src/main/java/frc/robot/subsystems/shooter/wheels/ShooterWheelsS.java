@@ -36,7 +36,7 @@ public class ShooterWheelsS implements Logged {
     
     m_leftRoller = new ShooterRoller(Constants.LEFT_CAN_ID,  true, 0.05, Constants.LEFT_KV, 0.05, 0.01, "Left");// kA 0.016432/60.0
     leftSysId = m_leftRoller.m_idRoutine;
-    m_rightRoller = new ShooterRoller(Constants.RIGHT_CAN_ID, false, 0.05, 12/(5800* (38.0 / 23.0) / 60.0), 0.05, 0.01, "Right"); //kA 0.017026/60.0
+    m_rightRoller = new ShooterRoller(Constants.RIGHT_CAN_ID, false, 0.05, Constants.RIGHT_KV, 0.05, 0.01, "Right"); //kA 0.017026/60.0
     rightSysId = m_rightRoller.m_idRoutine;
 
     leftAtGoal = m_leftRoller.atGoal;

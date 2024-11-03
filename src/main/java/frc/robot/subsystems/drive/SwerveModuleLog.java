@@ -4,8 +4,10 @@ import monologue.Logged;
 
 public class SwerveModuleLog implements Logged {
     private String name;
-    public SwerveModuleLog(String name) {
+    public final double offsetRots; 
+    public SwerveModuleLog(String name, double offsetRots) {
 this.name = name;
+this.offsetRots = offsetRots;
     }
     @Override
     public String getPath() {

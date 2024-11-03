@@ -518,11 +518,11 @@ public class CommandGroups {
     var first = m_autoFactory.trajectory("S2-SH2", loop);
     var SH2_pause = FIRST_SHOT_PAUSE;
     var second = m_autoFactory.trajectory("SH2-C2", loop);
-    var C2_pause = 0.75;
+    var C2_pause = 0.5;
     var third = m_autoFactory.trajectory("C2-C1", loop);
-    var C1_pause = 0.75;
+    var C1_pause = 0.5;
     var fourth = m_autoFactory.trajectory("C1-C3", loop);
-    var C3_pause = 0.75;
+    var C3_pause = 0.5;
     var fifth = m_autoFactory.trajectory("C3-M3", loop);
     var sixth = m_autoFactory.trajectory("M3-SH3", loop);
 
@@ -539,13 +539,13 @@ public class CommandGroups {
             shotPause().withTimeout(C1_pause),
             fourth.cmd(),
             shotPause().withTimeout(C3_pause),
-            fifth.cmd()));
+            fifth.cmd(),
+            sixth.cmd(),
+            shotPause()));
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
-    fifth.done().onTrue(sixth.cmd());
     sixth.atTime(0.9).onTrue(retractStopIntake());
-    sixth.done().onTrue(feed());
-    sixth.done().onTrue(m_drivebaseS.stopOnceC());
+    sixth.done().onTrue(waitSeconds(0.1).andThen(feed()));
 
     return routine(
         loop.cmd(),
@@ -608,14 +608,14 @@ public class CommandGroups {
             shotPause().withTimeout(C3_pause),
             fourth.cmd(),
             shotPause().withTimeout(C1_pause),
-            fifth.cmd()));
+            fifth.cmd(),
+            sixth.cmd(),
+            shotPause()));
     second.atTime(0).onTrue(m_intakeRollerS.intakeC()).onTrue(feed());
-
+    fifth.atTime(0).onTrue(retractStopIntake());
     fifth.atTime("intake").onTrue(deployRunIntake(new Trigger(this::notAtMidline)));
-    fifth.done().onTrue(sixth.cmd());
     sixth.atTime(1.2).onTrue(retractStopIntake());
     sixth.done().onTrue(feed());
-    sixth.done().onTrue(m_drivebaseS.stopOnceC());
 
     return routine(
         loop.cmd(),

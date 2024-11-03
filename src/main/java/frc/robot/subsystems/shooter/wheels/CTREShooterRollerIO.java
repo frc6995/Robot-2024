@@ -41,7 +41,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
                 .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
             ).withSlot0(
                 new Slot0Configs()
-                .withKP(0.001)
+                .withKP(0.01)
                 .withKS(0.00)
                 .withKV(12/(5800* (38.0 / 23.0) / 60.0))
             )
@@ -61,8 +61,7 @@ public class CTREShooterRollerIO extends ShooterRollerIO {
         m_motor = new TalonFX(CAN_ID);
         Constants.config.MotorOutput.Inverted = invert ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
         var configurator = m_motor.getConfigurator();
-        configurator.apply(Constants.config);
-        configurator.apply(pidConfigs);
+        configurator.apply(Constants.config.withSlot0(pidConfigs));
         sysIdRoutine = new SysIdRoutine(
 		new SysIdRoutine.Config(
 			null,

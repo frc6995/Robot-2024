@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.led.LightStripS;
 import frc.robot.subsystems.led.LightStripS.States;
 import frc.robot.subsystems.vision.CTREVision;
@@ -102,12 +103,12 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 	public final PIDController m_thetaController = new PIDController(7, 0, 0);
     public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(7, 0, 0, new TrapezoidProfile.Constraints(8, 12));
 	private final SysIdSwerveTranslation characterization = new SysIdSwerveTranslation();
-	private final SwerveModuleLog fr = new SwerveModuleLog("0-FR");
-	private final SwerveModuleLog fl = new SwerveModuleLog("1-FL");
-	private final SwerveModuleLog br = new SwerveModuleLog("2-BR");
-	private final SwerveModuleLog bl = new SwerveModuleLog("3-BL");
+	private final SwerveModuleLog fr = new SwerveModuleLog("0-FR", TunerConstants.kFrontRightEncoderOffset);
+	private final SwerveModuleLog fl = new SwerveModuleLog("1-FL", TunerConstants.kFrontLeftEncoderOffset);
+	private final SwerveModuleLog br = new SwerveModuleLog("2-BR", TunerConstants.kBackRightEncoderOffset);
+	private final SwerveModuleLog bl = new SwerveModuleLog("3-BL", TunerConstants.kBackLeftEncoderOffset);
 	@IgnoreLogged
-	private final SwerveModuleLog[] mods = new SwerveModuleLog[] {fr, fl, br, bl};
+	private final SwerveModuleLog[] mods = new SwerveModuleLog[] {fl, fr, bl, br};
 	// private final SysIdSwerveRotation characterization = new
 	// SysIdSwerveRotation();
 	// private final SysIdSwerveSteerGains characterization = new
@@ -380,6 +381,7 @@ public class Swerve extends SwerveDrivetrain implements Subsystem, Logged {
 			modLog.log("absTgtSpeed", Math.abs(target.speedMetersPerSecond));
 			modLog.log("angle", state.angle.getRadians());
 			modLog.log("tgtAngle", target.angle.getRadians());
+			modLog.log("offsetRotIf0", modLog.offsetRots - state.angle.getRotations());
 			var module = Modules[i];
 			var drive = module.getDriveMotor();
 			var steer = module.getSteerMotor();
