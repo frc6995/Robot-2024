@@ -44,6 +44,7 @@ public class Interpolation {
         entry(2, 2.4+Units.degreesToRadians(1.5), 7000, 7000-000);
         entry(2.5, 2.48+Units.degreesToRadians(0), 7000, 7000-2000);
         entry(2.75, 2.51+Units.degreesToRadians(0), 7000, 7000-1000);
+        entry(2.85, 2.54,7000, 7000-1500 );
         entry(3.1, 2.56+Units.degreesToRadians(1), 7000, 7000-2000);
         entry(3.5, 2.6+Units.degreesToRadians(1), 7500, 7500-2000);
         entry(3.7, 2.6+Units.degreesToRadians(0), 7500, 7500-2000);
