@@ -674,7 +674,7 @@ public class CommandGroups {
     first.atTime("intake").onTrue(deployRunIntake(notAtMidline));
     first.atTime(0).onTrue(spinDistance(this::autoDistanceToSpeaker));
     first.atTime("feed").onTrue(feed());
-    first.atTime("intake").onTrue(deployRunIntake(notAtMidline)).onTrue(midtakeReceiveNote(new Trigger(()->false)));
+    first.atTime("intake").onTrue(deployRunIntake(notAtMidline)).onTrue(midtakeReceiveNote(new Trigger(() -> false)));
     loop.enabled().onTrue(
         sequence(
             first.cmd(),
@@ -697,12 +697,14 @@ public class CommandGroups {
         0.75 * 3, first, M3SH5, SH5C3, C3C2, C2C1);
   }
 
-  public static Trigger always (EventLoop loop) {
-    return new Trigger(loop, ()->true);
+  public static Trigger always(EventLoop loop) {
+    return new Trigger(loop, () -> true);
   }
-  public static Trigger never (EventLoop loop) {
-    return new Trigger(loop, ()->false);
+
+  public static Trigger never(EventLoop loop) {
+    return new Trigger(loop, () -> false);
   }
+
   public AutoRoutine O_M21() {
     var loop = m_autoFactory.newLoop("O_M213");
     var first = m_autoFactory.trajectory("E1-M2R-LateShot", loop);
@@ -711,28 +713,25 @@ public class CommandGroups {
     var M1SH4 = m_autoFactory.trajectory("M1-SH4", loop);
     final double spinupTime = 0;
     loop.enabled()
-      .onTrue(sequence(
-        m_drivebaseS.resetPoseToBeginningC(first),
-        waitSeconds(spinupTime),
-        first.cmd(),
-        M2RSH4.cmd(),
-        shotPause().withTimeout(0.5),
-        SH4M1.cmd(),
-        M1SH4.cmd(),
-        shotPause()
-    ))
-    .onTrue(
-      spinDistance(this::autoDistanceToSpeaker)
-    );
+        .onTrue(sequence(
+            m_drivebaseS.resetPoseToBeginningC(first),
+            waitSeconds(spinupTime),
+            first.cmd(),
+            M2RSH4.cmd(),
+            shotPause().withTimeout(0.5),
+            SH4M1.cmd(),
+            M1SH4.cmd(),
+            shotPause()))
+        .onTrue(
+            spinDistance(this::autoDistanceToSpeaker));
     first.atTime("intake").or(SH4M1.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
-      deployRunIntakeOnly(notAtMidline)
-    );
+        deployRunIntakeOnly(notAtMidline));
     first.atTime("feed").onTrue(feed());
     M2RSH4.done().onTrue(feed());
     M1SH4.done().onTrue(feed());
 
     return routine(
-      loop.cmd(), 0.5+spinupTime, first, M2RSH4, SH4M1, M1SH4, SH4M1);
+        loop.cmd(), 0.5 + spinupTime, first, M2RSH4, SH4M1, M1SH4, SH4M1);
   }
 
   public AutoRoutine O_M23() {
@@ -743,29 +742,27 @@ public class CommandGroups {
     var M3SH6 = m_autoFactory.trajectory("M3-SH6", loop);
     final double spinupTime = 0;
     loop.enabled()
-      .onTrue(sequence(
-        m_drivebaseS.resetPoseToBeginningC(first),
-        waitSeconds(spinupTime),
-        first.cmd(),
-        M2RSH4.cmd(),
-        shotPause().withTimeout(0.5),
-        SH4M3.cmd(),
-        M3SH6.cmd(),
-        shotPause()
-    ))
-    .onTrue(
-      spinDistance(this::autoDistanceToSpeaker)
-    );
+        .onTrue(sequence(
+            m_drivebaseS.resetPoseToBeginningC(first),
+            waitSeconds(spinupTime),
+            first.cmd(),
+            M2RSH4.cmd(),
+            shotPause().withTimeout(0.5),
+            SH4M3.cmd(),
+            M3SH6.cmd(),
+            shotPause()))
+        .onTrue(
+            spinDistance(this::autoDistanceToSpeaker));
     first.atTime("intake").or(SH4M3.atTime("intake")).onTrue(midtakeReceiveNote(never(loop.getLoop()))).onTrue(
-      deployRunIntakeOnly(notAtMidline)
-    );
+        deployRunIntakeOnly(notAtMidline));
     first.atTime("feed").onTrue(feed());
     M2RSH4.done().onTrue(feed());
     M3SH6.done().onTrue(feed());
 
     return routine(
-      loop.cmd(), 0.5+spinupTime, first, M2RSH4, SH4M3, M3SH6, SH4M3);
+        loop.cmd(), 0.5 + spinupTime, first, M2RSH4, SH4M3, M3SH6, SH4M3);
   }
+
   public AutoRoutine D_M12_P() {
 
     var loop = m_autoFactory.newLoop("FourNote");
